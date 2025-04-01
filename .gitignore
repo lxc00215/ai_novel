@@ -1,0 +1,38 @@
+# Node.js dependencies
+ai_novel_backend/node_modules/*
+newapp/.git_disabled/*
+
+
+*/*.pyc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+*.pyc
+
+# Logs
+logs/
+*.log
+*.tlog
+*.out
+*.err
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
