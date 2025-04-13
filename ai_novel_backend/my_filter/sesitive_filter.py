@@ -106,6 +106,11 @@ async def get_word_filter():
 EXCLUDE_PATHS = [
     "http://localhost:8000/ai/generate_images",
     r"http://127.0.0.1:8000/character/\d+",
+    r"http://127.0.0.1:8000/spirate/\d+",
+    r"http://127.0.0.1:8000/chat/session/\d+",
+    r"http://127.0.0.1:8000/chat/session/\d+/clear",
+    r"http://127.0.0.1:8000/character/",
+    "http://127.0.0.1:8000/spirate/update",
     # 使用正则表达式匹配任意数字
 ]
 
@@ -161,6 +166,7 @@ class SensitiveWordMiddleware(BaseHTTPMiddleware):
                     print("敏感词过滤", json_body)
                     # 检查是否包含敏感词
                     sensitive_words = self._check_sensitive_content(json_body)
+                    print("敏感词:", sensitive_words)
                     if sensitive_words:
                         # 如果发现敏感词，立即返回错误响应
                         return JSONResponse(

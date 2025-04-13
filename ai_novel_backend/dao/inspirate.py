@@ -3,6 +3,8 @@ from typing import Dict, Any, Optional
 import httpx
 import dotenv
 
+from util.chapter_utils import ChapterUtils
+
 
 dotenv.load_dotenv()
 
@@ -101,11 +103,9 @@ class InspirationService:
             result = response
 
             print(f"result: {result}")
-            
-            # 解析返回的故事内容
-            generated_text = result['choices'][0]['message']['content']
-            print(f"generated_text: {generated_text}")
-            story_parts = self.parse_story(generated_text)
+
+            chapter_utils = ChapterUtils()
+            story_parts = chapter_utils.parse_story(result)
             print(f"story_parts: {story_parts}")
             return story_parts
         except Exception as e:
@@ -158,191 +158,4 @@ class InspirationService:
           
         except Exception as e:
             raise e
-        
-    def parse_story(self,text: str) -> dict:
-        """
-        解析故事文本，提取标题、角色、内容和剧情走向
-        """
-        # 处理文本中的 \n 字符串，将其转换为实际的换行符
-        text = text.replace('\\n', '\n')
-        
-        result = {
-            "title": "",
-            "characters": [],
-            "content": "",
-            "story_direction": []
-        }
-        
-        current_section = None
-        current_character = None
-        lines = text.split('\n')
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            if line.startswith('标题：'):
-                current_section = 'title'
-                result['title'] = line[3:].strip()
-                
-            elif line.startswith('角色：'):
-                current_section = 'characters'
-                
-            elif line.startswith('内容：'):
-                current_section = 'content'
-                print(f"current_section: {current_section}")
-                if current_character:
-                    
-                    result['characters'].append(current_character)
-                    current_character = None
-                    
-            elif line.startswith('剧情走向') or line.startswith('剧情发展走向'):
-                current_section = 'story_direction'
-                
-            elif current_section == 'characters':
-                if line.startswith('-'):
-                    if current_character:
-                        result['characters'].append(current_character)
-                    current_character = {}
-                    if '：' in line:
-                        name_part = line[line.index('：')+1:].strip()
-                        current_character['姓名'] = name_part
-                elif current_character is not None and '：' in line:
-                    key, value = line.split('：', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    
-                    if '、' in value:
-                        value = [v.strip() for v in value.split('、')]
-                    elif '，' in value:
-                        value = [v.strip() for v in value.split('，')]
-                    
-                    current_character[key] = value
-                    
-            elif current_section == 'content':
-                    # 替换中间的句号为句号+换行符
-                processed_line = line.replace('。', '。\n')
-                if result['content']:
-                    result['content'] += '\n'
-                result['content'] += processed_line
-                
-            elif current_section == 'story_direction':
-                if line.startswith('-'):
-                    direction = line[1:].strip()
-                    if direction:
-                        result['story_direction'].append(direction)
-        
-        # 确保最后一个角色被添加
-        if current_character:
-            result['characters'].append(current_character)
-        
-        return result
     
-        
-
-def parse_story(text: str) -> dict:
-    """
-    解析故事文本，提取标题、角色、内容和剧情走向
-    """
-    # 处理文本中的 \n 字符串，将其转换为实际的换行符
-    text = text.replace('\\n', '\n')
-    
-    result = {
-        "title": "",
-        "characters": [],
-        "content": "",
-        "story_direction": []
-    }
-    
-    current_section = None
-    current_character = None
-    lines = text.split('\n')
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-            
-        if line.startswith('标题：'):
-            current_section = 'title'
-            result['title'] = line[3:].strip()
-            
-        elif line.startswith('角色：'):
-            current_section = 'characters'
-            
-        elif line.startswith('内容：'):
-            
-            current_section = 'content'
-            if current_character:
-                result['characters'].append(current_character)
-                current_character = None
-                
-        elif line.startswith('剧情走向') or line.startswith('剧情发展走向'):
-            current_section = 'story_direction'
-            
-        elif current_section == 'characters':
-            if line.startswith('-'):
-                if current_character:
-                    result['characters'].append(current_character)
-                current_character = {}
-                if '：' in line:
-                    name_part = line[line.index('：')+1:].strip()
-                    current_character['姓名'] = name_part
-            elif current_character is not None and '：' in line:
-                key, value = line.split('：', 1)
-                key = key.strip()
-                value = value.strip()
-                
-                if '、' in value:
-                    value = [v.strip() for v in value.split('、')]
-                elif '，' in value:
-                    value = [v.strip() for v in value.split('，')]
-                
-                current_character[key] = value
-                
-        elif current_section == 'content':
-            # 如果行尾是句号，不需要额外添加换行符
-            if line.endswith('。'):
-                processed_line = line
-            else:
-                # 替换中间的句号为句号+换行符
-                processed_line = line.replace('。', '。\n')
-            
-            # 检查是否包含不匹配的方括号内容
-            if '[' in processed_line and ']' in processed_line:
-                # 提取方括号中的内容进行处理
-                start_idx = processed_line.find('[')
-                end_idx = processed_line.find(']')
-                if start_idx < end_idx:  # 确保方括号是正确的顺序
-                    bracket_content = processed_line[start_idx:end_idx+1]
-                    # 这里可以添加你的方括号内容处理逻辑
-                    print(f"Found bracket content: {bracket_content}")
-                    
-            if result['content']:
-                result['content'] += '\n'
-            result['content'] += processed_line
-            
-        elif current_section == 'story_direction':
-            if line.startswith('-'):
-                direction = line[1:].strip()
-                if direction:
-                    result['story_direction'].append(direction)
-    
-    # 确保最后一个角色被添加
-    if current_character:
-        result['characters'].append(current_character)
-    
-    return result
-
-    
-if __name__ == "__main__":
-
-   
-
-    result = parse_story(text="""
-    标题：浮动的字母\n\n角色：\n- 姓名：林远\n  背景：职业探险家，专注于探索神秘遗迹和未知领域\n  性格：冷静、好奇心强、独立\n  年龄：32\n  备 注：对历史文献和古迹有浓厚兴趣，擅长解读古文和图案，随身携带一本笔记本和一把多功能工具 刀。\n\n- 姓名：沈黎\n  背景：文献修复师，被雇佣协助林远的探索\n  性格：细心、敏锐、偶 尔有些固执\n  年龄：29\n  备注：对古籍有极高的敏感度，精通多种语言和古文字，随身携带修 复工具和放大镜。\n\n内容：\n林远轻轻推开那扇摇摇欲坠的木门，厚重的灰尘像一层薄雾弥漫在 空气中，阳光透过破碎的窗户洒在地面上，勾勒出一条条细碎的光柱。地板因岁月的侵蚀而嘎吱作 响，四周的书架上堆满了腐朽的书籍，许多已经破损不堪，散发出淡淡的霉味。\n\n沈黎紧随其后 ，手里拿着一盏便携式灯。她抬头环顾四周，眼中既有敬畏又有疑虑，"这里保存得比我想象中要差，但也许还能找到一些有价值的东西。""\n\n林远不置可否，只是点了点头。他径直走向一张布满灰尘的长桌，桌上赫然摆放着一本厚重的古书。书的封面已经斑驳不堪，但隐约还能看见一些奇异的 符号。他伸出手，用手套轻轻拂去灰尘。沈黎在一旁屏息凝视，似乎生怕他一个不小心就会破坏这 件珍贵的文物。\n\n当林远将书翻开时，奇迹发生了。书页上的字母开始微微发光，随即悬浮在空 中，像是脱离了纸张的束缚。那些字母在空气中旋转，形成一个复杂的符号阵列，围绕着林远跃动 。\n\n沈黎惊呆了，手中的灯几乎掉落在地。她喃喃道："这……这是怎么回事？这些文字似乎是某种古老的语言，但它们……它们怎么会动？""\n\n林远伸出手，试图触碰那些漂浮的字母，但字母却灵巧地避开了他的指尖。他皱起眉头，低声说道："看起来，这本书不仅仅是一件古籍，它可能是某种机关，或者说……某种钥匙。""\n\n沈黎迅速掏出放大镜，试图仔细观察那些字母的形状和排列，""这些 符号……我好像在某些古代铭文中见过类似的，它们似乎在传递某种信息。""\n\n突然，书页开始翻动，自行停留在一页上。浮动的字母迅速排列成一行句子，它们闪烁着微光，仿佛在等待两人的解读 。 \n\n""你看得懂吗？""林远问道，声音里透着一丝紧张。\n\n沈黎眯起眼睛，仔细辨认着那些古老的文字，""这是一种非常古老的语言，拼凑起来大概是——'通过试炼者，开启真理之门'。""\n\n林远 若有所思地看着她，""真理之门？听起来不像是普通的谜语，更像是一种警告，或者邀请。""\n\n就 在这时，地板下方传来一阵低沉的震动，仿佛回应着书中的字母。两人对视了一眼，意识到这次的 探索可能远比他们预想的复杂和危险。\n\n（故事未完待续……）  """)
-    print(result)
-    
-
-

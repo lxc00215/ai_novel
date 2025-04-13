@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from requests import request, session
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from database import  Character, ChatMessage, ChatSession, get_db
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,6 +49,22 @@ async def get_chat_sessions(db: AsyncSession, sessions: list):
     
     return sessions_with_messages
 
+
+@router.get("/sessions/{user_id}/recent")
+async def get_user_sessions(
+    user_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    # 首先获取会话列表
+    sessions_query = select(ChatSession).where(ChatSession.user_id == user_id).order_by(ChatSession.updated_at.desc()).limit(1)
+    result = await db.execute(sessions_query)
+    sessions = result.scalars().all()
+    
+    # 然后获取每个会话的消息
+    sessions_with_messages = await get_chat_sessions(db, sessions)
+    
+    return sessions_with_messages
+
 # 在路由处理函数中使用
 @router.get("/sessions/{user_id}")
 async def get_user_sessions(
@@ -73,6 +89,16 @@ async def get_chat_history(session_id: int,db: AsyncSession = Depends(get_db)):
     messages = messages.scalars().all()
     
     return messages
+
+# 清除该会话下的全部消息
+@router.post("/session/{sessionId}/clear")
+async def clear_session(sessionId: int,db: AsyncSession = Depends(get_db)):
+    """清除该会话下的全部消息"""
+    query = delete(ChatMessage).where(ChatMessage.session_id == sessionId)
+    await db.execute(query)
+    await db.commit()
+    return {"message": "Session messages cleared successfully"}
+
 
 @router.post("/session")
 async def get_or_create_session(
@@ -110,7 +136,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 from typing import AsyncGenerator
-import openai
 
 @router.post("/session/{session_id}/message")
 async def send_message(
@@ -160,6 +185,7 @@ async def send_message(
         history = await db.execute(history_query)
         history_messages = history.scalars().all()
         
+        print(character.prompt,"character.prompt")
         # 6. 准备消息格式
         messages = [
             {"role": "system", "content": character.prompt}  # 使用角色的 prompt
@@ -193,11 +219,35 @@ async def generate_response(
     """生成 AI 响应的流式生成器"""
     try:
         # 创建新的数据库会话
+
+          
+        client = AsyncOpenAI()
+        accumulated_message = ""
+                
+
+        stream = await client.chat.completions.create(
+                model=os.getenv("LLM_MODEL"),
+                messages=messages,
+                stream=True
+            )
+    
+        async for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                content = chunk.choices[0].delta.content
+                accumulated_message += content
+                
+                # 更新数据库中的消息
+             
+                
+                # 返回流式内容
+                yield f"data: {content}\n\n"
+            # 等全部流式内容返回后，更新数据库内容
+
         async with AsyncSession(db.bind) as new_db:
             # 创建新的 AI 消息记录
             ai_message = ChatMessage(
                 session_id=session_id,
-                content="",
+                content=accumulated_message,
                 sender_type="character",
                 created_at=datetime.now(),
                 updated_at=datetime.now()
@@ -205,28 +255,16 @@ async def generate_response(
             new_db.add(ai_message)
             await new_db.commit()
             await new_db.refresh(ai_message)
-            
-            client = AsyncOpenAI()
-            accumulated_message = ""
-            
-            stream = await client.chat.completions.create(
-                model=os.getenv("LLM_MODEL"),
-                messages=messages,
-                stream=True
-            )
-            
-            async for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    content = chunk.choices[0].delta.content
-                    accumulated_message += content
-                    
-                    # 更新数据库中的消息
-                    ai_message.content = accumulated_message
-                    ai_message.updated_at = datetime.now()
-                    await new_db.commit()
-                    
-                    # 返回流式内容
-                    yield f"data: {content}\n\n"
+            # 更新会话时间
+            session.updated_at = datetime.now()
+            await new_db.commit()
+            # await new_db.refresh(session)
+
+            # # 更新最后一条消息
+            session.last_message = accumulated_message
+            session.last_message_time = datetime.now()
+            await new_db.commit()
+            # await new_db.refresh(session)
             
             yield "data: [DONE]\n\n"
             

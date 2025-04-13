@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from fastapi import APIRouter, File, HTTPException, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from database import Character, ChatSession, get_db, User
 from schemas import CharacterRequest, UserResponse, UserProfileUpdate, CharacterResponse, CharacterCreate
 from auth import get_current_user
@@ -24,8 +24,6 @@ async def get_characters(
         query = select(ChatSession).where(ChatSession.user_id == user_id, ChatSession.character_id == character.id)
         result = await db.execute(query)
         session = result.scalar_one_or_none()
-        character.session_id = session.id
-        character.prompt = session.character.prompt
     return characters
 
 # 更新角色
@@ -42,13 +40,26 @@ async def update_character(
 
     if not existing_character:
         raise HTTPException(status_code=404, detail="角色不存在")
-
-    existing_character.name = character_request.name
-    existing_character.description = character_request.description
-    existing_character.image_url = character_request.image_url
-    existing_character.is_used = character_request.is_used
-    existing_character.prompt = character_request.prompt
+    if character_request.prompt:
+        existing_character.prompt = character_request.prompt
+    if character_request.name:
+        existing_character.name = character_request.name
+    if character_request.description:
+        existing_character.description = character_request.description
+    if character_request.image_url:
+        existing_character.image_url = character_request.image_url
+    if character_request.is_used:
+        existing_character.is_used = character_request.is_used
+    
+    query = update(Character).where(Character.id == character_request.id).values(
+        name=existing_character.name,
+        description=existing_character.description,
+        image_url=existing_character.image_url,
+        is_used=existing_character.is_used,
+        prompt=existing_character.prompt
+    )
     try: 
+        await db.execute(query)
         await db.commit()
         return existing_character
     except Exception as e:
