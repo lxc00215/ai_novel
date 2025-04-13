@@ -137,64 +137,7 @@ class OpenAIBridge:
         except Exception as e:
             print('OpenAI chat error:', str(e))
             raise e
-            
-
-            
-    def image_chat(self, messages: List[Dict], options: Dict = {}) -> Dict:
-        """图像理解"""
-        try:
-            formatted_messages = [
-                {
-                    'role': msg['role'],
-                    'content': (
-                        [
-                            {
-                                'type': msg.get('type', 'text'),
-                                **(
-                                    {
-                                        'image_url': {
-                                            'url': msg['url'],
-                                            'detail': msg.get('detail', 'auto')
-                                        }
-                                    }
-                                    if msg.get('type') == 'image_url'
-                                    else {'text': msg['content']}
-                                )
-                            }
-                        ]
-                        if isinstance(msg['content'], str)
-                        else msg['content']
-                    )
-                }
-                for msg in messages
-            ]
-            
-            headers = {
-                'Authorization': f'Bearer {self.api_key}',
-                'Content-Type': 'application/json'
-            }
-            
-            data = {
-                'model': options.get('model', 'gpt-4-vision-preview'),
-                'messages': formatted_messages,
-                'max_tokens': options.get('max_tokens', 4096),
-                **options
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code == 200:
-                return response.json()
-                
-            raise Exception('图像理解请求失败')
-            
-        except Exception as e:
-            print('OpenAI image chat error:', str(e))
-            raise e
+        
             
     def generate_image(self, prompt: str, options: GenerateImageRequest = {}) -> Dict:
         """图像生成"""
@@ -206,13 +149,13 @@ class OpenAIBridge:
             
             data = {
                 'prompt': prompt,
-                'model': options.model if options.model else os.getenv("IMAGE_MODEL"),
-                'batch_size': options.batch_size if options.batch_size else 1,
-                'seed': options.seed if options.seed else 42,
-                'guidance_scale': options.guidance_scale if options.guidance_scale else 7.5,
-                'num_inference_steps': options.num_inference_steps if options.num_inference_steps else 20,
-                'size': options.size if options.size else '1024x1024',
-                'negative_prompt': options.negative_prompt if options.negative_prompt else '',
+                'model':  os.getenv("IMAGE_MODEL"),
+                'batch_size':  1,
+                'seed':  42,
+                'guidance_scale':  7.5,
+                'num_inference_steps':  20,
+                'size': '1024x1024',
+                'negative_prompt': '',
             }
             
             response = requests.post(

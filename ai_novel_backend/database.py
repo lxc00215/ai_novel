@@ -1,4 +1,3 @@
-from ctypes import Array
 import uuid
 from pydantic import ConfigDict
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -131,9 +130,8 @@ class User(Base):
     bio = Column(Text)  # 个人简介
 
     # 确保关系定义完整
-    novels = relationship("Novel", back_populates="user")
     prompts = relationship("Prompt", back_populates="user")
-    book_generations = relationship("BookGeneration", back_populates="user")
+    novels = relationship("Novels", back_populates="user")
     book_analyses = relationship("BookAnalysis", back_populates="user")
     tasks = relationship("Task", back_populates="user")
 
@@ -151,20 +149,7 @@ class User(Base):
 #     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
 #     last_message_time = Column(DateTime, default=datetime.now())
 #     last_message = Column(Text, nullable=True)
-class Novel(Base):
-    __tablename__ = 'novels'
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
-    status = Column(String(20), default='draft')  # draft, published, deleted
-    word_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # 添加关系定义
-    user = relationship("User", back_populates="novels")
 
 class Prompt(Base):
     __tablename__ = 'prompts'
@@ -226,37 +211,35 @@ class BookAnalysis(Base):
     model = relationship("Model")
 
 
-class BookGeneration(Base):
-    __tablename__ = 'book_generation'
+class Novels(Base):
+    __tablename__ = 'novels'
     
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(255), nullable=False)
-    prompt = Column(Text, nullable=False)
-    model_id = Column(String(100), ForeignKey('models.id'), nullable=False)
-    status = Column(Enum('pending', 'processing', 'completed', 'failed', name='task_status'), nullable=False, default='pending')
-    progress = Column(Integer, default=0)
-    total_chapters = Column(Integer, nullable=False)
-    completed_chapters = Column(Integer, default=0)
-    error_message = Column(Text)
+    chapters = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user = relationship("User", back_populates="book_generations")
-    model = relationship("Model")
+    description = Column(Text, nullable=True)
+    is_top = Column(Boolean, default=False)
+    is_archive = Column(Boolean, default=False)
+    user = relationship("User", back_populates="novels")
+    # 一对多
     chapters = relationship("GeneratedChapter", back_populates="book", cascade="all, delete-orphan")
 
 class GeneratedChapter(Base):
     __tablename__ = 'generated_chapters'
     
     id = Column(Integer, primary_key=True)
-    book_id = Column(Integer, ForeignKey('book_generation.id', ondelete='CASCADE'), nullable=False)
-    chapter_number = Column(Integer, nullable=False)
+    book_id = Column(Integer, ForeignKey('novels.id', ondelete='CASCADE'), nullable=False)
+    order = Column(Integer, nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+    summary = Column(Text, nullable=False)
 
-    book = relationship("BookGeneration", back_populates="chapters")
+    book = relationship("Novels", back_populates="chapters")
 
 class Character(Base):
     __tablename__ = 'characters'
@@ -267,7 +250,7 @@ class Character(Base):
     image_url = Column(String(255))
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     is_used = Column(Boolean, default=False)
-    prompt = Column(Text, nullable=True)
+    prompt = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -370,4 +353,5 @@ class BookBreakdownResult(Base):
     summary = Column(Text)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
+
 

@@ -48,15 +48,32 @@ class UserProfileUpdate(BaseResultSchema):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
 
-# Novel schemas
-class NovelCreate(BaseResultSchema):
+class ChapterBase(BaseResultSchema):
+    order: int
     title: str
     content: str
 
+
+class ChapterCreate(ChapterBase):
+    order: int
+    title: str
+    content: str
+    summary: Optional[str] = None
+    updated_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+# Novel schemas
+class NovelCreate(BaseResultSchema):
+    title: str
+    description: str
+
 class NovelUpdate(BaseResultSchema):
     title: Optional[str] = None
-    content: Optional[str] = None
-    status: Optional[str] = None
+    description: Optional[str] = None
+    is_top: Optional[bool] = None
+    is_archive: Optional[bool] = None
+    chapters: Optional[List[ChapterCreate]] = None
+
 
 
 class UserLogin(BaseResultSchema):
@@ -66,12 +83,17 @@ class UserLogin(BaseResultSchema):
     password: str
 
 class NovelResponse(BaseResultSchema):
+    id: int
+    user_id: Optional[int] = None
     title: str
-    content: str
-    status: str
-    word_count: int
-   
-
+    description: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    is_top: Optional[bool] = False
+    is_archive: Optional[bool] = False
+    
+    class Config:
+        orm_mode = True  # This tells Pydantic to read data from ORM objects
 # Prompt schemas
 class PromptCreate(BaseResultSchema):
     title: str
@@ -189,28 +211,30 @@ class BookAnalysisResponse(BookAnalysisBase):
     class Config:
         orm_mode = True
 
-class BookGenerationBase(BaseResultSchema):
+# class BookGenerationBase(BaseResultSchema):
+#     title: str
+#     prompt: str
+#     model_id: str
+#     status: str
+#     progress: int
+#     total_chapters: int
+#     completed_chapters: int = 0
+#     error_message: Optional[str] = None
+
+class BookGenerationCreate(BaseResultSchema):
+    user_id: Optional[str]
+    description: Optional[str]
     title: str
-    prompt: str
-    model_id: str
-    status: str
-    progress: int
-    total_chapters: int
-    completed_chapters: int = 0
-    error_message: Optional[str] = None
 
-class BookGenerationCreate(BookGenerationBase):
-    user_id: int
-
-class BookGenerationResponse(BookGenerationBase):
+# class BookGenerationResponse(BookGenerationBase):
   
 
-    class Config:
-        orm_mode = True
+#     class Config:
+#         orm_mode = True
 
-# 更新 BookGenerationResponse 的前向引用
-BookGenerationResponse.model_rebuild()
-# 更新 ChatHistoryResponse 的前向引用
+# # 更新 BookGenerationResponse 的前向引用
+# BookGenerationResponse.model_rebuild()
+# # 更新 ChatHistoryResponse 的前向引用
 ChatHistoryResponse.model_rebuild()
 
 class CrazyNovelCreate(BaseResultSchema):
@@ -225,31 +249,28 @@ class CrazyNovelCreate(BaseResultSchema):
 
 
 
-class BookGenerationResonseByPage(BaseResultSchema):
-    items: List[BookGenerationResponse]
-    total: int
-    page: int
-    size: int
-    pages: int
+# class BookGenerationResonseByPage(BaseResultSchema):
+#     items: List[BookGenerationResponse]
+#     total: int
+#     page: int
+#     size: int
+#     pages: int
 
-class ChapterBase(BaseResultSchema):
-    chapter_number: int
-    title: str
-    content: str
 
-class ChapterCreate(ChapterBase):
-    pass
+
+
 
 class ChapterUpdate(BaseResultSchema):
     title: Optional[str] = None
     content: Optional[str] = None
+    summary: Optional[str] = None
+    order: Optional[int] = None
 
 
 
 
-
-class ChapterResponse(ChapterBase):
-    book_id: int
+class ChapterResponse(NovelResponse):
+    chapters: List[ChapterBase]
     class Config:
         orm_mode = True
 
@@ -322,7 +343,9 @@ class CharacterRequest(BaseResultSchema):
     name: str
     description: Optional[str] = None
     image_url: Optional[str] = None
+    prompt: Optional[str] = None
     is_used: bool = False
+    user_id: int
 
 class InspirationUpdate(BaseModel):
     id: int
@@ -330,6 +353,7 @@ class InspirationUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     story_direction: Optional[List] = None
+    cover_image: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -401,10 +425,16 @@ class CharacterResponse(BaseSchema):
     name: str
     description: Optional[str] = None
     image_url: Optional[str] = None
-    user_id: int
-    is_used: bool
-    created_at: datetime
-    updated_at: datetime
+    user_id: Optional[int] = None
+    prompt: Optional[str] = None
+    is_used: Optional[bool] = False
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class ContinueSpirateRequest(BaseSchema):
+    choice: str
+
+
 
 class SpirateResponse(BaseSchema):
     id: int
@@ -432,3 +462,42 @@ class ChatSessionRequest(BaseModel):
     user_id: int
     character_id: int
 
+# schemas.py additions:
+
+class ChapterGenerationInput(BaseResultSchema):
+    """Input for AI generation of a chapter"""
+    book_id: int
+    chapter_number: int
+    title: Optional[str] = None
+    model_id: Optional[str] = None  # If None, use default model
+    
+    # Generation guidance options
+    plot_outline: Optional[str] = None  # Brief outline of the chapter plot
+    character_descriptions: Optional[str] = None  # Key characters in this chapter
+    tone: Optional[str] = None  # e.g., "humorous", "serious", "mysterious"
+    setting_description: Optional[str] = None  # Where this chapter takes place
+    word_count_target: Optional[int] = 2000  # Target word count for generation
+    special_instructions: Optional[str] = None  # Any additional instructions
+
+class ChapterGenerationResponse(BaseResultSchema):
+    """Response for AI generation of a chapter"""
+    book_id: int
+    chapter_number: int
+    title: str
+    content: str
+    word_count: int
+    model_id: str
+    generation_time: float  # Time taken to generate in seconds
+
+# schemas.py additions (continued)
+
+class ChapterTemplate(BaseResultSchema):
+    """Template for chapter structure"""
+    name: str
+    description: str
+    structure: Dict[str, Dict]  # Contains sections like intro, conflict, resolution, etc.
+    example: Optional[str] = None
+
+class ChapterTemplateResponse(BaseResultSchema):
+    """Response containing available chapter templates"""
+    templates: List[ChapterTemplate]

@@ -1,15 +1,37 @@
-# Node.js dependencies
-ai_novel_backend/node_modules/*
-newapp/.git_disabled/*
+
+# 项目结构
+
+# novel_project - 项目根目录
+# ├── ai_novel_backend - 后端目录
+# │   ├── node_modules - 后端依赖目录
+# │   ├── app - 后端源代码目录
+# │   ├── config - 后端配置目录
+# │   ├── dao - 后端数据访问目录
+# │   ├── static - 后端公共资源目录
+# │   ├── routes - 后端路由目录
+# │   ├── util - 后端工具目录
+# │   ├── .env - 后端环境变量文件
+# │   ├──  - 后端环境变量示例文件
+
+# ├── frontend - 前端目录
+# │   ├── .git_disabled - 前端禁用目录
+# │   ├── .next - 前端编译目录
+# │   ├── node_modules - 前端依赖目录
 
 
-*/*.pyc
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
+# 不上传的文件
+
+# 后端依赖目录
+node_modules/
+
+# 前端
 
 *.pyc
+
+.git_disabled/*
+
+.next/*
 
 # Logs
 logs/
@@ -17,16 +39,6 @@ logs/
 *.tlog
 *.out
 *.err
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Build outputs
-dist/
-build/
-out/
 
 # IDE files
 .vscode/

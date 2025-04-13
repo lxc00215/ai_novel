@@ -28,7 +28,8 @@ async def generate_images(request: GenerateImageRequest):
         "api_key": os.getenv("OPENAI_API_KEY"),
         "base_url": os.getenv("OPENAI_BASE_URL"),
     })
-    result = bridge.generate_image(request.prompt,request)
+    print(request,"嘿嘿")
+    result = bridge.generate_image(request.prompt)
     res = await transfer_image(result['images'][0]['url'])
 
     return ImageResponse(image=res['image_url'], timings=result['timings'], seed=result['seed'])

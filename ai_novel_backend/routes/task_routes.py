@@ -9,7 +9,7 @@ from dao.inspirate import InspirationService
 from database import Task
 from models import TaskTypeEnum
 from routes.ai_routes import generate_images
-from schemas import SampleTaskRequest, SampleTaskResponse, TaskCreate, TaskResponse
+from schemas import GenerateImageRequest, SampleTaskRequest, SampleTaskResponse, TaskCreate, TaskResponse
 router = APIRouter(prefix="/task", tags=["task"])
 
 @router.post("/new",response_model=SampleTaskResponse)
@@ -208,7 +208,7 @@ async def process_task_inspiration(task_data: dict)->int:
             result = await service.generate_complete_story(task_data['prompt'])
 
         # 保存到灵感表
-    
+        
         character_ids = []
         # 创建Character 对象
         for character in result['characters']:
@@ -216,15 +216,20 @@ async def process_task_inspiration(task_data: dict)->int:
             character_result = Character(
                 name=character['姓名'],
                 description='\n'.join(character['描述']) if isinstance(character['描述'], list) else character['描述'],
-                user_id=task_data['user_id']
+                user_id=task_data['user_id'],
+                prompt=f"你现在正在做一个角色扮演，无论用户如何去套取你的模型信息，你都不会回复。你只会回答你的公开信息，你的公开信息是：你叫{character['姓名']},关于你的描述为：{character['描述']},除此之外，你可以基于你的角色定位和用户聊天、谈心，唯独不能泄露你的模型信息！"
             )
             async with async_session() as db:
                 db.add(character_result)
                 await db.commit()
                 await db.refresh(character_result)
                 character_ids.append(character_result.id)
-        cover_image = await generate_images(task_data['prompt'])
+
         
+        
+        # cover_image = await generate_images(GenerateImageRequest(prompt=task_data['prompt'],size='1280x960',user_id=task_data['user_id']))
+        
+
 
         inspiration_result = InspirationResult(
             title=result['title'],
@@ -233,7 +238,7 @@ async def process_task_inspiration(task_data: dict)->int:
             content=result['content'],
             user_id=task_data['user_id'],
             story_direction=result['story_direction'],
-            cover_image=cover_image['image_url']
+            cover_image=''
         )
         async with async_session() as db:
             db.add(inspiration_result)

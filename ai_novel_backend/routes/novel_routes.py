@@ -1,188 +1,236 @@
-from typing import Optional, List, Dict
-from fastapi import APIRouter, HTTPException, Depends, Query, WebSocket
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from config.prompt import WRITER_PROMPT
-from database import get_db, Novel, User, BookGeneration, GeneratedChapter
-from schemas import CrazyNovelCreate, NovelCreate, NovelUpdate, NovelResponse, PaginatedResponse
-from auth import get_current_user
+# from typing import Optional, List, Dict
 from datetime import datetime
-from dao.crazy1novel import write_novel_free
-import asyncio
-from fastapi import WebSocketDisconnect
-from fastapi.concurrency import run_in_threadpool
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List
+from sqlalchemy import select, func, update
+
+from database import Novels, User,async_session
+from sqlalchemy.ext.asyncio import AsyncSession
+# from config.prompt import WRITER_PROMPT
+from database import get_db, User, Novels, GeneratedChapter
+from schemas import BookGenerationCreate, ChapterCreate, ChapterResponse, ChapterUpdate, NovelResponse, NovelUpdate
+# from schemas import CrazyNovelCreate, NovelCreate, NovelUpdate, NovelResponse, PaginatedResponse
+# from auth import get_current_user
+# from datetime import datetime
+# from dao.crazy1novel import write_novel_free
+# import asyncio
+# from fastapi import WebSocketDisconnect
+# from fastapi.concurrency import run_in_threadpool
 
 router = APIRouter(prefix="/novels", tags=["novels"])
 
-@router.post("/create", response_model=NovelResponse)
+
+
+# 创建小说
+@router.post("/create", response_model=None)
 async def create_novel(
-    novel: NovelCreate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    request: BookGenerationCreate,
+    # current_user: User = Depends(get_current_user),
 ):
-    word_count = len(novel.content.split())
-    new_novel = Novel(
-        user_id=current_user.id,
-        title=novel.title,
-        content=novel.content,
-        word_count=word_count
-    )
-    
-    db.add(new_novel)
-    current_user.story_count += 1
-    current_user.total_words += word_count
+   async with async_session() as db:
 
-    # 计算创作天数
-    today = datetime.now().date()
-    if current_user.last_writing_date != today:
-        current_user.writing_days += 1
-        current_user.last_writing_date = today
-
-    await db.commit()
-    await db.refresh(new_novel)
-    return new_novel
-
-@router.get("/", response_model=PaginatedResponse)
-async def list_novels(
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    # 获取总数
-    total_query = select(func.count()).select_from(Novel).where(
-        Novel.user_id == current_user.id
-    )
-    total = await db.scalar(total_query)
-    
-    # 获取分页数据
-    query = select(Novel).where(
-        Novel.user_id == current_user.id
-    ).order_by(Novel.created_at.desc()).offset((page - 1) * size).limit(size)
-    
-    result = await db.execute(query)
-    novels = result.scalars().all()
-    
-    return {
-        "total": total,
-        "page": page,
-        "size": size,
-        "items": novels
-    }
-
-@router.get("/{novel_id}", response_model=NovelResponse)
-async def get_novel(
-    novel_id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    query = select(Novel).where(
-        Novel.id == novel_id,
-        Novel.user_id == current_user.id
-    )
-    result = await db.execute(query)
-    novel = result.scalar_one_or_none()
-    
-    if not novel:
-        raise HTTPException(status_code=404, detail="Novel not found")
-    return novel
-
-@router.put("/{novel_id}", response_model=NovelResponse)
-async def update_novel(
-    novel_id: int,
-    novel_update: NovelUpdate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    query = select(Novel).where(
-        Novel.id == novel_id,
-        Novel.user_id == current_user.id
-    )
-    result = await db.execute(query)
-    novel = result.scalar_one_or_none()
-    
-    if not novel:
-        raise HTTPException(status_code=404, detail="Novel not found")
-    if novel_update.content:
-        new_word_count = len(novel_update.content.split())
-        word_count_diff = new_word_count - novel.word_count
-        current_user.total_words += word_count_diff
-        novel.word_count = new_word_count
-
-        now = datetime.utcnow()
-        if not current_user.last_write_time or (now.date() - current_user.last_write_time.date()).days > 0:
-            current_user.writing_days += 1
-
-    # 更新字段
-    for field, value in novel_update.dict(exclude_unset=True).items():
-        setattr(novel, field, value)
-        if field == 'content':
-            novel.word_count = len(value.split())
-    
-    await db.commit()
-    return novel
-
-@router.websocket("/ws/novel_progress/{user_id}")
-async def websocket_novel_progress(websocket: WebSocket, user_id: int):
-    await websocket.accept()
-    try:
-        while True:
-            # 每秒检查一次进度
-            async with get_db() as session:
-                query = select(BookGeneration).where(
-                    BookGeneration.user_id == user_id,
-                    BookGeneration.status == "processing"
-                ).order_by(BookGeneration.created_at.desc())
-                result = await session.execute(query)
-                novel = result.scalar_one_or_none()
-                
-                if novel:
-                    await websocket.send_json({
-                        "progress": novel.progress,
-                        "status": novel.status,
-                        "error": novel.error_message
-                    })
-                    
-                    # 如果小说已完成或失败，结束 WebSocket 连接
-                    if novel.status in ["completed", "failed"]:
-                        break
-                        
-            await asyncio.sleep(1)  # 等待1秒
-    except WebSocketDisconnect:
-        print("Client disconnected")
-
-@router.post("/crazy/short")
-async def crazy_generate_novel(
-    crazy_novel: CrazyNovelCreate,
-    current_user: User = Depends(get_current_user),
-):
-    try:
-        # 启动异步任务
-        asyncio.create_task(
-            write_novel_free(
-                api_key=crazy_novel.api_key,
-                base_url=crazy_novel.base_url,
-                user_id=current_user.id,
-                options={
-                    "novel_type": crazy_novel.novel_type,
-                    "novel_category": crazy_novel.novel_category,
-                    "novel_theme": crazy_novel.novel_theme,
-                    "model": crazy_novel.model,
-                    "system_prompt": crazy_novel.system_prompt if crazy_novel.system_prompt else WRITER_PROMPT,
-                    "provider_name": crazy_novel.provider_name
-                },
-            )
+    # 创建一本什么都没的空小说
+        novel = Novels(
+            user_id=4,
+            title=request.title,
+            description=request.description,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
         )
     
-        return {
-            "message": "Novel generation started",
-            "user_id": current_user.id,
-            "status": "pending"
+        db.add(novel)
+        await db.commit()
+        await db.refresh(novel)
+
+        # 创建一本什么都没的空小说
+        chapter = GeneratedChapter(
+            book_id=novel.id,
+            order=0,
+            title="新建章节",
+            content="",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        db.add(chapter)
+        await db.commit()
+        # 章节已经通过 book_id 关联到小说
+        await db.refresh(novel)
+        return novel
+   
+# 获取该用户的全部小说
+@router.get("/{user_id}/novel", response_model=None)
+async def get_all_novel(user_id:int):
+    async with async_session() as db:
+        query = select(Novels).where(
+            Novels.user_id == user_id
+        )
+        result = await db.execute(query)
+        novels = result.scalars().all()
+
+        if not novels:
+            raise HTTPException(status_code=404, detail=f"未找到该用户的小说")
+       
+        return novels
+
+
+
+
+# 更新小说
+@router.put("/{novel_id}/updateNovel", response_model=None)
+async def update_novel(novel_id:int, new_novel:NovelUpdate):
+    async with async_session() as db:
+        query = select(Novels).where(
+            Novels.id == novel_id
+        )
+        result = await db.execute(query)
+        novel = result.scalars().first()
+        if not novel:
+            raise HTTPException(status_code=404, detail=f"未找到书籍ID为{novel_id}的小说")
+        
+        if new_novel.title:
+            novel.title = new_novel.title
+        
+        if new_novel.description:
+            novel.description = new_novel.description
+        if new_novel.is_top:
+            novel.is_top = new_novel.is_top
+        elif new_novel.is_top == False:
+            novel.is_top = False
+
+        if new_novel.is_archive:
+            novel.is_archive = new_novel.is_archive
+        elif new_novel.is_archive == False:
+            novel.is_archive = False
+
+
+        # 更新章节到chapter表
+        if new_novel.chapters:
+            for chapter in new_novel.chapters:
+                # 直接更新
+                query = update(GeneratedChapter).where(
+                    GeneratedChapter.book_id == novel.id,
+                    GeneratedChapter.order == chapter.order
+                ).values(
+                    title=chapter.title,
+                    content=chapter.content,
+                    summary=chapter.summary
+                )
+                await db.execute(query)
+
+        novel.updated_at = datetime.now()
+
+        await db.commit()
+        await db.refresh(novel)
+        return novel
+    
+# 添加章节
+@router.post("/{id}/chapters", response_model=None)
+async def add_chapter(id:int, new_chapter:ChapterCreate):
+    async with async_session() as db:
+        query = select(Novels).where(
+            Novels.id == id
+        )
+        result = await db.execute(query)
+        novel = result.scalars().first()
+        if not novel:
+            raise HTTPException(status_code=404, detail=f"未找到书籍ID为{id}的小说")
+        
+        # 创建新章节
+        new_chapter = GeneratedChapter(
+            book_id=id,
+            order=new_chapter.order,
+            title=new_chapter.title,
+            content=new_chapter.content,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        db.add(new_chapter)
+        await db.commit()
+        await db.refresh(new_chapter)
+
+        return new_chapter
+
+# 更新章节
+@router.put("/{id}/chapters/{order}", response_model=None)
+async def update_chapter(id:int, order:int, new_chapter:ChapterUpdate):
+    async with async_session() as db:
+        query = select(GeneratedChapter).where(
+            GeneratedChapter.book_id == id,
+            GeneratedChapter.order == order
+        )
+        result = await db.execute(query)
+        chapter = result.scalars().first()
+        if not chapter:
+            raise HTTPException(status_code=404, detail=f"未找到第{order}章的小说")
+        if new_chapter.title:
+            chapter.title = new_chapter.title
+        
+        if new_chapter.content:
+            chapter.content = new_chapter.content
+        
+        if new_chapter.summary:
+            chapter.summary = new_chapter.summary
+        chapter.updated_at = datetime.now()
+
+        await db.commit()
+        await db.refresh(chapter)
+        return chapter
+    
+
+
+    
+
+#  查询全部小说id为 的章节
+
+@router.get("/{novel_id}/chapters", response_model=ChapterResponse)
+async def get_novel_chapters(novel_id: int):
+    """
+    获取特定小说的所有章节
+    """
+    async with async_session() as db:
+        # 查询指定book_id的全部章节
+        query = select(GeneratedChapter).where(
+            GeneratedChapter.book_id == novel_id
+        ).order_by(GeneratedChapter.order)
+        
+        result = await db.execute(query)
+        chapters = result.scalars().all()
+        
+        if not chapters:
+            raise HTTPException(status_code=404, detail=f"未找到书籍ID为{novel_id}的章节")
+        
+        # 查询小说
+        query = select(Novels).where(
+            Novels.id == novel_id
+        )
+        result = await db.execute(query)
+        novel = result.scalars().first()
+        
+
+
+        # 准备返回数据
+        response_chapters = []
+        for chapter in chapters:
+            response_chapters.append({
+                "id": chapter.id,
+                "book_id": chapter.book_id,
+                "order": chapter.order,  # 将order映射为chapter_number
+                "title": chapter.title,
+                "content": chapter.content,
+                "created_at": chapter.created_at,
+                "updated_at": chapter.updated_at
+            })
+
+        # 小说和章节一起返回
+        response_novel = {
+            "id": novel.id,
+            "title": novel.title,
+            "is_top": novel.is_top,
+            "is_archive": novel.is_archive,
+            "description": novel.description,
+            "chapters": response_chapters
         }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start novel generation: {str(e)}"
-        )
+            
+        return response_novel
 
 
