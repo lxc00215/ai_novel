@@ -17,8 +17,8 @@ export default function WorksContainer() {
 
   const router = useRouter();
   const [works, setWorks] = useState<Novel[]>([]);
-  const [archive_works,setAchiveWorks] = useState<Novel[]>([])
-  const [isLoading,setIsLoading] = useState(false)
+  const [archive_works, setAchiveWorks] = useState<Novel[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 跟踪当前激活的标签
   const [activeTab, setActiveTab] = useState("works");
@@ -39,27 +39,23 @@ export default function WorksContainer() {
   // 处理创建作品提交
   const handleCreateSubmit = async (title: string, description: string) => {
     // 创建新作品并添加到列表
-    const newWork = await apiService.novels.create(title, description)
-    console.log(JSON.stringify(newWork))
-    if(newWork){  
-        //跳转页面
-        console.log(newWork)
-        router.push(`/dashboard/writing/${newWork.id}`)
+    const newWork = await apiService.novels.create(title, description);
+    console.log(JSON.stringify(newWork));
+    if(newWork){
+        // 跳转页面
+        console.log(newWork);
+        router.push(`/dashboard/writing/${newWork.id}`);
     }
   };
 
-
-//   获取作品数据
-
-const fetchData = async () => {
+  // 获取作品数据
+  const fetchData = async () => {
     setIsLoading(true);
     try {
       const response = await apiService.novels.getNovel("4");
-      
       if(response) {
         const normalWorks: Novel[] = [];
         const archivedWorks: Novel[] = [];
-        
         response.forEach((item: Novel) => {
           if(item.is_archive) {
             archivedWorks.push(item);
@@ -78,8 +74,8 @@ const fetchData = async () => {
     }
   };
 
-// 归档动作发出执行的方法
-const handleArchive = async (id: string, isArchive: boolean) => {
+  // 归档动作发出执行的方法
+  const handleArchive = async (id: string, isArchive: boolean) => {
     try {
       const response = await apiService.novels.updateNovel(id, {is_archive: isArchive});
       
@@ -99,20 +95,79 @@ const handleArchive = async (id: string, isArchive: boolean) => {
     }
   };
 
+  // 处理作品删除
+  const handleDelete = async (id: string) => {
+    try {
+      await apiService.novels.deleteNovel(id);
+      // 删除成功后从列表中移除
+      setWorks(prev => prev.filter(item => item.id !== id));
+      setAchiveWorks(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error("删除作品失败:", error);
+    }
+  };
 
-useEffect(()=>{
-    fetchData()
-},[])
+  // 处理作品更新
+  const handleUpdate = async (id: string, title: string, description: string) => {
+    try {
+      const response = await apiService.novels.updateNovel(id, {title, description});
+      
+      if(response && response.data) {
+        // 更新作品列表中的作品信息
+        setWorks(prev => prev.map(item => 
+          item.id === id ? {...item, title, description} : item
+        ));
+        
+        // 更新归档列表中的作品信息
+        setAchiveWorks(prev => prev.map(item => 
+          item.id === id ? {...item, title, description} : item
+        ));
+      }
+    } catch (error) {
+      console.error("更新作品信息失败:", error);
+    }
+  };
+
+  // 对作品进行排序的函数：置顶的排在前面，相同置顶状态下按更新时间倒序排列
+  const sortWorks = (items: Novel[]) => {
+    return [...items].sort((a, b) => {
+      // 首先按置顶状态排序
+      if (a.is_top && !b.is_top) return -1;
+      if (!a.is_top && b.is_top) return 1;
+      
+      // 置顶状态相同时，按更新时间排序（假设有updated_at字段，如果没有可以用created_at）
+      const aDate = a.updated_at ? new Date(a.updated_at) : new Date(a.created_at);
+      const bDate = b.updated_at ? new Date(b.updated_at) : new Date(b.created_at);
+      
+      // 降序排列，最新的在前面
+      return bDate.getTime() - aDate.getTime();
+    });
+  };
+
+  // 获取排序后的作品列表
+  const getSortedWorks = () => {
+    return sortWorks(works);
+  };
+
+  // 获取排序后的归档作品列表
+  const getSortedArchiveWorks = () => {
+    return sortWorks(archive_works);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <div className="container mx-auto py-8 px-4">
       <Tabs defaultValue="works" onValueChange={handleTabChange} className="w-full">
-        <div className="bg-black rounded-lg shadow-sm mb-8">
-          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-black-50 rounded-lg">
+        <div className="bg-background rounded-lg shadow-sm mb-8">
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-background rounded-lg">
             <TabsTrigger 
               value="works" 
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
                 activeTab === "works" 
-                  ? "bg-black shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  ? "bg-background shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -122,10 +177,9 @@ useEffect(()=>{
               value="published" 
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
                 activeTab === "published" 
-                  ? "bg-black shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  ? "bg-background shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
                   : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
+              }`}>
               已归档
             </TabsTrigger>
             <TabsTrigger 
@@ -152,30 +206,27 @@ useEffect(()=>{
           <>
             <TabsContent value="works" className="mt-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {/* 新建作品卡片 */}
+                {/* 新建作品卡片始终在第一位 */}
                 <div onClick={openCreateDialog} className="h-full">
                   <CreateWorkCard />
                 </div>
-                
-                {/* 用户作品列表 */}
-                {works.length > 0 ? (
-                  works.map((work, index) => (
-                    <div 
-                      key={work.id} 
-                      className="h-full"
-                      // 设置较高的z-index来确保下拉菜单不会被其他卡片遮挡
-                      style={{ zIndex: works.length - index }}
-                    >
-                      <WorkCard key={work.id} work={work} handleArchive={handleArchive} />
-                    </div>
-                  ))
-                ) : (
-                  works.length === 0 && !isLoading && (
-                    <div className="col-span-full">
-                      <EmptyState message="暂无作品，点击左侧卡片创建你的第一个作品吧！" />
-                    </div>
-                  )
-                )}
+
+                {/* 排序后的用户作品列表 */}
+                {getSortedWorks().map((work, index) => (
+                  <div 
+                    key={work.id} 
+                    className="h-full"
+                    // 设置较高的z-index来确保下拉菜单不会被其他卡片遮挡
+                    style={{ zIndex: works.length - index }}
+                  >
+                    <WorkCard 
+                      work={work} 
+                      handleArchive={handleArchive}
+                      onDelete={handleDelete}
+                      onUpdate={handleUpdate}
+                    />
+                  </div>
+                ))}
               </div>
             </TabsContent>
             
@@ -184,13 +235,18 @@ useEffect(()=>{
                 <EmptyState message="暂无已归档作品" />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {archive_works.map((work, index) => (
+                  {getSortedArchiveWorks().map((work, index) => (
                     <div 
                       key={work.id} 
                       className="h-full"
                       style={{ zIndex: archive_works.length - index }}
                     >
-                      <WorkCard work={work} handleArchive={handleArchive} />
+                      <WorkCard 
+                        work={work} 
+                        handleArchive={handleArchive}
+                        onDelete={handleDelete}
+                        onUpdate={handleUpdate}
+                      />
                     </div>
                   ))}
                 </div>

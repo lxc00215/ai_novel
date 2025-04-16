@@ -7,8 +7,8 @@ import AIPanel from '@/app/dashboard/writing/components/AIPanel';
 import Toolbar from '@/app/dashboard/writing/components/Toolbar';
 import { cn } from '@/lib/utils';
 import { Chapter, Novel } from '@/app/services/types';
-import { checkPrimeSync } from 'crypto';
 import apiService from '@/app/services/api';
+import {toast} from 'sonner'
 
 
 
@@ -21,7 +21,6 @@ export default function WritingInterface({ novel ,setNovel}: WritingInterfacePro
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 //   const [bookId, setBookId] = useState(novel[0].book_id);
   const [searchText, setSearchText] = useState('');
   const [replaceText, setReplaceText] = useState('');
@@ -61,8 +60,6 @@ export default function WritingInterface({ novel ,setNovel}: WritingInterfacePro
   };
 
   const editorRef = useRef<HTMLDivElement>(null);
-
-
   useEffect(() => {
     // 如果novel.chapters不存在或为空，初始化一个默认章节
     if (!novel.chapters || novel.chapters.length === 0) {
@@ -79,17 +76,10 @@ export default function WritingInterface({ novel ,setNovel}: WritingInterfacePro
         ...novel,
         chapters: [defaultChapter]
       });
-      console.log("到这里来1");
-
-      
       setCurrentOrder(0);
-      console.log("到这里来2 "+currentOrder);
     } else if (currentOrder === 0 && novel.chapters.length > 0) {
       // 如果还没有选中章节但有章节列表，选中第一个
-      console.log("到这里来3");
-      
       console.log(novel.chapters[0].order);
-      console.log("到这里来4 "+currentOrder);
       console.log(JSON.stringify(novel.chapters[0]));
       setCurrentOrder(0);
     }
@@ -97,16 +87,12 @@ export default function WritingInterface({ novel ,setNovel}: WritingInterfacePro
 
 
   useEffect(() => {
-
- 
     const handleDrag = (e: MouseEvent) => {
       if (!isDragging) return;
-      
       // 计算窗口右边缘到鼠标的距离
       const windowWidth = window.innerWidth;
       const mouseX = e.clientX;
       const newWidth = windowWidth - mouseX;
-      
       // 设置宽度限制：最小200px，最大50%的屏幕宽度
       const minWidth = 200;
       const maxWidth = windowWidth * 0.5;
@@ -169,11 +155,11 @@ const getCurrentChapter = (): Chapter => {
 
   // Editor functions
   const handleSave = () => {
-    console.log('Saving document');
     // 实际项目中这里会保存到数据库或文件系统
     saveChapters();
 
-    alert('文档已保存！');
+    toast.success("保存成功");
+
   };
 
   const handleUndo = () => {
@@ -312,8 +298,6 @@ const getCurrentChapter = (): Chapter => {
         ? { ...chapter, content: newContent } 
         : chapter
     )});
-
-    console.log("我执行了"+ JSON.stringify(novel));
   };
 
   const saveChapters = async () => {
@@ -373,14 +357,12 @@ const getCurrentChapter = (): Chapter => {
         prevSearchMatch: handlePrevSearchMatch
       };
     }
-    
     return () => {
       delete window.toolbarActions;
     };
   }, []);
-
   return (
-    <div className={`flex h-screen bg-white text-gray-900 overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
+    <div className={`flex h-screen bg-background text-foreground overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
       {/* Left Sidebar - novel */}
       <div className={`border-r transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
         <Sidebar 
@@ -408,11 +390,8 @@ const getCurrentChapter = (): Chapter => {
           openCharacterLibrary={openCharacterLibrary}
           openTermLibrary={openTermLibrary}
           className="z-50"
-
         />
         
-  
-
       {/* Right AI Panel */}
       <div className="flex flex-1 overflow-hidden">
           {/* Editor */}
@@ -460,7 +439,6 @@ const getCurrentChapter = (): Chapter => {
 
   );
 }
-
 // 类型扩展 - 为全局window对象添加工具栏方法
 declare global {
   interface Window {

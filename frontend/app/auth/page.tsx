@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import apiService from '../services/api';
+import Logo from '../components/logo';
 
 interface PasswordStrength {
   value: number;
@@ -136,7 +137,7 @@ const AuthPage = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       {/* 左侧创意展示区 */}
-      <div className="w-full md:w-3/5 bg-gradient-to-br from-blue-900 to-purple-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
+      <div className="w-full md:w-3/5 bg-gradient-to-br from-blue-900 to-red-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,29 +178,36 @@ const AuthPage = () => {
       </div>
       
       {/* 右侧表单区 */}
-      <div className="w-full md:w-2/5 bg-gray-50 p-8 flex flex-col justify-center items-center">
+      <div className="w-full md:w-2/5 bg-background p-8 flex flex-col justify-center items-center">
         <Link href="/">
           <div className="mb-6 flex items-center">
-            <img src="https://via.placeholder.com/40x40" alt="Logo" className="h-10 w-10 mr-2" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">创作空间</span>
+            <Logo isCollapsed={false} />
           </div>
         </Link>
         
-        <Card className="w-full max-w-md p-6 shadow-lg border-t-4 border-purple-700 bg-white bg-opacity-60 backdrop-filter backdrop-blur-sm">
+        <Card className="w-full max-w-md p-6 shadow-lg bg-background bg-opacity-60 backdrop-filter backdrop-blur-sm">
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">登录</TabsTrigger>
-              <TabsTrigger value="register">注册</TabsTrigger>
+              <TabsTrigger  className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "login" 
+                  ? "bg-secondary shadow-sm p-b-3 after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`} value="login">登录</TabsTrigger>
+              <TabsTrigger className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "register" 
+                  ? "bg-secondary shadow-sm  after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`} value="register">注册</TabsTrigger>
             </TabsList>
             
             {/* 登录表单 */}
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">欢迎回到创作空间</h2>
+                <h2 className="text-2xl font-bold text-center text-foreground mb-6">欢迎回到创作空间</h2>
                 
                 <div className="space-y-2">
                   <Label htmlFor="login-username" className="flex items-center">
-                    <FaUser className="mr-2 text-purple-700" size={14} />
+                    <FaUser className="mr-2 text-blue-700" size={14} />
                     用户名/邮箱
                   </Label>
                   <Input 
@@ -208,14 +216,14 @@ const AuthPage = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="输入您的用户名或邮箱" 
-                    className="focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="login-password" className="flex items-center">
-                    <FaLock className="mr-2 text-purple-700" size={14} />
+                    <FaLock className="mr-2 text-red-700" size={14} />
                     密码
                   </Label>
                   <Input 
@@ -224,7 +232,7 @@ const AuthPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="输入您的密码" 
-                    className="focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="focus:ring-2 focus:ring-red-100 transition-all"
                     required
                   />
                 </div>
@@ -238,35 +246,19 @@ const AuthPage = () => {
                     />
                     <Label htmlFor="remember-me" className="ml-2 text-sm">记住我</Label>
                   </div>
-                  <Link href="/forgot-password" className="text-sm text-purple-700 hover:underline">
+                  <Link href="/forgot-password" className="text-sm text-red-700 hover:underline">
                     忘记密码?
                   </Link>
                 </div>
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-800 to-purple-800 hover:shadow-lg transition-all"
+                  className="w-full hover:cursor-pointer bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg transition-all"
                 >
                   登录
                 </Button>
                 
-                <div className="relative flex items-center justify-center my-4">
-                  <div className="absolute border-t border-gray-300 w-full"></div>
-                  <span className="relative px-2 bg-white text-sm text-gray-500">或使用社交媒体账号</span>
-                </div>
                 
-                <div className="flex justify-center space-x-4">
-                  <button type="button" className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600"
-                   onClick={handleGuestAccess}>
-                    <FaWeixin size={20} />
-                  </button>
-                  <button type="button" className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600" onClick={handleGuestAccess}>
-                    <FaQq size={20} />
-                  </button>
-                  <button type="button" className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600" onClick={handleGuestAccess}>
-                    <SiSinaweibo size={20} />
-                  </button>
-                </div>
               </form>
               
               
@@ -275,11 +267,11 @@ const AuthPage = () => {
             {/* 注册表单 */}
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">加入AI创作新时代</h2>
+                <h2 className="text-2xl font-bold text-center text-foreground mb-6">加入AI创作新时代</h2>
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-username" className="flex items-center">
-                    <FaUser className="mr-2 text-purple-700" size={14} />
+                    <FaUser className="mr-2 text-blue-700" size={14} />
                     用户名
                   </Label>
                   <div className="relative">
@@ -289,7 +281,7 @@ const AuthPage = () => {
                       placeholder="创建一个独特的作家身份" 
                       value={username}
                       onChange={handleUsernameChange}
-                      className="focus:ring-2 focus:ring-purple-500 transition-all pr-10"
+                      className="focus:ring-2 focus:ring-blue-100 transition-all pr-10"
                       required
                     />
                     {usernameAvailable !== null && (
@@ -303,13 +295,13 @@ const AuthPage = () => {
                     )}
                   </div>
                   {username && usernameAvailable === false && (
-                    <p className="text-xs text-red-500 mt-1">该用户名已被使用</p>
+                    <p className="text-xs text-blue-500 mt-1">该用户名已被使用</p>
                   )}
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-email" className="flex items-center">
-                    <FaEnvelope className="mr-2 text-purple-700" size={14} />
+                    <FaEnvelope className="mr-2 text-blue-700" size={14} />
                     邮箱
                   </Label>
                   <Input 
@@ -318,14 +310,14 @@ const AuthPage = () => {
                     placeholder="用于账号激活和密码找回" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-password" className="flex items-center">
-                    <FaLock className="mr-2 text-purple-700" size={14} />
+                    <FaLock className="mr-2 text-blue-700" size={14} />
                     密码
                   </Label>
                   <Input 
@@ -334,7 +326,7 @@ const AuthPage = () => {
                     placeholder="至少8个字符，包含字母和数字" 
                     value={password}
                     onChange={handlePasswordChange}
-                    className="focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                   {password && (
@@ -356,7 +348,7 @@ const AuthPage = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password" className="flex items-center">
-                    <FaLock className="mr-2 text-purple-700" size={14} />
+                    <FaLock className="mr-2 text-blue-700" size={14} />
                     确认密码
                   </Label>
                   <Input 
@@ -365,7 +357,7 @@ const AuthPage = () => {
                     placeholder="再次输入您的密码" 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                   {confirmPassword && password !== confirmPassword && (
@@ -377,15 +369,15 @@ const AuthPage = () => {
                   <Checkbox id="terms" required />
                   <Label htmlFor="terms" className="text-xs">
                     注册即表示您同意我们的
-                    <Link href="/terms" className="text-purple-700 hover:underline">服务条款</Link>
+                    <Link href="/terms" className="text-blue-700 hover:underline">服务条款</Link>
                     和
-                    <Link href="/privacy" className="text-purple-700 hover:underline">隐私政策</Link>
+                    <Link href="/privacy" className="text-blue-700 hover:underline">隐私政策</Link>
                   </Label>
                 </div>
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-800 to-purple-800 hover:shadow-lg transition-all"
+                  className="w-full bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg transition-all"
                   disabled={!username || !email || !password || password !== confirmPassword || !usernameAvailable}
                 >
                   开始创作
@@ -397,7 +389,7 @@ const AuthPage = () => {
                   已有账号? 
                   <button 
                     onClick={() => setActiveTab("login")}
-                    className="ml-1 text-purple-700 hover:underline font-medium"
+                    className="ml-1 text-blue-700 hover:underline font-medium"
                   >
                     立即登录
                   </button>
@@ -420,7 +412,7 @@ const AuthPage = () => {
           
           <Button 
             variant="link" 
-            className="text-xs text-gray-500"
+            className="text-xs hover:cursor-pointer text-gray-500"
             onClick={() => document.getElementById('why-register')?.classList.toggle('hidden')}
           >
             为什么需要注册?

@@ -463,6 +463,14 @@ const apiService = {
         })
     },
 
+    delete:async(id:string)=>{
+      return request(`/novels/${id}/delete`,{
+        method:'POST',
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      })
+    },
     updateNovel:async(id:string,data:Partial<Novel>):Promise<ApiResponse<Novel>>=>{
       return request(`/novels/${id}/updateNovel`,{
         method:'PUT',
@@ -561,7 +569,6 @@ const apiService = {
     }
   }
   
-  // 可以继续添加更多 API 分组...
 };
 
 export default apiService; 

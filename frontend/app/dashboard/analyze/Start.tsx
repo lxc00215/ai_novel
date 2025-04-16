@@ -12,15 +12,14 @@ export default function Home({ onToggleView }: StartProps) {
   const hasHistory = true; // 从后端获取历史数据的状态
   
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6 relative">
-      {/* 右上角历史按钮 */}
+    <main className="min-h-screen bg-background p-6 relative">
       <div className="absolute top-4 right-4">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={onToggleView}
-          className="rounded-full hover:bg-white/20 transition-colors"
-        >
+          className="rounded-full bg-background transition-colors"
+>
           <History className="h-5 w-5" />
         </Button>
       </div>

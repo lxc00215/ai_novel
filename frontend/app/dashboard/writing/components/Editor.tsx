@@ -49,7 +49,8 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
         let content = "";
         for await (const chunk of stream.getStream()) {
           content += chunk;
-          setLocalContent(localContent.replace(selection.text,content));
+          // 在高亮的后面加 文本
+          setContent(ex)
         }
     }
 

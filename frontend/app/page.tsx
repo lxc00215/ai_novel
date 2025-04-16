@@ -14,16 +14,17 @@ import {
   Sparkles, 
   PenTool, 
   ChevronRight, 
-  Moon, 
-  Sun, 
   Menu, 
   X 
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import Logo from './components/logo';
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("novels");
   
   // 监听滚动事件
   useEffect(() => {
@@ -58,21 +59,17 @@ export default function HomePage() {
 
   return (
     <div className={cn(
-      "min-h-screen w-full transition-colors duration-300",
-      darkMode ? "bg-gray-900 text-gray-100" : "bg-[#f5f5dc] text-gray-800"
+      "min-h-screen w-full transition-colors duration-300 bg-background text-foreground",
     )}>
       {/* 导航栏 */}
       <header className={cn(
-        "fixed top-0 left-0 w-full z-50 transition-all duration-300",
+        "fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-background text-foreground",
         scrollY > 50 ? "bg-opacity-95" : "bg-opacity-70",
-        darkMode ? "bg-gray-900" : "bg-[#f5f5dc]"
       )}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] flex items-center justify-center">
-              <PenTool className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold font-serif">AI文学工坊</span>
+
+            <Logo isCollapsed={false} />
           </div>
           
           {/* 桌面导航 */}
@@ -85,20 +82,16 @@ export default function HomePage() {
             <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl">
               开始创作
             </Button>
-            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+            <ThemeToggle />
             <Link href="/auth" className="hover:text-[#7b1fa2] transition-colors">登录</Link>
           </nav>
           
           {/* 移动端菜单按钮 */}
           <div className="md:hidden flex items-center">
-            <button onClick={toggleDarkMode} className="p-2 mr-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+            <ThemeToggle/>
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-2 rounded-md hover:bg-background"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -111,16 +104,15 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "md:hidden py-4 px-4 shadow-lg",
-              darkMode ? "bg-gray-800" : "bg-white"
+              "md:hidden py-4 px-4 shadow-lg bg-background"
             )}
           >
             <nav className="flex flex-col space-y-3">
-              <Link href="#features" className="py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">AI拆书</Link>
-              <Link href="#features" className="py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">小说生成</Link>
-              <Link href="#features" className="py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">灵感创作</Link>
-              <Link href="#" className="py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">个人中心</Link>
-              <Link href="#faq" className="py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">帮助中心</Link>
+              <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">AI拆书</Link>
+              <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">小说生成</Link>
+              <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">灵感创作</Link>
+              <Link href="#" className="py-2 px-4 hover:bg-background rounded-md">个人中心</Link>
+              <Link href="#faq" className="py-2 px-4 hover:bg-background rounded-md">帮助中心</Link>
               <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white w-full">
                 开始创作
               </Button>
@@ -138,7 +130,7 @@ export default function HomePage() {
               {Array(100).fill(0).map((_, i) => (
                 <div key={i} className="flex items-center justify-center">
                   <div 
-                    className={`w-1 h-1 rounded-full bg-[#ffd700] opacity-${Math.random() > 0.7 ? '100' : '0'}`}
+                    className={`w-1 h-1 rounded-full bg-background opacity-${Math.random() > 0.7 ? '100' : '0'}`}
                     style={{animation: `pulse ${2 + Math.random() * 3}s infinite`}}
                   ></div>
                 </div>
@@ -154,7 +146,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
               >
-                <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight bg-clip-text text-transparent bg-gradient-to-r from-[#1a237e] to-[#7b1fa2]">
+                <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground">
                   让AI点亮你的创作灵感
                 </h1>
                 <p className="mt-6 text-lg md:text-xl opacity-90">
@@ -180,7 +172,7 @@ export default function HomePage() {
                 <div className="relative w-full h-80 perspective-1000">
                   <div className="absolute w-full h-full book-container">
                     <div className="book w-full h-full bg-gradient-to-b from-[#1a237e] to-[#7b1fa2] rounded-lg shadow-2xl transform rotate-y-10 rotate-z-5 relative">
-                      <div className="absolute inset-2 bg-white dark:bg-gray-800 rounded-sm p-6 overflow-hidden">
+                      <div className="absolute inset-2 bg-background rounded-sm p-6 overflow-hidden">
                         <div className="h-full flex flex-col">
                           <div className="flex-1">
                             <div className="w-20 h-1 bg-[#ffd700] mb-4"></div>
@@ -199,7 +191,7 @@ export default function HomePage() {
                           </div>
                           <button 
                             onClick={changeStoryStarter}
-                            className="text-xs text-[#7b1fa2] hover:underline self-end flex items-center"
+                            className="text-xs text-foreground hover:underline hover:cursor-pointer self-end flex items-center"
                           >
                             换一个开头 <Sparkles className="ml-1 w-3 h-3" />
                           </button>
@@ -231,20 +223,9 @@ export default function HomePage() {
         
         {/* 功能展示区 */}
         <section id="features" className="py-20 relative">
-          <div 
-            className="absolute inset-0 opacity-50 z-0"
-            style={{
-              backgroundImage: `linear-gradient(30deg, ${darkMode ? '#111' : '#f5f5dc'} 12%, transparent 12.5%, transparent 87%, ${darkMode ? '#111' : '#f5f5dc'} 87.5%, ${darkMode ? '#111' : '#f5f5dc'}), 
-              linear-gradient(150deg, ${darkMode ? '#111' : '#f5f5dc'} 12%, transparent 12.5%, transparent 87%, ${darkMode ? '#111' : '#f5f5dc'} 87.5%, ${darkMode ? '#111' : '#f5f5dc'}), 
-              linear-gradient(30deg, ${darkMode ? '#111' : '#f5f5dc'} 12%, transparent 12.5%, transparent 87%, ${darkMode ? '#111' : '#f5f5dc'} 87.5%, ${darkMode ? '#111' : '#f5f5dc'}), 
-              linear-gradient(150deg, ${darkMode ? '#111' : '#f5f5dc'} 12%, transparent 12.5%, transparent 87%, ${darkMode ? '#111' : '#f5f5dc'} 87.5%, ${darkMode ? '#111' : '#f5f5dc'})`,
-              backgroundSize: '80px 140px',
-              backgroundPosition: '0 0, 0 0, 40px 70px, 40px 70px',
-              backgroundColor: darkMode ? '#222' : 'rgba(245, 245, 220, 0.6)'
-            }}
-          ></div>
+        
           
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto bg-background px-4 relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold font-serif">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1a237e] to-[#7b1fa2]">
@@ -286,8 +267,7 @@ export default function HomePage() {
                   whileHover={{ y: -5, transition: { duration: 0.2 } }}
                 >
                   <Card className={cn(
-                    "overflow-hidden h-full border-0 shadow-lg",
-                    darkMode ? "bg-gray-800" : "bg-white"
+                    "overflow-hidden h-full border-0 shadow-lg bg-background",
                   )}>
                     <div className={`h-2 w-full bg-gradient-to-r ${feature.color}`}></div>
                     <CardHeader>
@@ -300,7 +280,7 @@ export default function HomePage() {
                       <p className="opacity-80">{feature.description}</p>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="ghost" className="text-[#7b1fa2] hover:text-[#7b1fa2] hover:bg-[#7b1fa2]/10 p-0">
+                      <Button variant="ghost" className="text-foreground  hover:bg-foreground/10 p-0">
                         了解更多 <ChevronRight className="ml-1 w-4 h-4" />
                       </Button>
                     </CardFooter>
@@ -329,7 +309,7 @@ export default function HomePage() {
               {/* 连接线 */}
               <div className="absolute left-1/2 top-10 bottom-10 w-0.5 bg-gradient-to-b from-[#1a237e] to-[#7b1fa2] hidden md:block"></div>
               
-              <div className="space-y-16 md:space-y-0">
+              <div className="space-y-16  md:space-y-0">
                 {[
                   {
                     icon: <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] flex items-center justify-center text-white text-xl font-bold">1</div>,
@@ -370,8 +350,7 @@ export default function HomePage() {
                       "mb-6 md:mb-0"
                     )}>
                       <Card className={cn(
-                        "w-full md:max-w-xs border-0 shadow-lg",
-                        darkMode ? "bg-gray-800" : "bg-white"
+                        "w-full md:max-w-xs border-0 shadow-lg bg-background",
                       )}>
                         <CardHeader>
                           <div className="mb-4">{step.icon}</div>
@@ -403,8 +382,8 @@ export default function HomePage() {
         {/* 用户作品展示 */}
         <section className="py-20 relative overflow-hidden">
           <div className={cn(
-            "absolute inset-0 z-0",
-            darkMode ? "bg-gray-800/50" : "bg-[#1a237e]/5"
+            "absolute inset-0 z-0 bg-background",
+          
           )}></div>
           
           <div className="container mx-auto px-4 relative z-10">
@@ -415,15 +394,40 @@ export default function HomePage() {
                 </span>
               </h2>
               <p className="mt-4 text-lg opacity-80 max-w-2xl mx-auto">
-                探索使用AI文学工坊创作的精彩作品
+                探索使用NonReal创作的精彩作品
               </p>
             </div>
-            
-            <Tabs defaultValue="novels" className="w-full">
+            {/* 如果选中，加一个下边框为白色 2px 的边框 */}
+            <Tabs defaultValue="novels" className="w-full" onValueChange={setActiveTab}>
               <TabsList className="w-full max-w-md mx-auto grid grid-cols-3">
-                <TabsTrigger value="novels">长篇小说</TabsTrigger>
-                <TabsTrigger value="shorts">短篇故事</TabsTrigger>
-                <TabsTrigger value="poetry">诗歌散文</TabsTrigger>
+              <TabsTrigger 
+              value="novels" 
+              className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "novels" 
+                  ? "bg-secondary shadow-sm  after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              长篇小说
+            </TabsTrigger>
+                <TabsTrigger 
+              value="shorts" 
+              className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "shorts" 
+                  ? "bg-secondary shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              短篇故事</TabsTrigger>
+                <TabsTrigger 
+              value="poetry" 
+              className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "poetry" 
+                  ? "bg-secondary shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              诗歌散文</TabsTrigger>
               </TabsList>
               
               <TabsContent value="novels" className="mt-8">
@@ -484,8 +488,7 @@ export default function HomePage() {
                   {/* 短篇故事展示内容，结构类似长篇小说 */}
                   {[1, 2, 3].map((_, index) => (
                     <Card key={index} className={cn(
-                      "border-0 shadow-lg h-full",
-                      darkMode ? "bg-gray-800" : "bg-white"
+                      "border-0 shadow-lg h-full bg-background",
                     )}>
                       <CardHeader>
                         <CardTitle className="font-serif">午夜来客</CardTitle>
@@ -509,8 +512,7 @@ export default function HomePage() {
                   {/* 诗歌散文展示内容 */}
                   {[1, 2].map((_, index) => (
                     <Card key={index} className={cn(
-                      "border-0 shadow-lg h-full",
-                      darkMode ? "bg-gray-800" : "bg-white"
+                      "border-0 shadow-lg h-full bg-background",
                     )}>
                       <CardHeader>
                         <CardTitle className="font-serif">春日私语</CardTitle>
@@ -535,11 +537,7 @@ export default function HomePage() {
               </TabsContent>
             </Tabs>
             
-            <div className="flex justify-center mt-12">
-              <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white">
-                浏览更多作品
-              </Button>
-            </div>
+       
           </div>
         </section>
         
@@ -572,8 +570,7 @@ export default function HomePage() {
         {/* 常见问题 */}
         <section id="faq" className="py-20 relative">
           <div className={cn(
-            "absolute inset-0 z-0",
-            darkMode ? "bg-gray-800/50" : "bg-[#1a237e]/5"
+            "absolute inset-0 z-0 bg-background",
           )}></div>
           
           <div className="container mx-auto px-4 relative z-10">
@@ -584,7 +581,7 @@ export default function HomePage() {
                 </span>
               </h2>
               <p className="mt-4 text-lg opacity-80 max-w-2xl mx-auto">
-                对AI文学工坊有疑问？这里为您解答
+                对NonReal有疑问？这里为您解答
               </p>
             </div>
             
@@ -619,8 +616,7 @@ export default function HomePage() {
                   viewport={{ once: true }}
                 >
                   <Card className={cn(
-                    "mb-4 border-0 shadow-md",
-                    darkMode ? "bg-gray-800" : "bg-white"
+                    "mb-4 border-0 shadow-md bg-background",
                   )}>
                     <CardHeader>
                       <CardTitle className="text-lg font-medium flex items-center">
@@ -650,8 +646,7 @@ export default function HomePage() {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className={cn(
-              "rounded-xl p-8 relative overflow-hidden shadow-xl",
-              darkMode ? "bg-gray-800" : "bg-white"
+              "rounded-xl p-8 relative overflow-hidden shadow-xl bg-background",
             )}>
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#1a237e] to-[#7b1fa2]"></div>
               <div className="relative z-10">
@@ -662,8 +657,7 @@ export default function HomePage() {
                   </p>
                   
                   <Card className={cn(
-                    "mb-8 border-0",
-                    darkMode ? "bg-gray-700" : "bg-gray-50"
+                    "mb-8 border-0 bg-background",
                   )}>
                     <CardContent className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -696,8 +690,8 @@ export default function HomePage() {
         </section>
         
         {/* 行动召唤 */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#1a237e] to-[#7b1fa2] opacity-90"></div>
+        <section className="py-20  relative overflow-hidden">
+          <div className="absolute  inset-0 z-0  opacity-90"></div>
           <div className="absolute inset-0 z-0 opacity-20">
             {Array(50).fill(0).map((_, i) => (
               <div 
@@ -715,10 +709,10 @@ export default function HomePage() {
             ))}
           </div>
           
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl mx-auto text-center text-white">
+          <div className="container  mx-auto px-4 relative z-10">
+            <div className="max-w-3xl  mx-auto text-center text-white">
               <motion.h2 
-                className="text-3xl md:text-4xl lg:text-5xl font-bold font-serif mb-6"
+                className="text-3xl md:text-4xl lg:text-5xlfont-bold font-serif mb-6"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -733,7 +727,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 viewport={{ once: true }}
               >
-                无论你是畅销作家还是初次创作，AI文学工坊都能成为你的得力助手
+                无论你是畅销作家还是初次创作，NonReal都能成为你的得力助手
               </motion.p>
               
               <motion.div
@@ -757,17 +751,14 @@ export default function HomePage() {
       
       {/* 底部 */}
       <footer className={cn(
-        "py-12 border-t",
-        darkMode ? "bg-gray-900 border-gray-800" : "bg-[#f5f5dc] border-gray-200"
+        "py-12 border-t bg-background",
       )}>
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] flex items-center justify-center">
-                  <PenTool className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-bold font-serif">AI文学工坊</span>
+              
+                <Logo isCollapsed={false} />
               </div>
               <p className="opacity-70 mb-4">
                 专业的AI小说创作平台，助你轻松完成从灵感到成书的全过程
@@ -816,7 +807,7 @@ export default function HomePage() {
           </div>
           
           <div className="pt-8 border-t border-gray-200 dark:border-gray-800 text-center opacity-70 text-sm">
-            <p>© {new Date().getFullYear()} AI文学工坊 版权所有</p>
+            <p>© {new Date().getFullYear()} NonReal 版权所有</p>
           </div>
         </div>
       </footer>

@@ -24,6 +24,7 @@ import {
   IoChevronBackOutline,
   IoChevronForwardOutline
 } from 'react-icons/io5';
+import Logo from '../components/logo';
 
 type NavItem = {
   label: string;
@@ -79,26 +80,7 @@ export function EnhancedSidebar() {
       transition={{ duration: 0.2 }}
     >
       <div className="flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="relative h-6 w-6 flex-shrink-0">
-            <div className="absolute h-4 w-4 rounded-full bg-blue-600 left-0 top-1"></div>
-            <div className="absolute h-4 w-4 rounded-full bg-red-600 left-2 top-1"></div>
-          </div>
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center overflow-hidden"
-              >
-                <span className="text-xl font-semibold tracking-tight whitespace-nowrap">MidReal</span>
-                <span className="text-xs align-top">TL</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <Logo isCollapsed={isCollapsed} />
         <Button 
           variant="ghost" 
           size="icon" 

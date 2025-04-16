@@ -1,38 +1,49 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import apiService from "@/app/services/api";
 
 interface CreateWorkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (title: string, description: string) => void;
+  // 新增的属性，用于编辑模式
+  initialTitle?: string;
+  initialDescription?: string;
+  dialogTitle?: string;
+  submitButtonText?: string;
 }
 
-export default function CreateWorkDialog({ open, onOpenChange, onSubmit }: CreateWorkDialogProps) {
-  const [title, setTitle] = useState("新建作品");
-  const [description, setDescription] = useState("");
-  const [titleCount, setTitleCount] = useState(4);
-  const [descriptionCount, setDescriptionCount] = useState(0);
+export default function CreateWorkDialog({ 
+  open, 
+  onOpenChange, 
+  onSubmit,
+  initialTitle = "新建作品",
+  initialDescription = "",
+  dialogTitle = "创建作品后可使用AI功能",
+  submitButtonText = "提交"
+}: CreateWorkDialogProps) {
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
+  const [titleCount, setTitleCount] = useState(initialTitle.length);
+  const [descriptionCount, setDescriptionCount] = useState(initialDescription.length);
   
   // 最大字符限制
   const MAX_TITLE_LENGTH = 30;
   const MAX_DESCRIPTION_LENGTH = 500;
   
-  // 重置表单
+  // 重置表单或设置初始值
   useEffect(() => {
     if (open) {
-      setTitle("新建作品");
-      setDescription("");
-      setTitleCount(4);
-      setDescriptionCount(0);
+      setTitle(initialTitle);
+      setDescription(initialDescription);
+      setTitleCount(initialTitle.length);
+      setDescriptionCount(initialDescription.length);
     }
-  }, [open]);
+  }, [open, initialTitle, initialDescription]);
   
   // 处理标题变化，更新字符计数
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,19 +66,17 @@ export default function CreateWorkDialog({ open, onOpenChange, onSubmit }: Creat
   // 处理表单提交
   const handleSubmit = async () => {
     if (title.trim()) {
-        onSubmit(title, description);
-        onOpenChange(false);
-      
+      onSubmit(title, description);
+      onOpenChange(false);
     }
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-background">
         <DialogHeader className="flex justify-between items-center">
-          <DialogTitle className="text-lg">创建作品后可使用AI功能</DialogTitle>
-          <DialogClose className="h-6 w-6 rounded-sm opacity-70 hover:opacity-100">
-          </DialogClose>
+          <DialogTitle className="text-lg">{dialogTitle}</DialogTitle>
+          <DialogClose className="h-6 w-6 hover:cursor-pointer opacity-70" />
         </DialogHeader>
         
         <div className="space-y-4 py-4">
@@ -113,14 +122,14 @@ export default function CreateWorkDialog({ open, onOpenChange, onSubmit }: Creat
           </div>
         </div>
         
-        <div className="flex justify-end">
+        <DialogFooter>
           <Button 
             onClick={handleSubmit} 
             className="bg-emerald-500 hover:bg-emerald-600 text-white"
           >
-            提交
+            {submitButtonText}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

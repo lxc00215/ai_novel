@@ -9,9 +9,7 @@ import { useEffect, useState, use } from "react";
 export default function WritingPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
     const id = resolvedParams.id;
-
     //获取ID为id的小说
-
     const [novel, setNovel] = useState<Novel>({
         id: '',
         title: '',
@@ -21,36 +19,21 @@ export default function WritingPage({ params }: { params: Promise<{ id: string }
         is_top: false,
         is_archive: false
     })
-
-
-
-
-
-
-
-
     useEffect( () => {
-
        async function fetchData() {
-        
         try{
             const res = await apiService.novels.getChapters(id)
             if(res){
-                console.log("我执行了")
                 console.log(JSON.stringify(res))
                 setNovel(res)
             }
-
         }catch(e){
-            console.log("出现错误:"+ JSON.stringify(e))
         }
        }
 
        fetchData();
   
     },[id])
-
-
     return (
         <WritingInterface 
         setNovel={setNovel}

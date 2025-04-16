@@ -162,19 +162,18 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
 
 
   return (
-    <div className="flex flex-col min-h-full bg-black text-white font-sans w-full h-full overflow-y-auto" style={{ fontFamily: "'Google Sans', 'Roboto', sans-serif" }}>
+    <div className="flex flex-col min-h-full bg-background text-foreground font-sans w-full h-full overflow-y-auto" style={{ fontFamily: "'Google Sans', 'Roboto', sans-serif" }}>
       {/* Header */}
       <div className="flex items-center p-4">
        
-        <h1 className="text-xl font-medium mx-auto">
+        <h1 className="text-xl text-foreground  mx-auto">
           {page === 'input' ? '生成你的 AI 故事' : ''}
         </h1>
         {page === 'input' && (
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-white"
-            
+            className="text-foreground"
               onClick={onToggleView}
           >
             <History size={20} />
