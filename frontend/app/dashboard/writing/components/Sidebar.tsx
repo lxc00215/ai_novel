@@ -51,13 +51,11 @@ export default function Sidebar({
           {sortedChapters.map((chapter) => (
             <li 
               key={chapter.id}
-              className={`flex items-center justify-between p-2 rounded cursor-pointer ${
+              className={`flex items-center justify-between p-2 rounded hover:cursor-pointer ${
                 currentOrder === chapter.order ? 'bg-blue-100' : 'hover:bg-gray-100'
               }`}
               onClick={() => {
-                // console.log("我执行了");
                 setCurrentOrder(chapter.order);
-                console.log("我执行了"+ currentOrder);
               }}
             >
               <span className="truncate flex-1">第{chapter.order + 1}章 {chapter.title}</span>

@@ -155,7 +155,6 @@ export default function Toolbar({
     {icon: <Menu className="h-4 w-4" />,position: MenuTooltipPosition,ref: MenuButtonRef, tooltip: "菜单", onClick: toggleSidebar, },
     {icon: <Maximize2 className="h-4 w-4" />,position: MaximizeTooltipPosition,ref: MaximizeButtonRef, tooltip: "沉浸模式", onClick: toggleFullscreen},
     {icon: <BookOpen className="h-4 w-4" />,position: BookOpenTooltipPosition,ref: BookOpenButtonRef, tooltip: "备忘录", onClick: openNotes},
-    
   ]
 
   const firstRow = ()=>{
@@ -195,8 +194,7 @@ export default function Toolbar({
     className={`h-8 w-8 transition-colors ${
       hoveredButton === button.tooltip ? 'border-blue-500 text-blue-500' : ''
     }`}
-    onClick={button.onClick}
-  >
+    onClick={button.onClick}>
     {button.icon}
   </Button>
   
@@ -261,7 +259,7 @@ export default function Toolbar({
         <div 
           ref={buttonRef}
           key={button.tooltip} 
-          className="relative hover:cursor-pointer"
+          className="relative text-foreground hover:cursor-pointer"
           onMouseEnter={() => setHoveredButton(button.tooltip)}
           onMouseLeave={() => setHoveredButton(null)}
         >
@@ -378,18 +376,13 @@ export default function Toolbar({
   };
   
   return (
-    <div className={`border-b bg-white  sticky top-0 ${className}`}>
+      <div className={`border-b bg-background  sticky top-0 ${className}`}>
       {/* First Row */}
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-3">
-       
-        
-          
          {firstRow()}
         </div>
-        
-        <div className="text-lg font-medium">{book_title}</div>
-        
+        <div className="text-lg  font-medium">{book_title}</div>
         <div className="flex items-center gap-3">
           <TooltipProvider>
             <Tooltip>
@@ -446,7 +439,7 @@ export default function Toolbar({
 
       {/* Search Input */}
       {isSearchActive && (
-        <div className="flex items-center px-3 py-2 gap-2 border-t bg-gray-50">
+        <div className="flex items-center px-3 py-2 gap-2 border-t bg-background">
           <div className="flex-1 flex items-center gap-2">
             <div className="flex-1">
               <Input 

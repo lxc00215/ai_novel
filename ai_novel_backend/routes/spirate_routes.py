@@ -197,6 +197,10 @@ async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
     return new
 
 
+
+
+
+
 # 根据用户id获取spirate
 @router.get("/user/{user_id}")
 async def get_spirate_by_user_id(user_id: int,

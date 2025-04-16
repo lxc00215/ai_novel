@@ -146,11 +146,7 @@ const ChatInterface = () => {
         console.log("currentSessionID",CurrentSessionID);
         setMessages(existingSession.messages);
       }
-
-    
-    
     setCurrentSessionID(existingSession?.session.id);
-    // await fetchChatHistory(character.id);
   };
 
   // Scroll to bottom when messages change
@@ -167,10 +163,10 @@ const ChatInterface = () => {
     return (
       <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
         {avatar ? (
-          <img src={avatar} alt={name} className="h-full w-full object-cover rounded-full" />
+          <img src={avatar??''} alt={name} className="h-full w-full object-cover rounded-full" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
-            {name.charAt(0)}
+            {name??'L'.charAt(0)}
           </div>
         )}
       </Avatar>

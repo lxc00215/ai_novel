@@ -226,7 +226,6 @@ async def transfer_image(image_url: str):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-# AI扩写
 
 @router.post("/expand")
 async def ai_expand(request: AIExpandRequest):

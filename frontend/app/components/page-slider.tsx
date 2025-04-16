@@ -22,7 +22,7 @@ export function PageSlider({
   } as React.CSSProperties
 
   return (
-    <div className="relative  w-full overflow-hidden">
+    <div className="relative  bg-background w-full overflow-hidden">
       {/* 页面容器 */}
       <div 
         className="flex h-full w-[200%]"
@@ -31,7 +31,7 @@ export function PageSlider({
         {/* 主页面 */}
         <div 
           className={cn(
-            "w-full h-full transition-transform",
+            "w-full h-full bg-background transition-transform",
             "duration-[var(--transition-duration)]"
           )}
           style={{

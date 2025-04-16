@@ -13,7 +13,6 @@ class GeminiBridge:
         self.base_url = config.get('base_url', self.base_url)
         
     async def chat(self, messages: List[Dict], options: Dict = {}) -> Dict:
-        print("没进来？")
         """基础聊天请求"""
         headers = {
             "Content-Type": "application/json"

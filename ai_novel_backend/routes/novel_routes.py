@@ -57,6 +57,19 @@ async def create_novel(
         await db.refresh(novel)
         return novel
    
+# 获取某一本小说
+@router.get("/{novel_id}", response_model=None)
+async def get_novel(novel_id:int):
+    async with async_session() as db:
+        query = select(Novels).where(
+            Novels.id == novel_id
+        )
+        result = await db.execute(query)
+        novel = result.scalars().first()
+        if not novel:
+            raise HTTPException(status_code=404, detail=f"未找到书籍ID为{novel_id}的小说")
+        return novel
+    
 # 获取该用户的全部小说
 @router.get("/{user_id}/novel", response_model=None)
 async def get_all_novel(user_id:int):
@@ -233,4 +246,21 @@ async def get_novel_chapters(novel_id: int):
             
         return response_novel
 
+
+# 删除小说
+@router.delete("/{novel_id}/delete", response_model=None)
+async def delete_novel(novel_id:int):
+    async with async_session() as db:
+        query = select(Novels).where(
+            Novels.id == novel_id
+        )
+        result = await db.execute(query)
+        novel = result.scalars().first()
+
+        if not novel:
+            raise HTTPException(status_code=404, detail=f"未找到书籍ID为{novel_id}的小说")
+        
+        await db.delete(novel)
+        await db.commit()
+        return {"message": "小说删除成功"}
 

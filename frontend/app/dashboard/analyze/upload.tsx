@@ -64,11 +64,7 @@ export default function Upload() {
     if (file) {
       simulateUpload();
     } else {
-      toast({
-        variant: "destructive",
-        title: "请先选择文件",
-        description: "请先选择或拖拽一个文件到上传区域",
-      });
+      toast.error("请先上传文件")
     }
   };
 
@@ -76,7 +72,7 @@ export default function Upload() {
     <div className="w-full">
       <div
         className={cn(
-          "rounded-xl p-12 transition-all duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-lg cursor-pointer",
+          "rounded-xl p-12 transition-all duration-300 ease-in-out border border-dashed bg-background shadow-lg cursor-pointer",
           isDragging ? "scale-[1.02] ring-2 ring-blue-400 dark:ring-blue-500" : "",
           file && !uploading ? "ring-2 ring-green-400 dark:ring-green-500" : ""
         )}
@@ -143,8 +139,7 @@ export default function Upload() {
               e.stopPropagation();
               handleUpload();
             }}
-            className="px-8 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md"
-          >
+            className="px-8 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md">
             开始上传
           </Button>
         </div>

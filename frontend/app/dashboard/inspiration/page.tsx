@@ -13,7 +13,7 @@ export default function InspirationPages() {
   };
 // 页面不要有滚动条
   return (
-    <div className="h-screen overflow-hidden ">
+    <div className="h-screen overflow-hidden bg-background">
       <PageSlider 
         isSecondaryVisible={isSecondaryPageVisible}
         mainPage={<Start onToggleView={toggleView} />}

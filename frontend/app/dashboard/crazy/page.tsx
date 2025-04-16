@@ -122,7 +122,6 @@ export default function HomePage() {
 
   const getSelectedOptions = () => {
     const options = [];
-    
     if (selectedGender) {
       options.push({
         type: 'gender',
@@ -130,7 +129,6 @@ export default function HomePage() {
         id: selectedGender
       });
     }
-    
     if (selectedCategory) {
       const categories = selectedGender === 'male' ? maleCategories : femaleCategories;
       const category = categories.find(c => c.id === selectedCategory);
@@ -142,7 +140,6 @@ export default function HomePage() {
         });
       }
     }
-    
     selectedSubcategories.forEach(subId => {
       const categories = selectedGender === 'male' ? maleCategories : femaleCategories;
       for (const cat of categories) {
@@ -157,7 +154,6 @@ export default function HomePage() {
         }
       }
     });
-    
     selectedSeeds.forEach(seedId => {
       options.push({
         type: 'seed',
@@ -165,10 +161,8 @@ export default function HomePage() {
         id: seedId
       });
     });
-    
     return options;
   };
-
   const removeOption = (option: { type: string, id: string }) => {
     if (option.type === 'gender') {
       setSelectedGender(null);
@@ -183,11 +177,8 @@ export default function HomePage() {
       setSelectedSeeds(selectedSeeds.filter(id => id !== option.id));
     }
   };
-
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-
-
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <main className="flex-1 container mx-auto p-4">
         {/* Gender Selection */}
         <section className="py-6">
@@ -196,7 +187,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div 
               onClick={() => setSelectedGender("male")}
-              className={`cursor-pointer transition-all duration-300 
+              className={`hover:cursor-pointer transition-all duration-300 
                 ${selectedGender === "male" 
                   ? "scale-[1.02] shadow-[0_0_15px_rgba(21,93,252,0.6)]" 
                   : "hover:scale-[1.01] hover:shadow-[0_0_8px_rgba(21,93,252,0.4)]"
@@ -214,7 +205,6 @@ export default function HomePage() {
                 <p className="text-xs text-gray-400">适合男性读者的小说类型，情节紧凑，世界观宏大</p>
               </div>
             </div>
-            
             <div 
               onClick={() => setSelectedGender("female")}
               className={`cursor-pointer transition-all duration-300 
