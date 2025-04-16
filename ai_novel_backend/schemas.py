@@ -501,3 +501,55 @@ class ChapterTemplate(BaseResultSchema):
 class ChapterTemplateResponse(BaseResultSchema):
     """Response containing available chapter templates"""
     templates: List[ChapterTemplate]
+
+
+# schemas.py (update the Feature schemas)
+class FeatureBase(BaseResultSchema):
+    name: str
+    model: str
+    prompt: str
+    base_url: str
+    description: Optional[str] = None
+    api_key: str = None
+    # Model parameters as separate fields
+    temperature: float = 0.7
+    top_k: int = 50
+    top_p: float = 0.9
+    max_tokens: int = 2048
+    frequency_penalty: float = 0.0
+    presence_penalty: float = 0.0
+    stop_sequences: List[str] = []
+    
+    is_active: bool = True
+
+class FeatureCreate(FeatureBase):
+    pass
+
+class FeatureUpdate(BaseResultSchema):
+    name: Optional[str] = None
+    model: Optional[str] = None
+    prompt: Optional[str] = None
+    base_url: Optional[str] = None
+    description: Optional[str] = None
+    api_key: str = None
+    # Optional model parameters
+    temperature: Optional[float] = None
+    top_k: Optional[int] = None
+    top_p: Optional[float] = None
+    max_tokens: Optional[int] = None
+    frequency_penalty: Optional[float] = None
+    presence_penalty: Optional[float] = None
+    stop_sequences: Optional[List[str]] = None
+    
+    is_active: Optional[bool] = None
+
+class FeatureResponse(FeatureBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+class AIExpandRequest(BaseResultSchema):
+    content: str
+    context: str
+    is_stream: bool = True
+    

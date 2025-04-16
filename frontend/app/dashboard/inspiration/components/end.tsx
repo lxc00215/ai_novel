@@ -44,7 +44,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [pageSize] = useState(10); // 每页显示数量
+  const [pageSize] = useState(6); // 每页显示数量
 
   const [shareUrl, setShareUrl] = useState<string>("");
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);

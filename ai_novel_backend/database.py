@@ -112,6 +112,33 @@ class Task(Base):
         return None
 
 
+# database.py (update the Feature class)
+class Feature(Base):
+    __tablename__ = "features"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, index=True, nullable=False)
+    model = Column(String(100))
+    prompt = Column(Text)
+    base_url = Column(String(255))
+
+    api_key = Column(String(255))
+
+    description = Column(Text)
+    
+    # Model parameters as separate columns
+    temperature = Column(Float, default=0.7)
+    top_k = Column(Integer, default=50)
+    top_p = Column(Float, default=0.9)
+    max_tokens = Column(Integer, default=2048)
+    frequency_penalty = Column(Float, default=0.0)
+    presence_penalty = Column(Float, default=0.0)
+
+    
+    # Tracking fields
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
 
 
 # 模型定义

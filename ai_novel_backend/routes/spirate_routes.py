@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, update
 from database import Character, InspirationResult, User, get_db, async_session
-from schemas import  CharacterResponse, ContinueSpirateRequest, InspirationUpdate, SpirateResponse
+from routes.feature_routes import get_feature_by_name
+from schemas import   ContinueSpirateRequest, InspirationUpdate, SpirateResponse
 from bridge.openai_bridge import OpenAIBridge
 from util.chapter_utils import ChapterUtils
 
@@ -14,13 +15,14 @@ from util.chapter_utils import ChapterUtils
 
 router = APIRouter(prefix="/spirate", tags=["spirate"])
 
-
+feature_config = get_feature_by_name("灵感-续写")
 bridge = OpenAIBridge()
 
 bridge.init({
-    "base_url": os.getenv("OPENAI_BASE_URL"),
-    "api_key": os.getenv("OPENAI_API_KEY")
+    "base_url": feature_config["base_url"],
+    "api_key": feature_config["api_key"]
 })
+
 
 @router.post("/continue/{id}")
 async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSession = Depends(get_db)):
@@ -28,9 +30,6 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
         # 根据ID获取spirate
         spirate = await db.execute(select(InspirationResult).where(InspirationResult.id == id))
         spirate = spirate.scalar_one_or_none()
-
-
-        
 
 
         content = f'''
@@ -77,7 +76,7 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
         ]
 
         res = bridge.chat(messages,  options={
-                    "model": os.getenv("LLM_MODEL"),
+                    "model": feature_config.model,
                     "max_tokens": 2000,
                     "temperature": 0.7
                 })
@@ -202,16 +201,19 @@ async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
 @router.get("/user/{user_id}")
 async def get_spirate_by_user_id(user_id: int,
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    pageSize: int = Query(5, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
-    spirate = await db.execute(select(InspirationResult).where(InspirationResult.user_id == user_id).order_by(InspirationResult.created_at.desc()).offset((page - 1) * page_size).limit(page_size))
+    print(pageSize,"pageSize")
+    print(page,"page")
+    spirate = await db.execute(select(InspirationResult).where(InspirationResult.user_id == user_id).order_by(InspirationResult.created_at.desc()).offset((page - 1) * pageSize).limit(pageSize))
     spirate = spirate.scalars().all()
+
 
     total = await db.execute(select(func.count()).where(InspirationResult.user_id == user_id))
     total = total.scalar_one_or_none()
     current_page = page
-    total_pages = math.ceil(total / page_size)
+    total_pages = math.ceil(total / pageSize)
     return {
         "data": spirate,
         "total": total,

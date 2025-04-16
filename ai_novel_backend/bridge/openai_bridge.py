@@ -3,12 +3,10 @@ from httpx import request
 import openai
 from typing import Dict, List, Optional, Any
 import json
-import dotenv
 import requests
 
 from schemas import GenerateImageRequest
 
-dotenv.load_dotenv()
 
 # 单例模式
 class OpenAIBridge:
@@ -28,14 +26,6 @@ class OpenAIBridge:
         self.base_url = config.get('base_url')
         self.api_key = config.get('api_key')
 
-def get_bridge():
-    openai_bridge = OpenAIBridge()
-    openai_bridge.init({
-        'base_url': os.getenv("OPENAI_BASE_URL"),
-        'api_key': os.getenv("OPENAI_API_KEY")
-    })
-    return openai_bridge
-
 
 class OpenAIBridge:
     def __init__(self):
@@ -51,7 +41,7 @@ class OpenAIBridge:
     def chat(self, messages: List[Dict], options: Dict = {}) -> Dict:
         """基础聊天请求"""
         data = {
-            "model": options.get('model', os.getenv("LLM_MODEL")),
+            "model": options.get('model', 'gpt-4o-mini'),
             "temperature": options.get('temperature', 0.7),
             "max_tokens": options.get('max_tokens', 4096),
             "top_p": options.get('top_p', 1),
@@ -80,7 +70,7 @@ class OpenAIBridge:
 
             response = openai.chat.completions.create(
 
-                model=options.get('model', os.getenv("LLM_MODEL")),
+                model=options.get('model', 'gpt-4o-mini'),
                 messages=data["messages"],
                 stream=False,
             )
@@ -149,7 +139,7 @@ class OpenAIBridge:
             
             data = {
                 'prompt': prompt,
-                'model':  os.getenv("IMAGE_MODEL"),
+                'model':  'Kwai-Kolors/Kolors',
                 'batch_size':  1,
                 'seed':  42,
                 'guidance_scale':  7.5,
@@ -182,7 +172,7 @@ class OpenAIBridge:
             }
             
             data = {
-                'model': options.get('model', 'gpt-4-turbo-preview'),
+                'model': options.get('model', 'gpt-4o-mini'),
                 'messages': messages,
                 'tools': tools,
                 'tool_choice': options.get('tool_choice', 'auto'),

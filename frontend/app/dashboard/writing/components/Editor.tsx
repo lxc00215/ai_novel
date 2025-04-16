@@ -6,6 +6,7 @@ import { Paintbrush, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Chapter } from '@/app/services/types';
+import apiService from '@/app/services/api';
 
 
 
@@ -24,6 +25,8 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const aiToolbarRef = useRef<HTMLDivElement>(null);
 
+  
+
   const safeChapter = chapter || {
     id: 'default',
     title: '加载中',
@@ -37,8 +40,36 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
   const [localTitle, setLocalTitle] = useState(safeChapter.title);
   const [localContent, setLocalContent] = useState(safeChapter.content);
   
+  
+    // 流式AI扩写  将选中的内容逐步替换为AI扩写的内容
 
+    const handleExpand = async () => {
+        const expandedText = `${selection.text}`;
+        const stream = await apiService.ai.expandContent(localContent,expandedText);
+        let content = "";
+        for await (const chunk of stream.getStream()) {
+          content += chunk;
+          setLocalContent(localContent.replace(selection.text,content));
+        }
+    }
 
+    const handlePolish = async () => {
+      const stream = await apiService.ai.polish(localContent,selection.text);
+      let content = "";
+      for await (const chunk of stream.getStream()) {
+        content += chunk;
+        setLocalContent(localContent.replace(selection.text,content));
+      }
+    }
+
+    const handleRewrite = async () => {
+      const stream = await apiService.ai.rewrite(localContent,selection.text);
+      let content = "";
+      for await (const chunk of stream.getStream()) {
+        content += chunk;
+        setLocalContent(localContent.replace(selection.text,content));
+      }
+    }
 
     // 更新本地状态 - 当chapter改变时
     useEffect(() => {
@@ -124,13 +155,16 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
     let result = selection.text;
     switch (action) {
       case 'expand':
-        result = `${selection.text}（这段描写得到了扩展，增加了更多环境描写和人物细节，使场景更加生动。）`;
+        console.log('AI扩写');
+        handleExpand();
         break;
       case 'rewrite':
-        result = `（改写后的内容：${selection.text}）`;
+        console.log('AI改写');
+        handleRewrite();
         break;
       case 'polish':
-        result = `${selection.text}（这段文字已经过润色，语言更加流畅优美，用词更加准确生动。）`;
+        console.log('AI润色');
+        handlePolish();
         break;
     }
     
