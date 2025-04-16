@@ -213,7 +213,7 @@ import time
 from auth import get_current_user
 from database import Novels, GeneratedChapter, User, get_db, Model
 from schemas import ChapterCreate, ChapterUpdate, ChapterResponse, ChapterGenerationInput, ChapterGenerationResponse
-from bridge.openai_bridge import OpenAIBridge, get_bridge
+from bridge.openai_bridge import OpenAIBridge
 
 # Add this new endpoint to the existing chapter_routes.py file
 
@@ -223,7 +223,6 @@ async def generate_chapter(
     book_id: int = Path(..., description="书籍ID"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    openai_bridge: OpenAIBridge = Depends(get_bridge)
 ):
     """Generate a chapter using AI based on input parameters"""
     # Verify book ownership
@@ -282,7 +281,11 @@ async def generate_chapter(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_message}
     ]
-    
+    openai_bridge = OpenAIBridge()
+    openai_bridge.init({
+        "api_key": model.api_key,
+        "base_url": model.base_url
+    })
     # Record generation start time
     start_time = time.time()
     
@@ -347,7 +350,6 @@ async def regenerate_chapter_section(
     chapter_number: int = Path(..., description="章节编号"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    openai_bridge: OpenAIBridge = Depends(get_bridge)
 ):
     """Regenerate a specific section of a chapter"""
     # Verify book ownership
@@ -423,6 +425,12 @@ async def regenerate_chapter_section(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_message}
     ]
+
+    openai_bridge = OpenAIBridge()
+    openai_bridge.init({
+        "api_key": model.api_key,
+        "base_url": model.base_url
+    })
     
     try:
         # Generate new section

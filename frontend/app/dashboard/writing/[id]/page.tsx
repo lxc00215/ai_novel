@@ -23,6 +23,12 @@ export default function WritingPage({ params }: { params: Promise<{ id: string }
     })
 
 
+
+
+
+
+
+
     useEffect( () => {
 
        async function fetchData() {

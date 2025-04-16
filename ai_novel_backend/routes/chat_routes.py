@@ -1,22 +1,16 @@
 # FastAPI 示例
 
-import os
-from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
-from requests import request, session
+from requests import session
 from sqlalchemy import delete, select
 from database import  Character, ChatMessage, ChatSession, get_db
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from bridge.openai_bridge import OpenAIBridge, get_bridge
+from routes.feature_routes import get_feature_by_name
 from schemas import ChatMessageRequest, ChatSessionRequest
-import json
 from openai import AsyncOpenAI  # 确保导入异步客户端
 
 router = APIRouter(prefix="/chat")
-
-load_dotenv()
-
     
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -220,13 +214,11 @@ async def generate_response(
     try:
         # 创建新的数据库会话
 
-          
+        feature_config = get_feature_by_name("聊天")
         client = AsyncOpenAI()
         accumulated_message = ""
-                
-
         stream = await client.chat.completions.create(
-                model=os.getenv("LLM_MODEL"),
+                model=feature_config["model"],
                 messages=messages,
                 stream=True
             )

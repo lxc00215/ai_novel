@@ -215,6 +215,130 @@ const apiService = {
       });
     },
 
+    // 流式AI扩写
+    expandContent: async (context:string,content: string) => {
+      try {
+        const response = await request('/ai/expand', {
+          method: 'POST',
+          body: JSON.stringify({ context,content }),
+          headers:{
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        }
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      // 返回一个异步生成器
+      return {
+        async *getStream() {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const messages = chunk
+              .split('\n')
+              .filter(line => line.startsWith('data: '))
+              .map(line => line.slice(6)); // 移除 'data: ' 前缀
+              
+            for (const message of messages) {
+              if (message.trim()) {
+                yield message;
+              }
+            }
+
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error in sendMessage:', error);
+      throw error;
+    }},
+    polish:async(context:string,content:string)=>{
+      const response = await request('/ai/polish',{
+        method:'POST',
+        body:JSON.stringify({context,content}),
+        headers:{
+          'Content-Type': 'application/json',
+          "Accept": "text/event-stream"
+        }
+      })
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      return {
+        async *getStream() {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const messages = chunk
+              .split('\n')
+              .filter(line => line.startsWith('data: '))
+              .map(line => line.slice(6)); // 移除 'data: ' 前缀
+              
+            for (const message of messages) {
+              if (message.trim()) {
+                yield message;
+              }
+            }
+
+          }
+        }
+      }
+    },
+
+    rewrite:async(context:string,content:string)=>{
+      const response = await request('/ai/rewrite',{
+        method:'POST',
+        body:JSON.stringify({context,content}),
+        headers:{
+          'Content-Type': 'application/json',
+          "Accept": "text/event-stream"
+        }
+      })
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      return {
+        async *getStream() {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const messages = chunk
+              .split('\n')
+              .filter(line => line.startsWith('data: '))
+              .map(line => line.slice(6)); // 移除 'data: ' 前缀
+              
+            for (const message of messages) {
+              if (message.trim()) {
+                yield message;
+              }
+            }
+
+          }
+        }
+      }
+  },
+
+  
     generateImage: async (prompt: string): Promise<ApiResponse<ImageObject>> => {
       const response = await request('/ai/generate_images', {
         method: 'POST',

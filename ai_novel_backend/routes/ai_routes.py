@@ -1,34 +1,30 @@
 import json
 import os
 import tempfile
-from typing import Optional
+from typing import AsyncGenerator, Optional
 import uuid
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 import httpx
-from schemas import GenerateImageRequest, ImageResponse
-import dotenv
-from bridge.openai_bridge import OpenAIBridge, get_bridge
+from openai import AsyncOpenAI
+from routes.feature_routes import get_feature_by_name
+from schemas import AIExpandRequest, GenerateImageRequest, ImageResponse
+from bridge.openai_bridge import OpenAIBridge
 
-dotenv.load_dotenv()
 
-openai_bridge = OpenAIBridge()
-openai_bridge.init({
-    "api_key": os.getenv("OPENAI_API_KEY"),
-    "base_url": os.getenv("OPENAI_BASE_URL"),
-})
+
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 @router.post("/generate_images", response_model=ImageResponse)
 async def generate_images(request: GenerateImageRequest):
     bridge = OpenAIBridge()
+    feature_config = get_feature_by_name("绘画")
     bridge.init({
-        "api_key": os.getenv("OPENAI_API_KEY"),
-        "base_url": os.getenv("OPENAI_BASE_URL"),
+        "api_key": feature_config["api_key"],
+        "base_url": feature_config["base_url"],
     })
-    print(request,"嘿嘿")
     result = bridge.generate_image(request.prompt)
     res = await transfer_image(result['images'][0]['url'])
 
@@ -173,10 +169,6 @@ async def upload_image(file_path: str) -> Optional[str]:
         return None
     
 
-# @router.post("/test")
-# async def test(bridge:OpenAIBridge = Depends(get_bridge)):
-#     result = bridge.chat_stream([{"role":"user","content":"写一个冒泡排序算法"}])
-#     return StreamingResponse(result, media_type="text/event-stream")
 
 @router.post("/transfer-image")
 async def transfer_image(image_url: str):
@@ -232,4 +224,115 @@ async def transfer_image(image_url: str):
         logger.error(f"Transfer image error: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+# AI扩写
+
+@router.post("/expand")
+async def ai_expand(request: AIExpandRequest):
+
+    feature_config = get_feature_by_name("AI扩写")
+    content = request.content
+    context = request.context
+
+    if request.is_stream:
+
+        # 构建消息
+       
+
+        messages = [
+            {"role": "system", "content": feature_config["prompt"]},
+            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文扩写内容，不要超过1000字"}
+        ]
+        return StreamingResponse(generate_response(messages, feature_config["model"]), media_type="text/event-stream",headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})
+
+    else:
+        feature_config = get_feature_by_name("AI扩写")
+        bridge = OpenAIBridge()
+        bridge.init({
+        "api_key": feature_config["api_key"],
+        "base_url": feature_config["base_url"],
+    })
+   
+        result = bridge.chat([{"role":"user","content":"上下文："+context+"\n\n 内容："+content+"请根据上下文扩写内容，不要超过1000字"}],options={"model":feature_config["model"]})
+        return result
+
+# AI 润色
+
+@router.post("/polish")
+async def ai_polish(request: AIExpandRequest):
+    content = request.content
+    context = request.context
+    feature_config = get_feature_by_name("AI润色")
+    if request.is_stream:
+        messages = [
+            {"role": "system", "content": feature_config["prompt"]},
+            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文润色内容，不要超过1000字"}
+        ]
+        return StreamingResponse(generate_response(messages, feature_config["model"]), media_type="text/event-stream",headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})
+    else:
+        bridge = OpenAIBridge()
+        bridge.init({
+            "api_key": feature_config["api_key"],
+            "base_url": feature_config["base_url"],
+        })
+        result = bridge.chat([{"role":"user","content":"上下文："+context+"\n\n 内容："+content+"请根据上下文润色内容，不要超过1000字"}],options={"model":feature_config["model"]})
+        return result
+# AI改写
+
+@router.post("/rewrite")
+async def ai_rewrite(request: AIExpandRequest):
+
+    feature_config = get_feature_by_name("AI改写")
+    content = request.content
+    context = request.context
+
+    if request.is_stream:
+        messages = [
+            {"role": "system", "content": feature_config["prompt"]},
+            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文改写内容，不要超过1000字"}
+        ]
+        return StreamingResponse(generate_response(messages, feature_config["model"]), media_type="text/event-stream",headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})
+    else:
+        feature_config = get_feature_by_name("AI改写")
+        bridge = OpenAIBridge()
+        bridge.init({
+            "api_key": feature_config["api_key"],
+            "base_url": feature_config["base_url"],
+        })
+        result = bridge.chat([{"role":"user","content":"上下文："+context+"\n\n 内容："+content+"请根据上下文改写内容，不要超过1000字"}],options={"model":feature_config["model"]})
+        return result
+
+async def generate_response(
+    messages: list,
+    model:str
+) -> AsyncGenerator[str, None]:
+    """生成 AI 响应的流式生成器"""
+    try:
+        # 创建新的数据库会话
+
+        client = AsyncOpenAI()
+        accumulated_message = ""
+        stream = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True
+            )
+    
+        async for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                content = chunk.choices[0].delta.content
+                accumulated_message += content
+                
+                # 更新数据库中的消息
+             
+                
+                # 返回流式内容
+                yield f"data: {content}\n\n"
+            # 等全部流式内容返回后，更新数据库内容            
+            # yield "data: [DONE]\n\n"
+            
+    except Exception as e:
+        print(f"Error in generate_response: {str(e)}")
+        yield f"data: Error: {str(e)}\n\n"
 
