@@ -14,11 +14,11 @@ const analyzePage = ()=>{
     const toggleView = () => {
         setIsSecondaryPageVisible(!isSecondaryPageVisible);
       };
-    return <div className="h-screen overflow-hidden">
+    return <div className="h-screen">
     <PageSlider 
       isSecondaryVisible={isSecondaryPageVisible}
       mainPage={<Start onToggleView={toggleView} />}
-      secondaryPage={<End  />}
+      secondaryPage={<End onToggleView={toggleView} />}
       transitionDuration={400}
     />
   </div>

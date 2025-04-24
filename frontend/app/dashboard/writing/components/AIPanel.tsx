@@ -13,14 +13,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
 import { Label } from "@/components/ui/label";
-import { Separator } from '@/components/ui/separator';
 import { cn } from "@/lib/utils";
 
 interface AIPanelProps {
@@ -29,7 +23,7 @@ interface AIPanelProps {
 
 export default function AIPanel({ closeAIPanel }: AIPanelProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [aiModel, setAiModel] = useState("察图版");
+  const [aiModel, setAiModel] = useState("平衡版");
   const [storyBackground, setStoryBackground] = useState("");
   const [writingStyleMode, setWritingStyleMode] = useState<"preset"|"custom">("preset");
   const [customWritingStyle, setCustomWritingStyle] = useState("");
@@ -67,7 +61,7 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
   };
   
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-background">
       <div className="flex items-center justify-between p-3 border-b">
         <h2 className="font-medium flex items-center gap-1">
           AI写作(一般用于章节正文写作)
@@ -98,10 +92,10 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
         <div className="space-y-2">
           <Label htmlFor="ai-model">AI模型</Label>
           <Select defaultValue={aiModel} onValueChange={setAiModel}>
-            <SelectTrigger id="ai-model" className="w-full bg-white">
+            <SelectTrigger id="ai-model" className="w-full bg-background">
               <SelectValue placeholder="选择AI模型" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+              <SelectContent className="bg-background">
               <SelectItem value="察图版">察图版</SelectItem>
               <SelectItem value="文章版">文章版</SelectItem>
               <SelectItem value="专业版">专业版</SelectItem>
@@ -116,10 +110,12 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
               <Textarea 
                 id="story-background"
                 className="resize-none h-24"
-                placeholder=""
+                placeholder="请输入故事背景"
+                value={storyBackground}
+                onChange={(e) => setStoryBackground(e.target.value)}
               />
               <div className="text-right text-xs text-gray-500">
-                0 / 500
+                {storyBackground.length} / 500
               </div>
             </div>
             
@@ -169,9 +165,9 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
           <div className="text-right text-xs text-gray-500">
             {storyBackground.length} / 3000
           </div>
-          <div className="text-sm text-red-500">
+          {storyBackground.length === 0 && <div  className="text-sm text-red-500">
             请输入本章剧情
-          </div>
+          </div>}
         </div>
         
         <div className="space-y-2">
@@ -203,7 +199,7 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
             <>
               <div className="relative">
                 <div 
-                  className="border rounded-md p-3 bg-white flex items-center justify-between cursor-pointer"
+                  className="border rounded-md p-3 bg-background flex items-center justify-between cursor-pointer"
                   onClick={() => setShowStyleDropdown(!showStyleDropdown)}
                 >
                   <span className="text-gray-700">{selectedStylePreset}</span>
@@ -211,7 +207,7 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
                 </div>
                 
                 {showStyleDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 border rounded-md shadow-lg bg-white z-10">
+                  <div className="absolute left-0 right-0 mt-1 border rounded-md shadow-lg bg-background z-10">
                     {stylePresets.map(style => (
                       <div 
                         key={style.id} 
@@ -292,10 +288,10 @@ export default function AIPanel({ closeAIPanel }: AIPanelProps) {
           
           {requirementsMode === "preset" ? (
             <Select onValueChange={setSelectedRequirementsPreset}>
-              <SelectTrigger className="bg-white">
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="请选择写作要求" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent className="bg-background text-text-primary">
                 {requirementsPresets.map(req => (
                   <SelectItem key={req.id} value={req.name}>{req.name}</SelectItem>
                 ))}

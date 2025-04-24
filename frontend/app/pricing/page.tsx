@@ -1,12 +1,25 @@
+"use client";
 
-// src/app/pricing/page.tsx
-import PricingPage from './pricingPage';
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckIcon, XIcon, ChevronDownIcon } from "lucide-react";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/components/ui/accordion";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
-export const metadata = {
-  title: '定价 | AI小说创作助手',
-  description: 'AI驱动的小说创作助手，让您的创意不再受限。选择适合您创作旅程的方案。',
-};
+// 将UI部分提取到单独组件
+import PricingPageUI from "./PricingPageUI";
 
-export default function Pricing() {
-  return <PricingPage />;
+export default function PricingPage() {
+  // 直接渲染分离的UI组件
+  return <PricingPageUI />;
 }

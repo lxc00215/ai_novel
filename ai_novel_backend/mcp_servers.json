@@ -1,0 +1,22 @@
+{
+    "mcp-server-alipay": {
+      "autoApprove": [],
+      "disabled": false,
+      "timeout": 60,
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@alipay/mcp-server-alipay"
+      ],
+      "env": {
+        "AP_APP_ID": "9021000129618474",
+        "AP_APP_KEY": "MIIEpAIBAAKCAQEAtPSRUYwO4N68W2iKAG8IrHd5CzdZaW6vvuzTk9uSGkmM53aN1LhhkJLRgyXwG8cT5PkunkYVDhed8R5/YWwayZ3Bi4HKg6XH2SKM+PKtDAObHEholos4OZAR/mRSBRLJg/v4Y+BZompvTa9FMWZNER1H1snyqp+BcdAJP9bs2r8hzmuGWv8MA29e+olJOW+u21FmNhBxBp0CbpbZST9XQ4W0UmuERdTAARNvU39RFlIATUTDa7t9i86JNDwnuLABJtPnJiMXcgpwdUiC3b3FM/DgB695Q0xgBt+K5OuFnMTjveeTH/xQGXmZwZSeQO//g72Q3Qsc3RbwHMu+I4eOawIDAQABAoIBACLop3wm29vvvECaGz1YLkEvTy+lvt8DFm5ru6lji3z8wW0JxvTJmTDN0hNN51NEhYb/t0mbVYaBcdvJOWOu+j/46hSitlHNUo+GBdIk5tNRgsPjCCI6u18HdyEvc089P5jxrAqAhmo5xD0lWeDcznNFxc0e6myWFt/A9XfWW50bPK1lVDSEGCANjFX8h52tUJSigaVdLJeYrilIVTP23Whg/4Bw7JCqPYzixcoLWznwhEDmJ8EBD/7QQGX6mfnzs4B4ZruSYuD4qL6ldrdAE6bbyNfqE2FqfxNtd9p/O5yXPECuhUvzqo1drKhLCedzMo7Yy4EsMmhwLASbbYO1EokCgYEA8ap5nJwafIs+1AlBqH/mitve4CGEY9dG9LwMnmtroEdkKxnLnMHYPpkxp9t1rx8EzVbZwT5lrNp8rknNQ09uUHq+YpbcG6/WKnPDG9YfmIO0NI9XcdgR+dkmZ6oda5XxJoSCbCywRCLRVFXWGd7x7Bjl6y3l9dxRkLplQWCGShUCgYEAv7A+58jjsm94HOHAhMHwr31j8HKQWFTKQ4SwC0bfxnhOU+sqgRZiy7wmKho0K0OfcanPaCozT+AHGAp3UQMcM4N88TuwjJuuUOnjFZOO+FPVu7Hzu56KOnvzq4B6Wi1ShG3iKnv5ZylVmL5X6ilQtZC4S65M/UdN9XMOQ0YfFn8CgYAezw/v8krCI/Jfj8qKE7wtabhxNHSvUcue+bZWH/W5mkBf6kr18hSCbn9RGf5X1AmFsBPUugK2Vahdg9UiRqcWpX9ODFOFSBZylQ2Dp/mhNPEtXjTUs6ofAxsNTjev9o6mzW/fIJdcKGAtcz/3Tl/jLI1rPQ+7F1pirBCqlAaqvQKBgQC+SNXZP1mRCwiAGzYCU4d6nY205fUWSm1Sowgi2aNQIKMYuQzDghZmyopUJxj8ja9cpMYIUEQJmYlROyqAmAbJuFAyJB+5JN3g4pyTEZzONGKqZRdfex0au2sDJ5HNrMoKPg5SQCkvWB/pdaJOB99frZ7VOdyhXMQt0J4q+BPqPwKBgQCXpD6c/zndYS4JwASpM6V5CC/xOeIYARovJNUgUTqbzy81CVK/hual/kLWsvxvObtKKh3r9m4C6Kixz/ZWlYuId4Ia0ifg2PZA/APFg1t8yQzEdhMo96+lV4s3KgZlF/lpfmKajaYQ9+bKmH+78igzx628htT19L7hC560Zzi1kQ==",
+        "AP_PUB_KEY": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAihKPke4ZX2BO+rKt5/qyvfV++JUpfeL0kIkHzlIaEeYvBIezC5598ctw7qnrujRkErB72fUI+PCBLQFiXrr+hwg/xdWyYVhdEhJix+qJPOOFKg5w+6+ASxsPNodfDqnO1NAS5v/bona2QwiGOyjnlh9ynmyx1Jk6umuUILBWKv/U484Lugi3PW07TqOZxfwPM0NRmq4gEXAkNbfbJXW25rgRZwcY0wt4ZAPdeu9e+PKKwpNHFlHI1hkzcQKxfWU1jF/bOdGSWx9nDj/Gt8yX4DmQLlxBT8wzn+r8CVIp9w1JbabHin7PAsXkhhu6UsR6CXZIIfQ6bL8nXXJSwApZGwIDAQAB",
+        "AP_CURRENT_ENV": "sandbox"
+      },
+      "transportType": "stdio"
+    }
+    
+}

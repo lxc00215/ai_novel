@@ -4,18 +4,220 @@ import tempfile
 from typing import AsyncGenerator, Optional
 import uuid
 import aiofiles
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 import httpx
 from openai import AsyncOpenAI
+from requests import Session
+from sqlalchemy import select
+from database import BookBreakdown, File as FileModel, get_db
 from routes.feature_routes import get_feature_by_name
-from schemas import AIExpandRequest, GenerateImageRequest, ImageResponse
+from schemas import AIAnalysisRequest, AIExpandRequest, BookBreakdownResponse, FileResponse, GenerateImageRequest, ImageResponse
 from bridge.openai_bridge import OpenAIBridge
 
-
-
-
 router = APIRouter(prefix="/ai", tags=["ai"])
+
+UPLOAD_DIR = "static/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.post("/upload-file")
+async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        # 生成唯一文件ID
+        file_id = str(uuid.uuid4())
+        
+        # 获取文件扩展名
+        _, file_ext = os.path.splitext(file.filename)
+        
+        # 创建保存路径
+        file_path = f"{UPLOAD_DIR}/{file_id}{file_ext}"
+        
+        # 保存上传的文件
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # 记录文件信息到数据库或缓存中
+        file_data = {
+            "file_id": file_id,
+            "original_filename": file.filename,
+            "file_path": file_path,
+            "content_type": file.content_type,
+            "file_size": len(content),
+            "user_id": 4
+        }
+        # 保存文件信息到数据库
+
+        new_file = FileModel(**file_data)
+        db.add(new_file)
+        await db.commit()
+
+        # 这里可以添加保存文件信息到数据库或缓存中的逻辑
+        return FileResponse(
+            file_id=file_id,
+            original_filename=file.filename,
+            content_type=file.content_type,
+            file_size=len(content),
+            user_id=4,
+            upload_date=new_file.upload_date
+        )
+        
+    except Exception as e:
+        logger.error(f"文件上传错误: {str(e)}")
+        logger.error(f"错误详情: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"文件上传失败: {str(e)}")
+
+
+@router.post("/analyze-file",response_model=BookBreakdownResponse)
+async def analyze_file(
+    request: AIAnalysisRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    分析已上传的文件
+    
+    Args:
+        file_id: 上传文件时返回的文件ID
+        analysis_type: 分析类型
+        additional_instructions: 额外的分析指令
+    """
+    try:
+        # 根据file_id查找文件信息
+        # 这里应该从数据库或缓存中获取文件信息
+        # 为了简化，这里直接在上传目录中查找
+        title = ''
+        # 查找文件路径
+        result = await db.execute(select(FileModel).where(FileModel.file_id == request.file_id))
+        file_record = result.scalar_one_or_none()
+       
+        if not file_record:
+            raise HTTPException(status_code=404, detail="文件未找到")
+        file_path = file_record.file_path
+        file_name = file_record.original_filename
+        
+        if not file_path or not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="文件未找到")
+       
+        file_ext = os.path.splitext(file_name)[1].lower()
+        
+        # 根据扩展名判断内容类型
+        content_type = ""
+        if file_ext in ['.jpg', '.jpeg', '.png', '.gif']:
+            content_type = f"image/{file_ext[1:]}"
+        elif file_ext in ['.txt', '.md']:
+            content_type = "text/plain"
+        elif file_ext == '.pdf':
+            content_type = "application/pdf"
+        elif file_ext == '.docx':
+            content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        else:
+            content_type = "application/octet-stream"
+        
+        # 获取特性配置
+        feature_config = get_feature_by_name("AI分析")
+        
+        # 准备文件信息
+        user_message = ""
+        
+        # 构建用户消息
+        if request.additional_instructions:
+            user_message += f"\n\n额外说明: {request.additional_instructions}"
+         # 初始化OpenAI桥接
+        bridge = OpenAIBridge()
+        bridge.init({
+            "api_key": feature_config["api_key"],
+            "base_url": feature_config["base_url"],
+        })
+        
+        # 根据文件类型确定处理方法
+        if content_type.startswith("image/"):
+            # 处理图片：首先上传到图片服务器
+            img_url = await upload_image(file_path)
+            if not img_url:
+                raise HTTPException(status_code=400, detail="图片上传失败")
+            
+            full_img_url = f"https://img.leebay.cyou{img_url}"
+            user_message += f"\n\n图片链接: {full_img_url}"
+            
+            # 使用视觉模型进行分析
+            if feature_config.get("supports_vision", False):
+                result = bridge.chat([{
+                    "role": "user", 
+                    "content": [
+                        {"type": "text", "text": user_message},
+                        {"type": "image_url", "image_url": {"url": full_img_url}}
+                    ]
+                }], options={"model": feature_config["model"]})
+            else:
+                # 使用常规模型，只提供图片URL
+                result = bridge.chat([{
+                    "role": "user",
+                    "content": "请尝试分析这个文件，提炼其中的爆点"
+                }], options={"model": feature_config["model"]})
+
+        elif content_type.startswith(("text/", "application/")):
+            # 处理文本或文档文件：如果可能，读取内容
+            with open(file_path, "rb") as f:
+                content = f.read()
+            if len(content) <= feature_config.get("max_content_size", 100000):  # 默认最大100KB
+                try:
+                    file_content = content.decode("utf-8", errors="replace")
+                    user_message += f"\n\n文件内容:\n{file_content}"
+                except Exception as e:
+                    user_message += f"\n\n文件内容无法解码: {str(e)}"
+            
+            # 发送请求与文件内容
+            result = bridge.chat([{
+                "role": "system", 
+                "content": feature_config["prompt"]
+            }, {
+                "role": "user",
+                "content": user_message
+            }], options={"model": feature_config["model"]})
+        else:
+             # 对于不支持的文件，仅提供元数据
+            result = bridge.chat([{
+                "role": "system", 
+                "content": feature_config["prompt"]
+            }, {
+                "role": "user",
+                "content": user_message + "\n\n请注意: 此文件类型不支持直接读取内容分析。"
+            }], options={"model": feature_config["model"]})
+         # 提取分析结果
+        analysis_content = result["content"] if "content" in result else str(result)
+        
+        # 设置拆书标题
+        if not title:
+            title = f"{file_record.original_filename}"
+        
+        # 创建拆书记录
+        breakdown_data = {
+            "file_id": request.file_id,
+            "title": title,
+            "analysis_content": analysis_content,
+            "analysis_type": "AI分析"
+        }
+        
+        # 保存到数据库
+        new_breakdown = BookBreakdown(**breakdown_data)
+        db.add(new_breakdown)
+        await db.commit()
+        await db.refresh(new_breakdown)
+        return BookBreakdownResponse(
+            id=new_breakdown.id,
+            file_id=request.file_id,
+            title=title,
+            analysis_content=analysis_content,
+            analysis_type="AI分析",
+            created_at=new_breakdown.created_at,
+            updated_at=new_breakdown.updated_at
+        )
+            
+    except Exception as e:
+        logger.error(f"文件分析错误: {str(e)}")
+        logger.error(f"错误详情: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
 
 @router.post("/generate_images", response_model=ImageResponse)
 async def generate_images(request: GenerateImageRequest):

@@ -552,4 +552,52 @@ class AIExpandRequest(BaseResultSchema):
     content: str
     context: str
     is_stream: bool = True
+
+class AIAnalysisRequest(BaseResultSchema):
+    file_id: str
+    additional_instructions: Optional[str] = None
+
+
+# schemas.py (添加文件和拆书相关的模式)
+
+from typing import Dict, Any, Optional, List
+from datetime import datetime
+from pydantic import BaseModel, Field
+
+# 文件相关模式
+class FileBase(BaseResultSchema):
+    original_filename: str
+    content_type: Optional[str] = None
+    file_size: Optional[int] = None
+    user_id: Optional[int] = None
+
+class FileCreate(FileBase):
+    file_id: str
+    file_path: str
+
+class FileResponse(FileBase):
+    file_id: str
+    upload_date: datetime
+    file_path: Optional[str] = None  # 可以选择是否在响应中包含文件路径
+
+# 拆书相关模式
+class BookBreakdownBase(BaseResultSchema):
+    file_id: str
+    title: str
+    analysis_content: str
+    analysis_type: Optional[str] = None
+
+class BookBreakdownCreate(BookBreakdownBase):
+    pass
+
+class BookBreakdownUpdate(BaseResultSchema):
+    title: Optional[str] = None
+    analysis_content: Optional[str] = None
+    analysis_type: Optional[str] = None
+
+class BookBreakdownResponse(BookBreakdownBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    file: Optional[FileResponse] = None  # 可以选择是否包含关联的文件信息
     

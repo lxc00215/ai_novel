@@ -11,17 +11,31 @@ import { FaWeixin, FaQq } from 'react-icons/fa';
 import { SiSinaweibo } from 'react-icons/si';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import apiService from '../services/api';
 import Logo from '../components/logo';
+import { link } from 'fs';
 
 interface PasswordStrength {
   value: number;
   label: string;
+
 }
 
-const AuthPage = () => {
+// 
+
+
+
+
+
+const AuthPage = ({}) => {
+
+  // 获取参数
+  const searchParams = useSearchParams();
+  const is_pay = searchParams.get('is_pay');
+
+
   const [activeTab, setActiveTab] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -95,8 +109,35 @@ const AuthPage = () => {
         account:username,
         password
       });
-      if (response.success) {
-        router.push('/dashboard');
+      if (response) {
+        // 保存登录信息
+        localStorage.setItem('token', response["access_token"]);
+
+
+        // 获取存储信息
+        if(is_pay){
+
+          router.push("/dashboard/inspiration")
+
+          // 获取金额
+         let amount = localStorage.get('amount');
+
+         // 支付
+         const response = await apiService.alipay.creat(amount);
+         console.log(JSON.stringify(response))
+        // 支付链接
+         let link = response['link']
+         console.log("link" + link)
+
+         // 新开窗口打开支付链接
+         window.open(link_str, '_blank');
+
+        // 弹出对话框
+
+        }else{
+          router.push("/dashboard")
+        }
+        
       } else {
         setError(response.message || '登录失败，请检查您的用户名和密码');
       }
@@ -117,10 +158,10 @@ const AuthPage = () => {
         email,
         password
       });
-      if (response.success) {
+      if (response) {
         router.push('/dashboard');
       } else {
-        setError(response.message || '注册失败，请检查您的信息');
+        setError(response || '注册失败，请检查您的信息');
       }
     } catch (error) {
       setError('注册时发生错误');
@@ -129,10 +170,7 @@ const AuthPage = () => {
     }
   };
 
-  const handleGuestAccess = () => {
-    // 弹窗提示
-    alert('暂未开放');
-  };
+  
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
@@ -254,6 +292,7 @@ const AuthPage = () => {
                 <Button 
                   type="submit" 
                   className="w-full hover:cursor-pointer bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg transition-all"
+               
                 >
                   登录
                 </Button>
@@ -377,7 +416,7 @@ const AuthPage = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg transition-all"
+                  className="w-full bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg hover:cursor-pointer transition-all"
                   disabled={!username || !email || !password || password !== confirmPassword || !usernameAvailable}
                 >
                   开始创作
