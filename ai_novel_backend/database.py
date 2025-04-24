@@ -382,3 +382,32 @@ class BookBreakdownResult(Base):
     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
 
 
+# 文件表模型
+class File(Base):
+    __tablename__ = "files"
+
+    file_id = Column(String(36), primary_key=True, index=True)  # UUID作为主键
+    original_filename = Column(String(255), nullable=False)
+    file_path = Column(String(255), nullable=False)
+    content_type = Column(String(100))
+    file_size = Column(Integer)
+    upload_date = Column(DateTime, default=datetime.now())
+    user_id = Column(Integer, nullable=True)  # 用户ID（如果需要关联上传用户）
+    
+    # 与拆书表建立关系
+    book_breakdowns = relationship("BookBreakdown", back_populates="file")
+
+# 拆书表模型
+class BookBreakdown(Base):
+    __tablename__ = "book_breakdowns"
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_id = Column(String(36), ForeignKey("files.file_id"), nullable=False)
+    title = Column(String(255), nullable=False)  # 拆书标题
+    analysis_content = Column(Text, nullable=False)  # 分析内容
+    analysis_type = Column(String(100))  # 分析类型
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
+    
+    # 关联文件表
+    file = relationship("File", back_populates="book_breakdowns")

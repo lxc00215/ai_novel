@@ -5,19 +5,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+// import { CalendarIcon } from "@/components/icons/CalendarIcon";
 
 // 模拟历史数据 - 实际应用中应从API获取
-const historyItems = [
-  { id: 1, title: "小说拆解 1", date: "2023-11-10" },
-  { id: 2, title: "科幻小说", date: "2023-11-15" },
-  { id: 3, title: "历史故事", date: "2023-11-20" },
-  { id: 4, title: "侦探小说", date: "2023-11-25" },
-  { id: 5, title: "奇幻冒险", date: "2023-11-30" },
-  { id: 6, title: "青春校园", date: "2023-12-05" },
-];
+interface HistoryListProps{
+  historyItems:any[]
+}
 
-export default function HistoryList() {
+export default function HistoryList({historyItems}:HistoryListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   
@@ -87,55 +84,68 @@ export default function HistoryList() {
   return (
     <div className="relative">
       {/* 左侧模糊效果 - 更强的渐变 */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-r from-background via-background/90 to-transparent pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none" />
       
-      {/* 左滚动按钮 */}
+      {/* 左滚动按钮 - 修改为半边在列表外，更小更美观 */}
       <Button 
-        variant="ghost" 
-        size="icon" 
+        variant="outline" 
+        size="sm" 
         className={cn(
-          "absolute left-2 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/90 dark:bg-slate-800/90 shadow-md hover:bg-white dark:hover:bg-slate-700 transition-all",
+          "absolute -left-3 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-background border border-border shadow-sm hover:bg-muted transition-all",
           !canScrollLeft && "opacity-0 pointer-events-none"
         )}
         onClick={() => scroll('left')}
         disabled={!canScrollLeft}
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-4 w-4" />
+        <span className="sr-only">向左滚动</span>
       </Button>
 
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto hide-scrollbar py-2"
+        className="overflow-x-auto scrollbar-none py-2"
         onScroll={handleScroll}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
+        {/* 添加内联样式隐藏滚动条 */}
+        <style jsx>{`
+          div::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        
         <div className="flex space-x-4 p-4 pb-2">
           {historyItems.map((item) => (
-            <Card key={item.id} className="w-[240px] flex-shrink-0 transition-all duration-200 hover:scale-[1.02] hover:shadow-md border border-slate-200 dark:border-slate-700">
-              <CardContent className="p-6">
-                <h3 className="font-medium truncate text-lg">{item.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2">{item.date}</p>
+            <Card 
+              key={item.id} 
+              className="w-[240px] flex-shrink-0 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md border border-border/60 group"
+            >
+              <CardContent className="p-5">
+                <h3 className="font-medium truncate text-lg mb-1 group-hover:text-primary transition-colors">{item.title}</h3>
+              
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
       
-      {/* 右滚动按钮 */}
+      {/* 右滚动按钮 - 修改为半边在列表外，更小更美观 */}
       <Button 
-        variant="ghost" 
-        size="icon" 
+        variant="outline" 
+        size="sm" 
         className={cn(
-          "absolute right-2 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/90 dark:bg-slate-800/90 shadow-md hover:bg-white dark:hover:bg-slate-700 transition-all",
+          "absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-background border border-border shadow-sm hover:bg-muted transition-all",
           !canScrollRight && "opacity-0 pointer-events-none"
         )}
         onClick={() => scroll('right')}
         disabled={!canScrollRight}
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-4 w-4" />
+        <span className="sr-only">向右滚动</span>
       </Button>
       
       {/* 右侧模糊效果 - 更强的渐变 */}
-      <div className="absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-background via-background/90 to-transparent pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
     </div>
   );
 }

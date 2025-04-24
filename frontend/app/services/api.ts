@@ -79,6 +79,35 @@ export const request = async (url: string,  options: RequestInit = {
 
 // API 服务对象
 const apiService = {
+
+  alipay:{
+    creat:async(amount:string)=>{
+      return await request('/alipay/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount:amount,
+          description:"充值"
+        }),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      });
+    },
+    checkOrder:async(orderInfo:any)=>{
+      return await request('/alipay/check',{
+        method:'post',
+        body:JSON.stringify({
+          "order_info":orderInfo
+        }),
+        headers:{
+          'Content-Type':'application/json'
+        }
+      
+      })
+    }
+  
+  },
+  
   // 认证相关 API
   auth: {
     // 登录
@@ -88,9 +117,10 @@ const apiService = {
       const response = await request('/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
       });
-
-
       
       // 如果登录成功，保存令牌和用户信息
       if (response.success && response.data) {
@@ -107,6 +137,9 @@ const apiService = {
       const response = await request('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
+        headers:{
+          'Content-Type': 'application/json'
+        }
       });
       
       // 如果注册成功，保存令牌和用户信息
@@ -201,12 +234,41 @@ const apiService = {
         }
       });
     }
-    
   },
-  
-
+  bookGeneration:{
+    getAnalysisHistory:async()=>{
+      return request(`/bookGeneration/get-analysis-history`,{
+        method:'GET',
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+  },
   // AI 生成相关 API
   ai: {
+    
+    // 拆解
+    analyze:async(file_id:string)=>{
+      return request(`/ai/analyze-file`,{
+        method:'POST',
+        body:JSON.stringify({file_id}),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+
+ 
+    getAnalysis:async(file_id:string)=>{
+      return request(`/ai/get-analysis`,{
+        method:'POST',
+        body:JSON.stringify({file_id}),
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      })
+    },
     // 生成小说内容
     generateContent: async (prompt: string): Promise<ApiResponse<string>> => {
       return request('/ai/generate', {

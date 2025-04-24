@@ -2,7 +2,7 @@
 import apiService, { request } from '@/app/services/api';
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shuffle, Check, Wand2, Loader2 } from 'lucide-react';
+import { Check, Wand2, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 

@@ -135,18 +135,6 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
   return (
     <div className="relative">
       <div className="min-h-screen overflow-y-auto p-6 flex-1 bg-black text-white pr-20 pl-30 pt-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-        {/* Story Generator Card */}
-        <Card className="bg-[#2b2b2b] border-none rounded-lg shadow-lg p-4 my-5 w-fit max-w-md cursor-pointer hover:bg-zinc-800 transition-all duration-200 ease-in-out">
-          <CardContent className="flex items-center">
-            <div className="flex items-center gap-4">
-              <Plus className="text-purple-500 h-8 w-8 flex-shrink-0" />
-              <div>
-                <h2 className="text-xl font-medium text-white mb-1 whitespace-nowrap">生成你的 AI 故事</h2>
-                <p className="text-zinc-400 text-sm whitespace-nowrap">输入一句话生成任意故事</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* My Stories Section */}
         <div className="mb-6">
@@ -255,7 +243,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
         </div>
 
         {/* 优化后的分页组件 */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex pt-10 justify-center">
           <Pagination>
             <PaginationContent>
               {/* 上一页按钮 */}
