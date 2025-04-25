@@ -122,7 +122,6 @@ export default function HistoryList({historyItems}:HistoryListProps) {
             >
               <CardContent className="p-5">
                 <h3 className="font-medium truncate text-lg mb-1 group-hover:text-primary transition-colors">{item.title}</h3>
-              
               </CardContent>
             </Card>
           ))}
@@ -143,7 +142,6 @@ export default function HistoryList({historyItems}:HistoryListProps) {
         <ChevronRight className="h-4 w-4" />
         <span className="sr-only">向右滚动</span>
       </Button>
-      
       {/* 右侧模糊效果 - 更强的渐变 */}
       <div className="absolute right-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
     </div>
