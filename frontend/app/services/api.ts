@@ -51,7 +51,7 @@ const handleApiError = (error: any) => {
 // 封装请求函数
 export const request = async (url: string,  options: RequestInit = {
  
-},base_url=process.env.YOUR_ENDPOINT) => {
+},base_url=process.env.NEXT_PUBLIC_ENDPOINT) => {
   try {
     const response = await fetch(base_url+url, options);
     
