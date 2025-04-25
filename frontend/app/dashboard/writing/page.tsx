@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "管理您的AI小说创作作品，创建新作品或管理现有作品",
 }
 
+
 export default function WorksPage() {
   return <WorksContainer />;
 } 

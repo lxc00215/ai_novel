@@ -64,7 +64,7 @@ const ChatInterface = () => {
           if (targetCharacter) {
             // 检查是否已有与该角色的会话
             const existingSession = sessionsResponse.find(
-              session => session.character_id == characterIdFromUrl
+              (session:any) => session.character_id == characterIdFromUrl
             );
 
            
@@ -122,15 +122,14 @@ const ChatInterface = () => {
 
   const switchCharacter = async (character: Character,characterID:string) => {
     setCurrentCharacter(character);
-    console.log("sessionID",sessionsResponse[0].session);
     const existingSession = sessionsResponse.find(
-        session => session.session.character_id == characterID
+        (session:any) => session.session.character_id == characterID
       );
       console.log(JSON.stringify(existingSession)+"existingSession");
       if(existingSession?.messages.length == 0){
             // 设置初始消息
             setMessages([{
-            session_id:existingSession?.id,
+            session_id:Number(existingSession?.id),
             id: '1',
             sender: character.name,
             sender_type: 'character',
@@ -141,12 +140,10 @@ const ChatInterface = () => {
       console.log(JSON.stringify(existingSession)+"existingSession");
 
       if(existingSession){
-        console.log("existingSession",existingSession.session.id);
-        setCurrentSessionID(existingSession.session.id);
-        console.log("currentSessionID",CurrentSessionID);
+        setCurrentSessionID(Number(existingSession.id));
         setMessages(existingSession.messages);
       }
-    setCurrentSessionID(existingSession?.session.id);
+    setCurrentSessionID(Number(existingSession?.id));
   };
 
   // Scroll to bottom when messages change
@@ -260,7 +257,7 @@ const ChatInterface = () => {
                 {renderAvatar(character.name, character.image_url)}
                 <div>
                   <p className="font-medium">{character.name}</p>
-                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find(session => session.session.id == character.session_id)?.session.last_message}</p>
+                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find((session:any) => session.id == character.session_id)?.last_message}</p>
                 </div>
               </div>
             ))}

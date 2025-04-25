@@ -17,7 +17,6 @@ from util.mcpHub import MCPClient
 mcp_client = None
 mcp_config_path = "mcp_servers.json"
 
-
 # 应用生命周期管理
 @asynccontextmanager
 async def lifespan(app: FastAPI):

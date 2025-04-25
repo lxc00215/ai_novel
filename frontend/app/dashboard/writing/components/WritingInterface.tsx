@@ -69,7 +69,8 @@ export default function WritingInterface({ novel ,setNovel}: WritingInterfacePro
         content: "",
         order: 1,
         book_id: novel.id || "0",
-        summary: ""
+        summary: "",
+        prompt: ""
       };
       
       setNovel({
@@ -137,13 +138,13 @@ const getCurrentChapter = (): Chapter => {
         content: "",
         order: 1,
         book_id: novel.id || "0",
-        summary: ""
+        summary: "",
+        prompt: ""
       };
     }
     
     // 查找当前选中的章节
     const chapter = novel.chapters.find(c => c.order === currentOrder);
-    
     // 如果未找到，返回第一个章节
     return chapter || novel.chapters[0];
   };
@@ -180,7 +181,8 @@ const getCurrentChapter = (): Chapter => {
       content: '',
       order: newOrder,
       book_id: novel.id || "0",
-      summary: ''
+      summary: '',
+      prompt: ''
     };
 
     

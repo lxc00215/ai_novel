@@ -32,8 +32,8 @@ interface PasswordStrength {
 const AuthPage = ({}) => {
 
   // 获取参数
-  const searchParams = useSearchParams();
-  const is_pay = searchParams.get('is_pay');
+  // const searchParams = useSearchParams();
+  // const is_pay = searchParams.get('is_pay');
 
 
   const [activeTab, setActiveTab] = useState("login");
@@ -111,35 +111,36 @@ const AuthPage = ({}) => {
       });
       if (response) {
         // 保存登录信息
-        localStorage.setItem('token', response["access_token"]);
-
+        // localStorage.setItem('token', response["access_token"]);
 
         // 获取存储信息
-        if(is_pay){
+        // if(is_pay){
 
-          router.push("/dashboard/inspiration")
+        //   router.push("/dashboard/inspiration")
 
-          // 获取金额
-         let amount = localStorage.get('amount');
+        //   // 获取金额
+        //  let amount = localStorage.get('amount');
 
-         // 支付
-         const response = await apiService.alipay.creat(amount);
-         console.log(JSON.stringify(response))
-        // 支付链接
-         let link = response['link']
-         console.log("link" + link)
+        //  // 支付
+        //  const response = await apiService.alipay.creat(amount);
+        //  console.log(JSON.stringify(response))
+        // // 支付链接
+        //  let link = response['link']
+        //  console.log("link" + link)
 
-         // 新开窗口打开支付链接
-         window.open(link_str, '_blank');
+        //  // 新开窗口打开支付链接
+        // //  window.open(link, '_blank');
 
-        // 弹出对话框
 
-        }else{
-          router.push("/dashboard")
-        }
+
+        // // 弹出对话框
+
+        // }else{
+        //   router.push("/dashboard")
+        // }
         
       } else {
-        setError(response.message || '登录失败，请检查您的用户名和密码');
+        // setError(response.message || '登录失败，请检查您的用户名和密码');
       }
     } catch (error) {
       setError('登录时发生错误');

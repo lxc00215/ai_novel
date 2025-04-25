@@ -25,6 +25,15 @@ import { useRouter } from "next/navigation";
 import apiService from "../services/api";
 
 import { toast } from "sonner"
+
+
+interface Plan{
+  name:string;
+  price:number;
+  period:string;
+  description:string;
+  features:string[];
+} 
 export default function PricingPageUI() {
   // 使用annually替代activeTab，使状态更加语义化
   const [annually, setAnnually] = useState(false);
@@ -35,7 +44,7 @@ export default function PricingPageUI() {
   // 保存当前选择的支付金额
   const [paymentAmount, setPaymentAmount] = useState("");
   // 当前选择的付款计划
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   // 添加加载状态
   const [isLoading, setIsLoading] = useState(false);
   // 添加订单信息
@@ -59,7 +68,7 @@ export default function PricingPageUI() {
 
   // 支付状态轮询
   useEffect(() => {
-    let pollingInterval;
+    let pollingInterval:any;
     
     if (isPolling && orderInfo && pollingCount < MAX_POLLING_COUNT) {
       console.log("开始轮询支付状态，订单信息:", orderInfo);
@@ -137,7 +146,7 @@ export default function PricingPageUI() {
   
 
   // 修改处理点击函数，先显示确认对话框
-  const handleSubscribeClick = async (plan, amount) => {
+  const handleSubscribeClick = async (plan:any, amount:any) => {
     // 保存当前选择的计划和金额
     setSelectedPlan(plan);
     setPaymentAmount(amount);
@@ -165,7 +174,9 @@ export default function PricingPageUI() {
         console.log("订单信息:", response);
         setOrderInfo(response['order_info']);
 
-        tempwindow.location.href = link_str;
+        if(tempwindow){
+          tempwindow.location.href = link_str;
+        }
 
 
         
@@ -276,7 +287,6 @@ export default function PricingPageUI() {
       });
   }
       
-      console.error("支付处理出错", error);
     };
 
   // 手动检查支付状态
@@ -287,7 +297,7 @@ export default function PricingPageUI() {
   // 重新发起支付
   const handleRetryPayment = () => {
     if (selectedPlan) {
-      const amount = annually ? selectedPlan.yearlyPrice?.toString() : selectedPlan.monthlyPrice?.toString();
+      const amount = annually ? selectedPlan.price?.toString() : selectedPlan.price?.toString();
       setShowPaymentDialog(false);
       
       // 短暂延迟后重新发起支付
@@ -540,7 +550,7 @@ export default function PricingPageUI() {
                     </div>
                     {plan.name !== "免费试用" && annually && (
                       <div className="text-xs mt-1 bg-white/20 rounded-full px-2 py-0.5 inline-block">
-                        相当于 ¥{Math.round((plan.yearlyPrice) / 12)} 元/月
+                          相当于10000 元/月
                       </div>
                     )}
                     <p className="text-sm mt-2">{plan.description}</p>

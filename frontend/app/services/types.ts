@@ -27,6 +27,8 @@ export interface Character{
   image_url:string;
   session_id:string;
   prompt:string;
+  is_used:boolean;
+  user_id:string;
 }
 
 export interface RegisterRequest {
@@ -154,6 +156,7 @@ export interface Session{
   character:Character;
   messages:Message[];
   user:User;
+  last_message:string;
 }
 
 export interface Novel{
@@ -164,6 +167,8 @@ export interface Novel{
   chapters:Chapter[]
   is_top: boolean;
   is_archive: boolean;
+  updated_at:string;
+  created_at:string;
 }
 
 

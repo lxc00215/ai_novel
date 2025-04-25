@@ -93,7 +93,6 @@ export default function Upload({ onUploadComplete }: UploadProps) {
     //   setFileId(response.file_id)
     //  }
      const response = xhr.send(formData);
-     console.log(JSON.stringify(response))
 
 
       // 上传成功后，调用onUploadComplete回调函数
@@ -101,7 +100,6 @@ export default function Upload({ onUploadComplete }: UploadProps) {
         onUploadComplete({
           fileName: file.name,
           fileSize: file.size,
-          ...response
         });
       }
 

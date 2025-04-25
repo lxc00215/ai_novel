@@ -30,6 +30,7 @@ export function middleware(request: NextRequest) {
     '/api/v1': '/api/v2',
     '/dashboard': '/dashboard/inspiration',
   }
+
   
   // === 1. 处理重定向映射 ===
   if (path in redirectMappings) {

@@ -75,30 +75,33 @@ export default function WorksContainer() {
   };
 
   // 归档动作发出执行的方法
-  const handleArchive = async (id: string, isArchive: boolean) => {
-    try {
-      const response = await apiService.novels.updateNovel(id, {is_archive: isArchive});
-      
-      if(response && response.data) {
-        if(isArchive) {
-          // 从作品列表移除，添加到归档列表
-          setWorks(prev => prev.filter(item => item.id !== id));
-          setAchiveWorks(prev => [...prev, response.data]);
-        } else {
-          // 从归档列表移除，添加到作品列表
-          setAchiveWorks(prev => prev.filter(item => item.id !== id));
-          setWorks(prev => [...prev, response.data]);
-        }
+
+const handleArchive = async (id: string, isArchive: boolean) => {
+  try {
+    const response = await apiService.novels.updateNovel(id, {is_archive: isArchive});
+    
+    if(response && response.data) {
+      if(isArchive) {
+        // 从作品列表移除，添加到归档列表
+        setWorks(prev => prev.filter(item => item.id !== id));
+        // 修复: 确保 response.data 不为 undefined
+        setAchiveWorks(prev => [...prev, response.data as Novel]);
+      } else {
+        // 从归档列表移除，添加到作品列表
+        setAchiveWorks(prev => prev.filter(item => item.id !== id));
+        setWorks(prev => [...prev, response.data as Novel]);
       }
-    } catch (error) {
-      console.error("更新归档状态失败:", error);
     }
-  };
+  } catch (error) {
+    console.error("更新归档状态失败:", error);
+  }
+};
+// ... existing code ...
 
   // 处理作品删除
   const handleDelete = async (id: string) => {
     try {
-      await apiService.novels.deleteNovel(id);
+      await apiService.novels.delete(id);
       // 删除成功后从列表中移除
       setWorks(prev => prev.filter(item => item.id !== id));
       setAchiveWorks(prev => prev.filter(item => item.id !== id));

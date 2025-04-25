@@ -82,7 +82,7 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
       onDelete(work.id);
     } else {
       // 如果没有传入删除函数，使用API服务直接删除
-      apiService.novels.deleteNovel(work.id)
+      apiService.novels.delete(work.id)
         .then(() => {
           console.log("作品已删除");
           setShowDeleteDialog(false);

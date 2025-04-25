@@ -6,7 +6,7 @@ import { Check, Wand2, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
-import { InspirationDetail } from '@/app/services/types';
+import { Character, InspirationDetail } from '@/app/services/types';
 import { toast } from 'sonner';
 
 
@@ -50,17 +50,11 @@ const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   // 添加打字机模式控制
   const [typewriterMode] = useState(isNew == 'true'?true:false);
 
-  const [editingLineIndex, setEditingLineIndex] = useState(null);
-  const [storyLines, setStoryLines] = useState([]);
+  const [editingLineIndex, setEditingLineIndex] = useState<number | null>(null);
+  const [storyLines, setStoryLines] = useState<string[]>([]);
 
 
-  const [characters,setCharacters] = useState([ 
-    { id:1,name: "Poppy Abel", description: "Brave and intuitive student. On a trip north in January, Poppy discovers a mysterious force.", image_url: "/api/placeholder/260/320" },
-      { id:2,name: "Ava", description: "An energetic and charismatic fire elemental. Strong but sometimes impulsive and hot-headed.", image_url: "/api/placeholder/260/320" },
-      { id:3,name: "Luna", description: "Known for her quiet wisdom in the shadows. She is loyal, intuitive, and playful. Luna provides emotional support.", image_url: "/api/placeholder/260/320" },
-      { id:4,name: "Mason", description: "A technical genius with a dry sense of humor.", image_url: "/api/placeholder/260/320" },
-      { id:5,name: "Ridge", description: "Mountain guide with deep knowledge of local legends.", image_url: "/api/placeholder/260/320" }]);
-
+  const [characters,setCharacters] = useState<Character[]>([]);
   const [editingPrompt, setEditingPrompt] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
 
@@ -73,7 +67,7 @@ const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [displayedChoices, setDisplayedChoices] = useState<string[]>([]);
 
   // 添加新的状态
-  const [displayedLines, setDisplayedLines] = useState([]);
+  const [displayedLines, setDisplayedLines] = useState<string[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -85,7 +79,7 @@ const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
   // 添加新的状态来跟踪是否所有图片都已生成完成
   const [allImagesGenerated, setAllImagesGenerated] = useState(false);
-  const [updatedStoryLines, setUpdatedStoryLines] = useState([]);
+  const [updatedStoryLines, setUpdatedStoryLines] = useState<string[]>([]);
 
   const router = useRouter();
   // 添加分支打字机效果的状态
@@ -134,7 +128,7 @@ const handleChoiceSelect = async (choice: string) => {
      
      // 更新角色列表（如果响应中包含）
      if (response.characters) {
-       setCharacters(response.characters);
+       setCharacters(response.characters as Character[]);
 
       //  多线程生成图片
       const imagePromises = response.characters.map(async (character:any) => {
@@ -149,7 +143,6 @@ const handleChoiceSelect = async (choice: string) => {
           description: character.description,
           image_url: image_url,
           is_used: false,
-          user_id: response.user.id,
           prompt: character.prompt
         };
     
@@ -179,11 +172,18 @@ const handleChoiceSelect = async (choice: string) => {
      }
      
      // 更新主故事对象
-     setInspiration({
-       ...inspiration,
-       content: [...displayedLines].join('\n'),
-       story_direction: newChoices
-     });
+    // 更新主故事对象
+if (inspiration && inspiration.id) {
+  setInspiration({
+    ...inspiration,
+    content: [...displayedLines].join('\n'),
+    story_direction: newChoices,
+    id: inspiration.id, // 明确指定 id，确保非 undefined
+  });
+} else {
+  console.error('Invalid inspiration object:', inspiration);
+  toast.error('无法更新故事内容，请重试');
+}
      
    } catch (error) {
      console.error('Error continuing story:', error);
@@ -208,7 +208,7 @@ const typewriterEffectForContinuation = async (lines: string[], startIndex: numb
   let finalStoryContent = [...displayedLines];
   
   // 检查是否为图片URL的简单判断函数
-  const isImageUrl = (text) => text.startsWith('http') && (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
+  const isImageUrl = (text:any) => text.startsWith('http') && (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
   
   for (let i = 0; i < lines.length; i++) {
     const lineIndex = startIndex + i;
@@ -219,7 +219,7 @@ const typewriterEffectForContinuation = async (lines: string[], startIndex: numb
     if (isImageUrl(line)) {
       // 直接添加图片URL，不做打字机效果
       setDisplayedLines(prev => {
-        const newLines = [...prev];
+        const newLines:string[] = [...prev];
         newLines[lineIndex] = line;
         return newLines;
       });
@@ -371,7 +371,7 @@ const handleContentAndImages = async (responseData:any) => {
           // 已有内容直接全部显示
           showAllContentImmediately(responseData);
         }
-      } catch (err) {
+      } catch (err:any) {
         setError(err.message);
         console.error('Error:', err);
       } finally {
@@ -431,30 +431,30 @@ const handleContentAndImages = async (responseData:any) => {
         return timeArray[0] + "年" + timeArray[1] + "月"
     }
       // AI rewrite a line
-  const aiRewriteLine = (index) => {
+  const aiRewriteLine = (index:number) => {
     // Simulate AI rewriting
     setTimeout(() => {
-      const newLines = [...storyLines];
+      const newLines:string[] = [...storyLines];
       newLines[index] = "AI 重写了这一行，雪花在空中轻舞，我感受到了前所未有的力量从我的指尖流过，像是冰雪女神赐予我的礼物。";
       setStoryLines(newLines);
       setEditingLineIndex(null);
     }, 1000);
   };
 
-  const editLine = (index) => {
+  const editLine = (index:number) => {
     setEditingLineIndex(index);
   };
 
   // Save edited line
   const saveEditedLine = (index:number, newText:string) => {
-    const newLines = [...storyLines];
+    const newLines:string[] = [...storyLines];
     newLines[index] = newText;
     setStoryLines(newLines);
     setEditingLineIndex(null);
   };
 
   // 添加直接显示所有内容的函数
-  const showAllContentImmediately = (contentData) => {
+  const showAllContentImmediately = (contentData:any) => {
     setShowHeader(true);
     setShowCharacters(true);
     setShowStoryContent(true);
@@ -470,7 +470,7 @@ const handleContentAndImages = async (responseData:any) => {
   };
 
   // 修改顺序展示函数
-  const showContentSequentially = async (contentData) => {
+  const showContentSequentially = async (contentData:any) => {
     // 显示标题和作者信息
     setShowHeader(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -673,13 +673,17 @@ const renderChatSection = () => (
             <span className="text-xs">{char.name.split(' ')[0]}</span>
             <Button size="sm" variant="outline" onClick={async () => {
               // 更新参数
-              const json_data = {
-                id: char.id,
+              const json_data:Character = {
+                id: "",
                 name: char.name,
                 is_used: true,
-                user_id: inspiration?.user.id
+                user_id: inspiration?.user.id as string,
+                description: char.description,
+                image_url: char.image_url,
+                session_id: "",
+                prompt: ""
               };
-              const updatedCharacter = await apiService.character.update(char.id, json_data);
+              const updatedCharacter = await apiService.character.update(1, json_data);
               console.log("updatedCharacter",updatedCharacter);
 
               //跳转页面
@@ -768,12 +772,12 @@ const renderChatSection = () => (
                 type="text"
                 className="text-xl font-bold mb-2 bg-black border border-gray-700 rounded-md px-2 py-1 text-left outline-none focus:border-blue-500"
                 value={inspiration?.title}
-                onChange={(e) => setInspiration({...inspiration, title: e.target.value})}
+                onChange={(e) => setInspiration({...inspiration as InspirationDetail, title: e.target.value as string})}
                 autoFocus
                 onBlur={() => setEditingTitle(false)}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
-                    setInspiration({...inspiration, title: title});
+                    setInspiration({...inspiration as InspirationDetail, title: inspiration?.title as string});
                     setEditingTitle(false);
                   }
                 }}
@@ -784,7 +788,7 @@ const renderChatSection = () => (
                   variant="ghost" 
                   className="h-6 w-6 p-0"
                   onClick={() => {
-                    setInspiration({...inspiration, title: title});
+                    setInspiration({...inspiration as InspirationDetail, title: inspiration?.title as string});
                     setEditingTitle(false);
                   }}
                 >
@@ -803,7 +807,7 @@ const renderChatSection = () => (
           
           <div className="flex flex-col text-sm text-gray-400">
             <p>作者: {inspiration?.user.account}</p>
-            <p>最后更新: {parseTime(inspiration?.updated_at)}</p>
+            <p>最后更新: {parseTime(inspiration?.updated_at as string)}</p>
           </div>
           <div className="text-sm text-gray-300 mt-4 border border-gray-800 rounded-lg p-3">
             {!editingPrompt ? (
@@ -826,9 +830,9 @@ const renderChatSection = () => (
                 <textarea
                   className="bg-black text-gray-300 w-full resize-none outline-none min-h-[15px] mb-8"
                   value={inspiration?.prompt}
-                  onChange={(e) => setInspiration({...inspiration, prompt: e.target.value})}
+                  onChange={(e) => setInspiration({...inspiration as InspirationDetail, prompt: e.target.value as string})}
                   style={{ height: 'auto', overflow: 'hidden' }}
-                  onInput={(e) => {
+                  onInput={(e:any) => {
                     e.target.style.height = 'auto';
                     e.target.style.height = e.target.scrollHeight + 'px';
                   }}

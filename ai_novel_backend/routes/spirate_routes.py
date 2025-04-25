@@ -76,7 +76,7 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
         ]
 
         res = bridge.chat(messages,  options={
-                    "model": feature_config.model,
+                    "model": feature_config["model"],
                     "max_tokens": 2000,
                     "temperature": 0.7
                 })

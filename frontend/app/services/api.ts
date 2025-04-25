@@ -18,7 +18,8 @@ import {
   Chapter,
   ImageObject,
   ContinueRequest,
-  ContinueResponse
+  ContinueResponse,
+  InspirationDetail
 } from './types' ;
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 import { create } from 'domain';
@@ -66,7 +67,7 @@ export const request = async (url: string,  options: RequestInit = {
       };
     }
     // / 关键修改: 检查是否是 SSE 请求
-    if (options.headers && options.headers['Accept'] === 'text/event-stream') {
+    if (options.headers && (options.headers as any)['Accept'] === 'text/event-stream') {
       return response; // 直接返回 response 对象,不要尝试 JSON 解析
     }
     
@@ -79,6 +80,7 @@ export const request = async (url: string,  options: RequestInit = {
 
 // API 服务对象
 const apiService = {
+  // 
 
   alipay:{
     creat:async(amount:string)=>{
@@ -194,7 +196,7 @@ const apiService = {
 
   spirate: {
 
-    continue: async (inspiration_id:string,choice:string): Promise<ApiResponse<ContinueResponse>> => {
+    continue: async (inspiration_id:string,choice:string): Promise<ContinueResponse> => {
       return request(`/spirate/continue/${inspiration_id}`, {
         method: 'POST',
         body: JSON.stringify({choice}),
@@ -225,7 +227,7 @@ const apiService = {
       });
       return response;
     },
-    update: async (data: Partial<Inspiration>): Promise<ApiResponse<Inspiration>> => {
+    update: async (data: Partial<InspirationDetail>): Promise<InspirationDetail> => {
       return request(`/spirate/update`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -401,7 +403,7 @@ const apiService = {
   },
 
   
-    generateImage: async (prompt: string): Promise<ApiResponse<ImageObject>> => {
+    generateImage: async (prompt: string): Promise<ImageObject> => {
       const response = await request('/ai/generate_images', {
         method: 'POST',
         body: JSON.stringify({ prompt,user_id:4 ,size:"1280x960"}),
@@ -509,7 +511,7 @@ const apiService = {
   },
 
   novels:{
-    create:async(title:string,description:string):Promise<ApiResponse<Novel>>=>{
+    create:async(title:string,description:string):Promise<Novel>=>{
         return request(`/novels/create`,{
           method:'POST',
           body:JSON.stringify(
@@ -563,7 +565,7 @@ const apiService = {
         }
       })
     },
-    getChapters:async(id:string):Promise<ApiResponse<Chapter[]>>=>{
+    getChapters:async(id:string):Promise<Chapter[]>=>{
       return request(`/novels/${id}/chapters`,{
         method:'GET',
         headers:{
@@ -571,7 +573,7 @@ const apiService = {
         }
       })
     },
-    getNovel:async(id:string):Promise<ApiResponse<Novel>>=>{
+    getNovel:async(id:string):Promise<Novel[]>=>{
       return request(`/novels/${id}/novel`,{
         method:'GET',
         headers:{
@@ -582,7 +584,7 @@ const apiService = {
   },
 
   character:{
-      update:async(id:number,data:Partial<Character>):Promise<ApiResponse<Character>>=>{
+      update:async(id:number,data:Partial<Character>):Promise<Character>=>{
         console.log("update",JSON.stringify(data));
         return request(`/character/${id}`,{
           method:'PUT',
@@ -592,7 +594,7 @@ const apiService = {
           }
         })
       },
-      getCharacters:async(user_id:number):Promise<ApiResponse<Character[]>>=>{
+      getCharacters:async(user_id:number):Promise<Character[]>=>{
         return request(`/character/${user_id}`,{
           method:'GET',
           headers:{
