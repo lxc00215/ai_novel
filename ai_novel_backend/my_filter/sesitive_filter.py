@@ -156,7 +156,7 @@ class SensitiveWordMiddleware(BaseHTTPMiddleware):
         # 仅处理POST/PUT/PATCH请求
         if request.method in ["POST", "PUT", "PATCH"]:
             if is_excluded_path(request.url):
-                print("排除敏感词过滤", json.loads(await request.body()))
+                # print("排除敏感词过滤", json.loads(await request.body()))
                 return await call_next(request)
             try:
                 body = await request.body()

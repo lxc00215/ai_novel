@@ -19,7 +19,6 @@ import {
   Users,
   Tag,
   Sparkles,
-  Paintbrush,
   PenTool,
   BookOpen as BookAnalyze,
   Tag as NameTag,
@@ -266,7 +265,7 @@ export default function Toolbar({
           <Button 
             variant="outline" 
             size="sm" 
-            className={`bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 ${
+            className={`bg-amber-50 text-amber-600 border-amber-200 hover:cursor-pointer hover:bg-amber-100 ${
               isAiHovered ? 'border-blue-500' : ''
             }`}
             onClick={button.onClick}

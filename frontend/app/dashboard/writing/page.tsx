@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 }
 
 
+
 export default function WorksPage() {
-  return <WorksContainer />;
+  return <WorksContainer/>;
 } 

@@ -674,17 +674,15 @@ const renderChatSection = () => (
             <Button size="sm" variant="outline" onClick={async () => {
               // 更新参数
               const json_data:Character = {
-                id: "",
+                id: char.id,
                 name: char.name,
                 is_used: true,
                 user_id: inspiration?.user.id as string,
                 description: char.description,
                 image_url: char.image_url,
-                session_id: "",
-                prompt: ""
+                prompt: char.prompt
               };
-              const updatedCharacter = await apiService.character.update(1, json_data);
-              console.log("updatedCharacter",updatedCharacter);
+              const updatedCharacter = await apiService.character.update(char.id, json_data);
 
               //跳转页面
               router.push(`/dashboard/messages?characterId=${char.id}`);

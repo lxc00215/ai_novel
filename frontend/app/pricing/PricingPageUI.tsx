@@ -375,7 +375,7 @@ export default function PricingPageUI() {
       )}
       
       {/* 支付确认对话框 */}
-      <Dialog open={showPaymentDialog} onOpenChange={(open) => {
+      <Dialog open={showPaymentDialog} onOpenChange={(open:any) => {
         if (!isLoading) {
           setShowPaymentDialog(open);
         }

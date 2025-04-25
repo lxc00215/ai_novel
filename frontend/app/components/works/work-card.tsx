@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import CreateWorkDialog from "./create-work-dialog";
 
 // 作品接口
-
 interface WorkCardProps {
   work: Novel;
   handleArchive: (id: string, isArchive: boolean) => void;

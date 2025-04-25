@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Plus, UploadCloud, Settings2 } from "lucide-react";
 import WorkCard from "./work-card";
 import CreateWorkCard from "./create-work-card";
 import EmptyState from "./empty-state";
@@ -74,8 +72,6 @@ export default function WorksContainer() {
     }
   };
 
-  // 归档动作发出执行的方法
-
 const handleArchive = async (id: string, isArchive: boolean) => {
   try {
     const response = await apiService.novels.updateNovel(id, {is_archive: isArchive});
@@ -96,7 +92,6 @@ const handleArchive = async (id: string, isArchive: boolean) => {
     console.error("更新归档状态失败:", error);
   }
 };
-// ... existing code ...
 
   // 处理作品删除
   const handleDelete = async (id: string) => {
@@ -219,7 +214,6 @@ const handleArchive = async (id: string, isArchive: boolean) => {
                   <div 
                     key={work.id} 
                     className="h-full"
-                    // 设置较高的z-index来确保下拉菜单不会被其他卡片遮挡
                     style={{ zIndex: works.length - index }}
                   >
                     <WorkCard 

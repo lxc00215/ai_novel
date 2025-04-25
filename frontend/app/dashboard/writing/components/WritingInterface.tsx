@@ -9,19 +9,17 @@ import { cn } from '@/lib/utils';
 import { Chapter, Novel } from '@/app/services/types';
 import apiService from '@/app/services/api';
 import {toast} from 'sonner'
-
-
+import { Loader2 } from "lucide-react";
 
 interface WritingInterfaceProps {
-  novel: Novel;
-  setNovel: (novels:Novel)=>void;
+  novel: Novel ;
+  setNovel: (novel:Novel)=>void;
 }
 
 export default function WritingInterface({ novel ,setNovel}: WritingInterfaceProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-//   const [bookId, setBookId] = useState(novel[0].book_id);
   const [searchText, setSearchText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [searchResults, setSearchResults] = useState({
@@ -62,28 +60,33 @@ export default function WritingInterface({ novel ,setNovel}: WritingInterfacePro
   const editorRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // 如果novel.chapters不存在或为空，初始化一个默认章节
-    if (!novel.chapters || novel.chapters.length === 0) {
-      const defaultChapter: Chapter = {
-        id: "default",
-        title: "第1章",
-        content: "",
-        order: 1,
-        book_id: novel.id || "0",
-        summary: "",
-        prompt: ""
-      };
+
+    const fun = ()=>{
       
-      setNovel({
-        ...novel,
-        chapters: [defaultChapter]
-      });
-      setCurrentOrder(0);
-    } else if (currentOrder === 0 && novel.chapters.length > 0) {
-      // 如果还没有选中章节但有章节列表，选中第一个
-      console.log(novel.chapters[0].order);
-      console.log(JSON.stringify(novel.chapters[0]));
-      setCurrentOrder(0);
+      if (!novel) {
+        return;
+      }else if(novel.chapters.length === 0){
+        const defaultChapter: Chapter = {
+          id: "default",
+          title: "新建章节",
+          content: "",
+          order: 1,
+          book_id:  "0",
+          summary: "",
+          prompt: "",
+        };
+        setNovel({
+          ...novel as Novel,
+          chapters: [defaultChapter]
+        });
+        setCurrentOrder(novel.chapters[0].order);
+      }else if(novel.chapters.length > 0 && currentOrder === 0){
+        setCurrentOrder(novel.chapters[0].order);
+      }
+     
     }
+    fun();
+    
   }, [novel, setNovel]);
 
 
@@ -128,7 +131,6 @@ const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     handleSearch(searchText);
   }
 };
-
 const getCurrentChapter = (): Chapter => {
     if (!novel.chapters || novel.chapters.length === 0) {
       // 返回一个默认章节对象，防止错误
@@ -286,11 +288,14 @@ const getCurrentChapter = (): Chapter => {
 
    // 更新章节标题
    const updateChapterTitle = (order: number, newTitle: string) => {
+    console.log("更新章节标题",newTitle);
     setNovel({...novel, chapters: novel.chapters.map(chapter => 
       chapter.order === order 
         ? { ...chapter, title: newTitle } 
         : chapter
     )});
+
+    console.log("更新章节标题",JSON.stringify(novel));
   };
 
 
@@ -363,11 +368,20 @@ const getCurrentChapter = (): Chapter => {
       delete window.toolbarActions;
     };
   }, []);
+
+  if (!novel) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className={`flex h-screen bg-background text-foreground overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
       {/* Left Sidebar - novel */}
       <div className={`border-r transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
-        <Sidebar 
+        <Sidebar
           chapters={novel.chapters} 
           currentOrder={currentOrder}
           setCurrentOrder={setCurrentOrder}
@@ -401,8 +415,6 @@ const getCurrentChapter = (): Chapter => {
             <Editor 
               chapter={getCurrentChapter()} 
               updateTitle={(newTitle: string)=>{
-                console.log(newTitle);
-                console.log(currentOrder);
                 updateChapterTitle(currentOrder,newTitle);
               }}
               updateContent={(newContent: string)=>{

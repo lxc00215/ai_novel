@@ -82,29 +82,18 @@ class MCPClient:
         
         import shutil
         cmd_path = shutil.which(server_config["command"])
-        logger.info(f"命令路径: {cmd_path}")
         
         if not cmd_path:
-            logger.error(f"命令 '{server_config['command']}' 不存在或不在PATH中")
             return
         server_params = StdioServerParameters(
             command=server_config["command"],
             args=server_config["args"],
             env=server_config.get("env", {})
         )
-
-        print(server_params)
-
-
-
-
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
-        logger.info(f"服务器 {server_name} 连接成功，获取stdio_transport")
         stdio, write = stdio_transport
-        logger.info(f"成功解析stdio_transport")
             
         self.session = await self.exit_stack.enter_async_context(ClientSession(stdio, write))
-        logger.info(f"成功创建ClientSession")
         await self.session.initialize()
         logger.info(f"成功初始化ClientSession")
         

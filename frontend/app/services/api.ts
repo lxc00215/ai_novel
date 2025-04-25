@@ -19,7 +19,8 @@ import {
   ImageObject,
   ContinueRequest,
   ContinueResponse,
-  InspirationDetail
+  InspirationDetail,
+  Session
 } from './types' ;
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 import { create } from 'domain';
@@ -425,8 +426,8 @@ const apiService = {
 
   chat:{
     // 获取用户最近的会话列表
-    getRecentSessions: async (userId: number) => {
-      return await request(`/chat/sessions/${userId}`, {
+    getRecentSessions: async (userId: number): Promise<Session[]> => {
+      return await request(`/chat/sessions/${userId}/recent`, {
         method: 'GET',
         headers:{
           'Content-Type': 'application/json'
@@ -442,6 +443,7 @@ const apiService = {
 
     // 清空特定角色的对话记录
     clearSession: async (sessionId: number) => {
+
       return await request(`/chat/session/${sessionId}/clear`, {
         method: 'POST',
         headers:{
@@ -565,7 +567,7 @@ const apiService = {
         }
       })
     },
-    getChapters:async(id:string):Promise<Chapter[]>=>{
+    getChapters:async(id:string):Promise<Novel>=>{
       return request(`/novels/${id}/chapters`,{
         method:'GET',
         headers:{
@@ -584,7 +586,7 @@ const apiService = {
   },
 
   character:{
-      update:async(id:number,data:Partial<Character>):Promise<Character>=>{
+      update:async(id:string,data:Partial<Character>):Promise<Character>=>{
         console.log("update",JSON.stringify(data));
         return request(`/character/${id}`,{
           method:'PUT',
