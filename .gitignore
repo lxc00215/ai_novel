@@ -5,6 +5,7 @@ node_modules/
 .next/*
 logs/
 *.log
+.env
 *.tlog
 *.out
 *.err
