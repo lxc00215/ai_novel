@@ -69,7 +69,6 @@ class OpenAIBridge:
             ]
 
             response = openai.chat.completions.create(
-
                 model=options.get('model', 'gpt-4o-mini'),
                 messages=data["messages"],
                 stream=False,
