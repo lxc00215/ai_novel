@@ -112,7 +112,7 @@ const apiService = {
   auth: {
     // 登录
     
-    login: async (data: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
+    login: async (data: LoginRequest): Promise<AuthResponse> => {
       console.log(JSON.stringify(data)+":登录");
       const response = await request('/auth/login', {
         method: 'POST',
