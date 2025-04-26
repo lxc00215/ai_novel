@@ -140,13 +140,13 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         <div className="space-y-2">
           <Label htmlFor="ai-model">AI模型</Label>
           <Select defaultValue={aiModel} onValueChange={setAiModel}>
-            <SelectTrigger id="ai-model" className="w-full bg-background">
+            <SelectTrigger id="ai-model" className="w-full bg-black">
               <SelectValue placeholder="选择AI模型" />
             </SelectTrigger>
-            <SelectContent className="bg-background">
-              <SelectItem value="察图版">察图版</SelectItem>
-              <SelectItem value="文章版">文章版</SelectItem>
-              <SelectItem value="专业版">专业版</SelectItem>
+            <SelectContent className="bg-black text-white border-gray-700">
+              <SelectItem value="察图版" className="hover:bg-gray-800">察图版</SelectItem>
+              <SelectItem value="文章版" className="hover:bg-gray-800">文章版</SelectItem>
+              <SelectItem value="专业版" className="hover:bg-gray-800">专业版</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -247,26 +247,26 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             <>
               <div className="relative">
                 <div
-                  className="border rounded-md p-3 bg-background flex items-center justify-between cursor-pointer"
+                  className="border rounded-md p-3 bg-black text-white flex items-center justify-between cursor-pointer"
                   onClick={() => setShowStyleDropdown(!showStyleDropdown)}
                 >
-                  <span className="text-gray-700">{selectedStylePreset}</span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                  <span>{selectedStylePreset}</span>
+                  <ChevronDown className="h-4 w-4 text-white" />
                 </div>
 
                 {showStyleDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 border rounded-md shadow-lg bg-background z-10">
+                  <div className="absolute left-0 right-0 mt-1 border border-gray-700 rounded-md shadow-lg bg-black text-white z-10">
                     {stylePresets.map(style => (
                       <div
                         key={style.id}
-                        className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                        className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-700 last:border-b-0"
                         onClick={() => {
                           setSelectedStylePreset(style.name);
                           setShowStyleDropdown(false);
                         }}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={`text-amber-700 ${selectedStylePreset === style.name ? "font-medium" : ""}`}>
+                          <span className={`${selectedStylePreset === style.name ? "font-medium" : ""}`}>
                             {style.name}
                           </span>
                           {selectedStylePreset === style.name && (
@@ -274,7 +274,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                           )}
                         </div>
                         {selectedStylePreset === style.name && (
-                          <div className="text-sm text-amber-600 mt-1">
+                          <div className="text-sm text-gray-300 mt-1">
                             使用方法：搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。
                           </div>
                         )}
@@ -284,12 +284,12 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                 )}
               </div>
 
-              <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+              <div className="bg-black text-white p-3 rounded-md border border-gray-700">
                 <div className="flex items-center justify-between">
-                  <span className="text-amber-700 font-medium">{selectedStylePreset}</span>
-                  <ChevronDown className="h-4 w-4 text-amber-600" />
+                  <span className="font-medium">{selectedStylePreset}</span>
+                  <ChevronDown className="h-4 w-4 text-white" />
                 </div>
-                <div className="text-sm text-amber-700 mt-2">
+                <div className="text-sm text-gray-300 mt-2">
                   使用方法：搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。
                 </div>
               </div>
@@ -336,12 +336,12 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
 
           {requirementsMode === "preset" ? (
             <Select onValueChange={setSelectedRequirementsPreset}>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className="bg-black">
                 <SelectValue placeholder="请选择写作要求" />
               </SelectTrigger>
-              <SelectContent className="bg-background text-text-primary">
+              <SelectContent className="bg-black text-white border-gray-700">
                 {requirementsPresets.map(req => (
-                  <SelectItem key={req.id} value={req.name}>{req.name}</SelectItem>
+                  <SelectItem key={req.id} value={req.name} className="hover:bg-gray-800">{req.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

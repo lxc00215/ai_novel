@@ -140,13 +140,6 @@ def is_excluded_path(path: str) -> bool:
 # 导入必要的依赖
 
 
-
-
-
-
-
-
-
 class SensitiveWordMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, word_filter: SensitiveWordFilter):
         super().__init__(app)

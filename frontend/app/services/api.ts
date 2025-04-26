@@ -295,6 +295,57 @@ const apiService = {
       });
     },
 
+    // 流式生成小说内容
+    generateContentStream: async (prompt: string, writingStyle: string = "", requirements: string = "") => {
+      try {
+        const response = await request('/ai/generate', {
+          method: 'POST',
+          body: JSON.stringify({
+            prompt,
+            writing_style: writingStyle,
+            requirements,
+            is_stream: true
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          }
+        });
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error('No reader available');
+        }
+
+        // 返回一个异步生成器
+        return {
+          async *getStream() {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value);
+              const messages = chunk
+                .split('\n')
+                .filter(line => line.startsWith('data: '))
+                .map(line => line.slice(6)); // 移除 'data: ' 前缀
+
+              for (const message of messages) {
+                if (message.trim()) {
+                  yield message;
+                }
+              }
+            }
+          }
+        };
+      } catch (error) {
+        console.error('Error in generateContentStream:', error);
+        throw error;
+      }
+    },
+
     // 流式AI扩写
     expandContent: async (context: string, content: string) => {
       try {
