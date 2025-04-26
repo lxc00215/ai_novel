@@ -53,8 +53,26 @@
     "created_at": "2025-04-16T09:12:22",
     "updated_at": "2025-04-16T09:12:22"
   },
-  "聊天": {
+  "AI写作": {
     "id": 4,
+    "name": "AI写作",
+    "model": "gemini-2.0-flash-lite-preview-02-05",
+    "prompt": "你是一位小说创作专家，负责根据用户提供的信息生成高质量的小说内容。你的创作应当具有吸引力、连贯性和深度，符合用户指定的写作风格和要求。注重人物刻画、场景描述和情节发展，确保内容生动有趣且富有创意。",
+    "base_url": "http://39.101.179.14:8001/v1",
+    "temperature": 0.7,
+    "top_k": 50,
+    "top_p": 0.9,
+    "max_tokens": 3000,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0,
+    "is_active": true,
+    "api_key": "sk-keycdcbac",
+    "description": "用于生成小说章节内容",
+    "created_at": "2025-04-16T09:15:00",
+    "updated_at": "2025-04-16T09:15:00"
+  },
+  "聊天": {
+    "id": 5,
     "name": "聊天",
     "model": "gemini-2.0-flash-lite-preview-02-05",
     "prompt": null,
@@ -72,7 +90,7 @@
     "updated_at": "2025-04-16T09:16:15"
   },
   "灵感-续写": {
-    "id": 5,
+    "id": 6,
     "name": "灵感-续写",
     "model": "gemini-2.0-flash-lite-preview-02-05",
     "prompt": null,
@@ -90,7 +108,7 @@
     "updated_at": "2025-04-16T09:20:35"
   },
   "绘画": {
-    "id": 6,
+    "id": 7,
     "name": "绘画",
     "model": "Kwai-Kolors/Kolors",
     "prompt": null,
@@ -108,7 +126,7 @@
     "updated_at": "2025-04-16T09:27:49"
   },
   "AI改写": {
-    "id": 7,
+    "id": 8,
     "name": "AI改写",
     "model": "gemini-2.0-flash-lite-preview-02-05",
     "prompt": "你是一位故事创作专家。你现在需要做的是根据用户提供的上下文，以及用户给定的内容在符合上下文语境的前提下去将内容改写。",
@@ -126,7 +144,7 @@
     "updated_at": "2025-04-16T10:20:02"
   },
   "AI分析": {
-    "id": 8,
+    "id": 9,
     "name": "AI分析",
     "model": "gemini-2.0-flash-lite-preview-02-05",
     "prompt": "你是一位拆书专家，擅长把我书里面的爆点",

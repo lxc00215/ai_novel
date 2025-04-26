@@ -233,8 +233,8 @@ async def generate_chapter(
     book = await db.execute(book_query)
     book = book.scalar_one_or_none()
     
-    if not book:
-        raise HTTPException(status_code=404, detail="书籍不存在或无权访问")
+    # if not book:
+    #     raise HTTPException(status_code=404, detail="书籍不存在或无权访问")
     
     # Check if chapter number already exists
     existing_query = select(GeneratedChapter).where(

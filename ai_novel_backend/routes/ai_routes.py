@@ -4,7 +4,7 @@ import tempfile
 from typing import AsyncGenerator, Optional
 import uuid
 import aiofiles
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Body
 from fastapi.responses import StreamingResponse
 import httpx
 from openai import AsyncOpenAI
@@ -536,4 +536,59 @@ async def generate_response(
     except Exception as e:
         print(f"Error in generate_response: {str(e)}")
         yield f"data: Error: {str(e)}\n\n"
+
+@router.post("/generate")
+async def generate_content(request: dict = Body(...)):
+    """
+    生成小说内容
+    """
+    try:
+        # 获取AI写作特性配置
+        feature_config = get_feature_by_name("AI写作")
+        
+        # 获取请求数据
+        prompt = request.get("prompt", "")
+        model = request.get("model", feature_config["model"])
+        
+        # 写作风格和要求
+        writing_style = request.get("writing_style", "")
+        requirements = request.get("requirements", "")
+        
+        # 构建提示词
+        system_prompt = feature_config["prompt"]
+        user_message = f"""
+        请根据以下信息创作小说内容:
+        
+        剧情/提纲: {prompt}
+        
+        写作风格: {writing_style}
+        
+        写作要求: {requirements}
+        """
+        
+        # 调用AI生成内容
+        bridge = OpenAIBridge()
+        bridge.init({
+            "api_key": feature_config["api_key"],
+            "base_url": feature_config["base_url"],
+        })
+        
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ]
+        
+        result = bridge.chat(
+            messages=messages,
+            options={
+                "model": model,
+                "temperature": feature_config.get("temperature", 0.7),
+                "max_tokens": feature_config.get("max_tokens", 2000)
+            }
+        )
+        
+        return {"data": result, "success": True}
+    except Exception as e:
+        print(f"内容生成错误: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"生成失败: {str(e)}")
 

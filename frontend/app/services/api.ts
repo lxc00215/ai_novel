@@ -1,10 +1,10 @@
 "use client";
 
 import { get } from 'http';
-import { 
-  ApiResponse, 
-  LoginRequest, 
-  RegisterRequest, 
+import {
+  ApiResponse,
+  LoginRequest,
+  RegisterRequest,
   AuthResponse,
   Novel,
   // CreateNovelRequest,
@@ -19,7 +19,7 @@ import {
   ImageObject,
   ContinueRequest,
   ContinueResponse
-} from './types' ;
+} from './types';
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 import { create } from 'domain';
 import { title } from 'process';
@@ -36,8 +36,18 @@ interface ErrorResponse {
 // 封装错误处理函数
 const handleApiError = (error: any) => {
   // 获取错误信息
-  const errorMessage = error.response?.data?.message || '请求失败，请稍后重试';
-  
+  let errorMessage = '请求失败，请稍后重试';
+
+  // 处理敏感词错误
+  if (error.response?.data) {
+    if (error.response.data.error === "内容包含敏感词" && error.response.data.found_words) {
+      const sensitiveWords = error.response.data.found_words.join('、');
+      errorMessage = `存在敏感词: ${sensitiveWords}，请修改`;
+    } else if (error.response.data.message) {
+      errorMessage = error.response.data.message;
+    }
+  }
+
   // 显示错误提示
   toast.error(errorMessage, {
     position: 'top-center',
@@ -49,12 +59,12 @@ const handleApiError = (error: any) => {
 };
 
 // 封装请求函数
-export const request = async (url: string,  options: RequestInit = {
- 
-},base_url="http://localhost:8000") => {
+export const request = async (url: string, options: RequestInit = {
+
+}, base_url = "/api/proxy") => {
   try {
-    const response = await fetch(base_url+url, options);
-    
+    const response = await fetch(base_url + url, options);
+
     // 检查响应状态
     if (!response.ok) {
       const errorData: ErrorResponse = await response.json();
@@ -65,11 +75,12 @@ export const request = async (url: string,  options: RequestInit = {
         }
       };
     }
-    // / 关键修改: 检查是否是 SSE 请求
-    if (options.headers && options.headers['Accept'] === 'text/event-stream') {
+    // 检查是否是 SSE 请求
+    const headers = options.headers as Record<string, string>;
+    if (headers && headers['Accept'] === 'text/event-stream') {
       return response; // 直接返回 response 对象,不要尝试 JSON 解析
     }
-    
+
 
     return await response.json();
   } catch (error) {
@@ -80,99 +91,99 @@ export const request = async (url: string,  options: RequestInit = {
 // API 服务对象
 const apiService = {
 
-  alipay:{
-    creat:async(amount:string)=>{
+  alipay: {
+    creat: async (amount: string) => {
       return await request('/alipay/create', {
         method: 'POST',
         body: JSON.stringify({
-          amount:amount,
-          description:"充值"
+          amount: amount,
+          description: "充值"
         }),
-        headers:{
+        headers: {
           'Content-Type': 'application/json'
         }
       });
     },
-    checkOrder:async(orderInfo:any)=>{
-      return await request('/alipay/check',{
-        method:'post',
-        body:JSON.stringify({
-          "order_info":orderInfo
+    checkOrder: async (orderInfo: any) => {
+      return await request('/alipay/check', {
+        method: 'post',
+        body: JSON.stringify({
+          "order_info": orderInfo
         }),
-        headers:{
-          'Content-Type':'application/json'
+        headers: {
+          'Content-Type': 'application/json'
         }
-      
+
       })
     }
-  
+
   },
-  
+
   // 认证相关 API
   auth: {
     // 登录
-    
+
     login: async (data: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
-      console.log(JSON.stringify(data)+":登录");
+      console.log(JSON.stringify(data) + ":登录");
       const response = await request('/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
-        headers:{
+        headers: {
           'Content-Type': 'application/json'
         }
       });
-      
+
       // 如果登录成功，保存令牌和用户信息
       if (response.success && response.data) {
         const { token, user } = response.data;
         if (token) localStorage.setItem('authToken', token);
         if (user) localStorage.setItem('user', JSON.stringify(user));
       }
-      
+
       return response;
     },
-    
+
     // 注册
     register: async (data: RegisterRequest): Promise<ApiResponse<AuthResponse>> => {
       const response = await request('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
-        headers:{
+        headers: {
           'Content-Type': 'application/json'
         }
       });
-      
+
       // 如果注册成功，保存令牌和用户信息
       if (response.success && response.data) {
         const { token, user } = response.data;
         if (token) localStorage.setItem('authToken', token);
         if (user) localStorage.setItem('user', JSON.stringify(user));
       }
-      
+
       return response;
     },
-    
+
     // 退出登录
     logout: async (): Promise<ApiResponse<any>> => {
       // 调用后端登出接口（如果需要）
       const response = await request('/auth/logout', {
         method: 'POST',
       });
-      
+
       // 无论成功与否，清除本地存储
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      
+
       return response;
     },
-    
+
     // 获取当前用户信息
     // getCurrentUser: async (): Promise<ApiResponse<User>> => {
     //   return fetchApi<User>('/auth/me');
     // }
   },
 
-  utils:{
+  utils: {
     /**
      * 上传图片到服务器
      * @param data FormData对象，包含要上传的文件
@@ -187,18 +198,18 @@ const apiService = {
         }
       });
 
-      console.log(JSON.stringify(response)+"下载图片并上传");
+      console.log(JSON.stringify(response) + "下载图片并上传");
       return response.image_url;
     },
   },
 
   spirate: {
 
-    continue: async (inspiration_id:string,choice:string): Promise<ApiResponse<ContinueResponse>> => {
+    continue: async (inspiration_id: string, choice: string): Promise<ApiResponse<ContinueResponse>> => {
       return request(`/spirate/continue/${inspiration_id}`, {
         method: 'POST',
-        body: JSON.stringify({choice}),
-        headers:{
+        body: JSON.stringify({ choice }),
+        headers: {
           'Content-Type': 'application/json'
         }
       });
@@ -215,11 +226,11 @@ const apiService = {
         return { success: false, data: null };
       }
     },
-    getStories: async (id:number,page:number,pageSize:number) => {
+    getStories: async (id: number, page: number, pageSize: number) => {
       console.log("getStories1");
-      const response = await request(`/spirate/user/${id}?page=${page}&pageSize=${pageSize}`,{
-        method:'GET',
-        headers:{
+      const response = await request(`/spirate/user/${id}?page=${page}&pageSize=${pageSize}`, {
+        method: 'GET',
+        headers: {
           'Content-Type': 'application/json'
         }
       });
@@ -229,17 +240,17 @@ const apiService = {
       return request(`/spirate/update`, {
         method: 'PUT',
         body: JSON.stringify(data),
-        headers:{
+        headers: {
           'Content-Type': 'application/json'
         }
       });
     }
   },
-  bookGeneration:{
-    getAnalysisHistory:async()=>{
-      return request(`/bookGeneration/get-analysis-history`,{
-        method:'GET',
-        headers:{
+  bookGeneration: {
+    getAnalysisHistory: async () => {
+      return request(`/bookGeneration/get-analysis-history`, {
+        method: 'GET',
+        headers: {
           'Content-Type': 'application/json'
         }
       })
@@ -247,93 +258,101 @@ const apiService = {
   },
   // AI 生成相关 API
   ai: {
-    
+
     // 拆解
-    analyze:async(file_id:string)=>{
-      return request(`/ai/analyze-file`,{
-        method:'POST',
-        body:JSON.stringify({file_id}),
-        headers:{
+    analyze: async (file_id: string) => {
+      return request(`/ai/analyze-file`, {
+        method: 'POST',
+        body: JSON.stringify({ file_id }),
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     },
 
- 
-    getAnalysis:async(file_id:string)=>{
-      return request(`/ai/get-analysis`,{
-        method:'POST',
-        body:JSON.stringify({file_id}),
-        headers:{
+
+    getAnalysis: async (file_id: string) => {
+      return request(`/ai/get-analysis`, {
+        method: 'POST',
+        body: JSON.stringify({ file_id }),
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     },
     // 生成小说内容
-    generateContent: async (prompt: string): Promise<ApiResponse<string>> => {
+    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<ApiResponse<string>> => {
       return request('/ai/generate', {
         method: 'POST',
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          writing_style: writingStyle,
+          requirements
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
     },
 
     // 流式AI扩写
-    expandContent: async (context:string,content: string) => {
+    expandContent: async (context: string, content: string) => {
       try {
         const response = await request('/ai/expand', {
           method: 'POST',
-          body: JSON.stringify({ context,content }),
-          headers:{
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream'
-        }
-      });
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      
-      if (!reader) {
-        throw new Error('No reader available');
-      }
-
-      // 返回一个异步生成器
-      return {
-        async *getStream() {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            
-            const chunk = decoder.decode(value);
-            const messages = chunk
-              .split('\n')
-              .filter(line => line.startsWith('data: '))
-              .map(line => line.slice(6)); // 移除 'data: ' 前缀
-              
-            for (const message of messages) {
-              if (message.trim()) {
-                yield message;
-              }
-            }
-
+          body: JSON.stringify({ context, content, is_stream: true }),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
           }
+        });
+        console.log(response)
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error('No reader available');
         }
-      };
-    } catch (error) {
-      console.error('Error in sendMessage:', error);
-      throw error;
-    }},
-    polish:async(context:string,content:string)=>{
-      const response = await request('/ai/polish',{
-        method:'POST',
-        body:JSON.stringify({context,content}),
-        headers:{
+
+        // 返回一个异步生成器
+        return {
+          async *getStream() {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value);
+              const messages = chunk
+                .split('\n')
+                .filter(line => line.startsWith('data: '))
+                .map(line => line.slice(6)); // 移除 'data: ' 前缀
+
+              for (const message of messages) {
+                if (message.trim()) {
+                  yield message;
+                }
+              }
+
+            }
+          }
+        };
+      } catch (error) {
+        console.error('Error in sendMessage:', error);
+        throw error;
+      }
+    },
+    polish: async (context: string, content: string) => {
+      const response = await request('/ai/polish', {
+        method: 'POST',
+        body: JSON.stringify({ context, content, is_stream: true }),
+        headers: {
           'Content-Type': 'application/json',
           "Accept": "text/event-stream"
         }
       })
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      
+
       if (!reader) {
         throw new Error('No reader available');
       }
@@ -343,13 +362,13 @@ const apiService = {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             const chunk = decoder.decode(value);
             const messages = chunk
               .split('\n')
               .filter(line => line.startsWith('data: '))
               .map(line => line.slice(6)); // 移除 'data: ' 前缀
-              
+
             for (const message of messages) {
               if (message.trim()) {
                 yield message;
@@ -361,18 +380,18 @@ const apiService = {
       }
     },
 
-    rewrite:async(context:string,content:string)=>{
-      const response = await request('/ai/rewrite',{
-        method:'POST',
-        body:JSON.stringify({context,content}),
-        headers:{
+    rewrite: async (context: string, content: string) => {
+      const response = await request('/ai/rewrite', {
+        method: 'POST',
+        body: JSON.stringify({ context, content, is_stream: true }),
+        headers: {
           'Content-Type': 'application/json',
           "Accept": "text/event-stream"
         }
       })
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      
+
       if (!reader) {
         throw new Error('No reader available');
       }
@@ -382,13 +401,13 @@ const apiService = {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             const chunk = decoder.decode(value);
             const messages = chunk
               .split('\n')
               .filter(line => line.startsWith('data: '))
               .map(line => line.slice(6)); // 移除 'data: ' 前缀
-              
+
             for (const message of messages) {
               if (message.trim()) {
                 yield message;
@@ -398,14 +417,14 @@ const apiService = {
           }
         }
       }
-  },
+    },
 
-  
+
     generateImage: async (prompt: string): Promise<ApiResponse<ImageObject>> => {
       const response = await request('/ai/generate_images', {
         method: 'POST',
-        body: JSON.stringify({ prompt,user_id:4 ,size:"1280x960"}),
-        headers:{
+        body: JSON.stringify({ prompt, user_id: 4, size: "1280x960" }),
+        headers: {
           'Content-Type': 'application/json'
         }
       });
@@ -421,12 +440,12 @@ const apiService = {
     }
   },
 
-  chat:{
+  chat: {
     // 获取用户最近的会话列表
     getRecentSessions: async (userId: number) => {
       return await request(`/chat/sessions/${userId}`, {
         method: 'GET',
-        headers:{
+        headers: {
           'Content-Type': 'application/json'
         }
       });
@@ -442,7 +461,7 @@ const apiService = {
     clearSession: async (sessionId: number) => {
       return await request(`/chat/session/${sessionId}/clear`, {
         method: 'POST',
-        headers:{
+        headers: {
           'Content-Type': 'application/json'
         }
       });
@@ -452,8 +471,8 @@ const apiService = {
     getOrCreateSession: async (userId: number, characterId: number) => {
       return await request('/chat/session', {
         method: 'POST',
-        body: JSON.stringify({user_id:userId,character_id:characterId}),
-        headers:{
+        body: JSON.stringify({ user_id: userId, character_id: characterId }),
+        headers: {
           'Content-Type': 'application/json'
         }
       });
@@ -470,28 +489,28 @@ const apiService = {
             'Accept': 'text/event-stream'
           }
         });
-  
+
         // 处理 SSE 数据流
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
-        
+
         if (!reader) {
           throw new Error('No reader available');
         }
-  
+
         // 返回一个异步生成器
         return {
           async *getMessages() {
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
-              
+
               const chunk = decoder.decode(value);
               const messages = chunk
                 .split('\n')
                 .filter(line => line.startsWith('data: '))
                 .map(line => line.slice(6)); // 移除 'data: ' 前缀
-                
+
               for (const message of messages) {
                 if (message.trim()) {
                   yield message;
@@ -508,109 +527,109 @@ const apiService = {
     }
   },
 
-  novels:{
-    create:async(title:string,description:string):Promise<ApiResponse<Novel>>=>{
-        return request(`/novels/create`,{
-          method:'POST',
-          body:JSON.stringify(
-            {
-              'title':title,
-              'description':description,
-              'user_id':'4'
-            }
-          ),
-          headers:{
-             'Content-Type': 'application/json'
+  novels: {
+    create: async (title: string, description: string): Promise<ApiResponse<Novel>> => {
+      return request(`/novels/create`, {
+        method: 'POST',
+        body: JSON.stringify(
+          {
+            'title': title,
+            'description': description,
+            'user_id': '4'
           }
-        })
-    },
-
-    delete:async(id:string)=>{
-      return request(`/novels/${id}/delete`,{
-        method:'POST',
-        headers:{
-          'Content-Type': 'application/json'
-        }
-      })
-    },
-    updateNovel:async(id:string,data:Partial<Novel>):Promise<ApiResponse<Novel>>=>{
-      return request(`/novels/${id}/updateNovel`,{
-        method:'PUT',
-        body:JSON.stringify(data),
-        headers:{
+        ),
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     },
 
-    createChapter:async(id:string,data:Partial<Chapter>):Promise<ApiResponse<Chapter>>=>{
-      return request(`/novels/${id}/chapters`,{
-        method:'POST',
-        body:JSON.stringify(data),
-        headers:{
+    delete: async (id: string) => {
+      return request(`/novels/${id}/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+    updateNovel: async (id: string, data: Partial<Novel>): Promise<ApiResponse<Novel>> => {
+      return request(`/novels/${id}/updateNovel`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     },
 
-    updateChapter:async(id:string,order:number,data:Partial<Chapter>):Promise<ApiResponse<Chapter>>=>{
-      console.log("updateChapter",JSON.stringify(data));
-      return request(`/novels/${id}/chapters/${order}`,{
-        method:'PUT',
-        body:JSON.stringify(data),
-        headers:{
+    createChapter: async (id: string, data: Partial<Chapter>): Promise<ApiResponse<Chapter>> => {
+      return request(`/novels/${id}/chapters`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     },
-    getChapters:async(id:string):Promise<ApiResponse<Chapter[]>>=>{
-      return request(`/novels/${id}/chapters`,{
-        method:'GET',
-        headers:{
+
+    updateChapter: async (id: string, order: number, data: Partial<Chapter>): Promise<ApiResponse<Chapter>> => {
+      console.log("updateChapter", JSON.stringify(data));
+      return request(`/novels/${id}/chapters/${order}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     },
-    getNovel:async(id:string):Promise<ApiResponse<Novel>>=>{
-      return request(`/novels/${id}/novel`,{
-        method:'GET',
-        headers:{
+    getChapters: async (id: string): Promise<ApiResponse<Chapter[]>> => {
+      return request(`/novels/${id}/chapters`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+    getNovel: async (id: string): Promise<ApiResponse<Novel>> => {
+      return request(`/novels/${id}/novel`, {
+        method: 'GET',
+        headers: {
           'Content-Type': 'application/json'
         }
       })
     }
   },
 
-  character:{
-      update:async(id:number,data:Partial<Character>):Promise<ApiResponse<Character>>=>{
-        console.log("update",JSON.stringify(data));
-        return request(`/character/${id}`,{
-          method:'PUT',
-          body:JSON.stringify(data),
-          headers:{
-            'Content-Type': 'application/json'
-          }
-        })
-      },
-      getCharacters:async(user_id:number):Promise<ApiResponse<Character[]>>=>{
-        return request(`/character/${user_id}`,{
-          method:'GET',
-          headers:{
-            'Content-Type': 'application/json'
-          }
-        })
-      }
+  character: {
+    update: async (id: number, data: Partial<Character>): Promise<ApiResponse<Character>> => {
+      console.log("update", JSON.stringify(data));
+      return request(`/character/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+    getCharacters: async (user_id: number): Promise<ApiResponse<Character[]>> => {
+      return request(`/character/${user_id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    }
   },
 
   task: {
     //创建任务
     create: async (data: CreateTaskRequest): Promise<ApiResponse<SimpleTask>> => {
-      
+
       try {
         const response = await request('/task/new', {
           method: 'POST',
           body: JSON.stringify(data),
-          headers:{
+          headers: {
             'Content-Type': 'application/json'
           }
         });
@@ -630,7 +649,7 @@ const apiService = {
       }
     }
   }
-  
+
 };
 
 export default apiService; 

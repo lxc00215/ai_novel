@@ -10,7 +10,7 @@ from models import TaskTypeEnum
 
 
 # 数据库URL
-DATABASE_URL = "mysql+aiomysql://root:root@localhost/novel"
+DATABASE_URL = "mysql+aiomysql://root:shiyunlai123@localhost/novel"
 
 # 创建异步引擎
 engine = create_async_engine(

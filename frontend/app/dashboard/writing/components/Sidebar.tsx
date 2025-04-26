@@ -18,9 +18,9 @@ interface SidebarProps {
   deleteChapter: (order: number) => void;
 }
 
-export default function Sidebar({ 
-  chapters, 
-  currentOrder, 
+export default function Sidebar({
+  chapters,
+  currentOrder,
   setCurrentOrder,
   addNewChapter,
   deleteChapter,
@@ -31,10 +31,10 @@ export default function Sidebar({
     // 这里可以打开一个编辑概要的对话框
   };
 
-   // 排序章节，确保按order顺序显示
-   const sortedChapters = [...chapters].sort((a, b) => a.order - b.order);
+  // 排序章节，确保按order顺序显示
+  const sortedChapters = [...chapters].sort((a, b) => a.order - b.order);
 
-   //章节标题前添加序号
+  //章节标题前添加序号
 
   return (
     <div className="flex flex-col h-full">
@@ -44,25 +44,24 @@ export default function Sidebar({
           新建章节
         </Button>
       </div>
-      
+
       {/* 使用固定高度和滚动来解决列表过长的问题 */}
       <div className="flex-1 overflow-y-auto">
         <ul className="space-y-1 p-2">
           {sortedChapters.map((chapter) => (
-            <li 
+            <li
               key={chapter.id}
-              className={`flex items-center justify-between p-2 rounded hover:cursor-pointer ${
-                currentOrder === chapter.order ? 'bg-blue-100' : 'hover:bg-gray-100'
-              }`}
+              className={`flex items-center justify-between p-2 rounded hover:cursor-pointer ${currentOrder === chapter.order ? 'bg-blue-100' : 'hover:bg-gray-100'
+                }`}
               onClick={() => {
                 setCurrentOrder(chapter.order);
               }}
             >
               <span className="truncate flex-1">第{chapter.order + 1}章 {chapter.title}</span>
               <div className="flex items-center gap-1 ml-2 shrink-0">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-7 w-7 opacity-70 hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -73,9 +72,9 @@ export default function Sidebar({
                   <FileText className="h-4 w-4" />
                 </Button>
                 {chapters.length > 1 && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-7 w-7 opacity-70 hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation();
