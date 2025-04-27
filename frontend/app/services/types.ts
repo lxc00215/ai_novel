@@ -37,11 +37,20 @@ export interface RegisterRequest {
   password: string;
 }
 
-export interface CreateTaskRequest{
+export interface CreateInspirationRequest{
   prompt:string;
   user_id:number;
   task_type:string;
   is_continue:boolean;
+}
+
+export interface CreateCrazyRequest{
+  type:string;
+  category:string;
+  seeds:string[];
+  chapter_count:number;
+  task_type:string;
+  user_id:number;
 }
 
 export interface TaskStatusRequest{

@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 
 from fastapi.staticfiles import StaticFiles
 from routes import alipay_routes, book_generation_routes, feature_routes, alipay_routes
-from my_filter.sesitive_filter import SensitiveWordFilter, get_word_filter
 sys.path.append("routes")
 from sqlalchemy.orm import configure_mappers
 from fastapi import Depends, FastAPI

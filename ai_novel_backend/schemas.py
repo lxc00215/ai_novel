@@ -3,7 +3,7 @@ from fastapi import Depends
 from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional, List, Union, Dict
 from datetime import datetime
-from database import BookBreakdownResult, Character, CrazyWalk2Result, CrazyWalkResult, InspirationResult, Task, get_db
+from database import BookBreakdownResult, Character, CrazyWalkResult, InspirationResult, Task, get_db
 from models import TaskTypeEnum
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -324,7 +324,6 @@ class TaskResponse(TaskBase):
     result: Optional[Union[
         InspirationResult,
         CrazyWalkResult,
-        CrazyWalk2Result,
         BookBreakdownResult
     ]] = None
 

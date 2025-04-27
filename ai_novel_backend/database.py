@@ -86,17 +86,8 @@ class Task(Base):
                     "created_at": result.created_at,
                     "updated_at": result.updated_at
                 }
-        elif self.result_type == TaskTypeEnum.CRAZY_WALK_2:
-            result = await session.get(CrazyWalk2Result, self.result_id)
-            if result:
-                return {
-                    "id": result.id,
-                    "title": result.title,
-                    "content": result.content,
-                    "additional_info": result.additional_info,
-                    "created_at": result.created_at,
-                    "updated_at": result.updated_at
-                }
+
+                
         elif self.result_type == TaskTypeEnum.BOOK_BREAKDOWN:
             result = await session.get(BookBreakdownResult, self.result_id)
             if result:
@@ -244,7 +235,8 @@ class Novels(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(255), nullable=False)
-    chapters = Column(JSON, nullable=True)
+    # 在 Novels 模型中添加
+    chapter_ids = Column(JSON, nullable=True)  # 专门用于存储章节ID列表
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     description = Column(Text, nullable=True)
@@ -356,19 +348,27 @@ class CrazyWalkResult(Base):
     
     id = Column(Integer, primary_key=True)
     title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now())
-    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
-
-class CrazyWalk2Result(Base):
-    __tablename__ = 'crazy_walk_2_results'
+    description = Column(Text, nullable=True)  # 新增字段
+    novel_id = Column(Integer, ForeignKey('novels.id'), nullable=True)  # 新增字段
+    novel_type = Column(String(50), nullable=True)  # 新增字段
+    category = Column(String(50), nullable=True)  # 新增字段
+    seeds = Column(JSON, nullable=True)  # 新增字段
+    chapter_count = Column(Integer, nullable=True)  # 新增字段
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
-    id = Column(Integer, primary_key=True)
-    title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
-    additional_info = Column(JSON)
-    created_at = Column(DateTime, default=datetime.now())
-    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
+    # 如果需要关联关系
+    novel = relationship("Novels", backref="crazy_walk_results")
+  
+# class CrazyWalk2Result(Base):
+#     __tablename__ = 'crazy_walk_2_results'
+    
+#     id = Column(Integer, primary_key=True)
+#     title = Column(String(255), nullable=False)
+#     content = Column(Text, nullable=False)
+#     additional_info = Column(JSON)
+#     created_at = Column(DateTime, default=datetime.now())
+#     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
 
 class BookBreakdownResult(Base):
     __tablename__ = 'book_breakdown_results'

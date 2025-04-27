@@ -52,12 +52,9 @@ const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
   const [editingLineIndex, setEditingLineIndex] = useState<number | null>(null);
   const [storyLines, setStoryLines] = useState<string[]>([]);
-
-
   const [characters,setCharacters] = useState<Character[]>([]);
   const [editingPrompt, setEditingPrompt] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
-
   // 添加新的状态来控制各个部分的显示
   const [showHeader, setShowHeader] = useState(false);
   const [showCharacters, setShowCharacters] = useState(false);

@@ -1,6 +1,5 @@
 "use client";
 
-import { get } from 'http';
 import { 
   ApiResponse, 
   LoginRequest, 
@@ -8,24 +7,19 @@ import {
   AuthResponse,
   Novel,
   // CreateNovelRequest,
-  CreateTaskRequest,
   SimpleTask,
-  TaskStatusResponse,
   TaskResponse,
   Character,
-  Inspiration,
-  ChatSessionRequest,
   Chapter,
   ImageObject,
-  ContinueRequest,
   ContinueResponse,
   InspirationDetail,
-  Session
+  Session,
+  CreateInspirationRequest,
+  CreateCrazyRequest
 } from './types' ;
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
-import { create } from 'domain';
-import { title } from 'process';
-import { json } from 'stream/consumers';
+
 
 // API 基础URL
 
@@ -608,8 +602,7 @@ const apiService = {
 
   task: {
     //创建任务
-    create: async (data: CreateTaskRequest): Promise<ApiResponse<SimpleTask>> => {
-      
+    create: async (data: CreateInspirationRequest | CreateCrazyRequest): Promise<ApiResponse<SimpleTask>> => {
       try {
         const response = await request('/task/new', {
           method: 'POST',
@@ -624,6 +617,19 @@ const apiService = {
         throw error;
       }
     },
+    // 查询任务
+    getTaskByType:async(task_type:string):Promise<SimpleTask>=>{
+      return request(`/task/get-by-type/${task_type}`,{
+        method:'GET',
+        headers:{
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+
+
+
+    
     status: async (taskId: string): Promise<ApiResponse<TaskResponse>> => {
       try {
         const response = await request(`/task/status/${taskId}`);

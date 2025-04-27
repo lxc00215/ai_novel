@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Inspiration } from "@/app/services/types";
 import { useRouter } from "next/navigation";
 import apiService from "@/app/services/api";
+
 import {QRCodeSVG } from 'qrcode.react';
 import { 
   Pagination, 
@@ -40,6 +41,8 @@ const getStories = async (page: number, pageSize: number) => {
 
 // 接收一个切换函数作为props
 export default function End({ onToggleView }: { onToggleView: () => void }) {
+
+  const router = useRouter();
   const [stories, setStories] = useState<Inspiration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -88,6 +91,13 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
     const shareableUrl = `${window.location.origin}/dashboard/inspiration/${storyId}`;
     setShareUrl(shareableUrl);
     setIsQRCodeOpen(true);
+  };
+
+  const handleContinue = (storyId: string) => (e: React.MouseEvent) => {
+    console.log("执行了")
+    e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
+    console.log("storyId", storyId);
+    router.push(`/dashboard/inspiration/${storyId}`);
   };
 
   const copyShareLink = async () => {
@@ -179,8 +189,8 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                     {/* 底部按钮区域 - 响应式按钮大小和间距 */}
                     <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
                       <Button 
-                        className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
-                      >
+                        className="text-xs sm:text-sm hover:cursor-pointer px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
+                        onClick={handleContinue(story.id)}>
                         继续
                       </Button>
 
@@ -188,7 +198,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                         <DrawerTrigger asChild>
                           <Button
                             onClick={handleShare(story.id)}
-                             className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
+                             className="text-xs sm:text-sm hover:cursor-pointer px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
                           >
                             <Share2 className="w-4 h-4 mr-2" />
                             分享

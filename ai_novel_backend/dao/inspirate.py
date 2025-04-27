@@ -12,21 +12,13 @@ from bridge.openai_bridge import OpenAIBridge
 
 bridge = OpenAIBridge()
 
-class StoryCharacter:
-    """故事角色设定类"""
-    def __init__(self, name: str, background: str, age: int, personality: str, memo: Optional[str] = None):
-        self.name = name
-        self.background = background
-        self.age = age
-        self.personality = personality
-        self.memo = memo
+
 
 class InspirationService:
     """灵感服务，处理故事生成和续写任务"""
     
     def __init__(self):
-        print(f"OPENAI_BASE_URL: {os.getenv('OPENAI_BASE_URL')}")
-        print(f"OPENAI_API_KEY: {os.getenv('OPENAI_API_KEY')}")
+      
         bridge.init({
             "base_url": os.getenv("OPENAI_BASE_URL"),
             "api_key": os.getenv("OPENAI_API_KEY")
@@ -110,52 +102,3 @@ class InspirationService:
             return story_parts
         except Exception as e:
             raise e
-    
-    async def continue_story(self, 
-                             prompt: str) -> Dict[str, Any]:
-        """
-        根据提示词续写故事
-        
-        Args:
-            prompt: 用户提供的提示词
-            
-        Returns:
-            包含续写内容的字典
-        """
-        
-        try:
-            # 构建续写故事的提示词
-            enhanced_prompt = f"""
-            基于以下提示词，继续编写故事:
-            
-            {prompt}
-            
-            请直接续写故事内容。续写的内容应当自然衔接，保持一致的风格和情节发展。
-            """
-            
-            # 调用大模型API
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    os.getenv("OPENAI_API_URL"),
-                    headers=self.headers,
-                    json={
-                        "model": os.getenv("LLM_MODEL"),
-                        "prompt": enhanced_prompt,
-                        "max_tokens": 1500,
-                        "temperature": 0.7
-                    },
-                    timeout=60.0
-                )
-                
-                response.raise_for_status()
-                result = response.json()
-                
-                # 获取生成的内容
-                generated_text = result.get("choices", [{}])[0].get("text", "").strip()
-                
-                print(f"generated_text: {generated_text}")
-                return generated_text
-          
-        except Exception as e:
-            raise e
-    

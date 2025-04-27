@@ -35,15 +35,9 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
     book_id: '',
     summary: ''
   };
-
-
   const [localTitle, setLocalTitle] = useState(safeChapter.title);
   const [localContent, setLocalContent] = useState(safeChapter.content);
-  
-  
     // 流式AI扩写  将选中的内容逐步替换为AI扩写的内容
-
-    
     const handleExpand = async () => {
         const expandedText = `${selection.text}`;
         const stream = await apiService.ai.expandContent(localContent,expandedText);
@@ -51,7 +45,8 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
         for await (const chunk of stream.getStream()) {
           content += chunk;
           // 在高亮的后面加 文本
-          setContent(localContent.replace(selection.text,content));
+          setLocalContent(localContent.replace(selection.text,content));
+          // updateContent(localContent.replace(selection.text,content));
         }
     }
 
