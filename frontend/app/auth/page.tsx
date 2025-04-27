@@ -23,26 +23,13 @@ interface PasswordStrength {
 
 }
 
-// 添加必要的接口定义
-interface ApiResponse<T> {
-  success?: boolean;
-  message?: string;
-  data?: T;
-}
+// 
 
-// 根据后端的定义
-interface Token {
-  access_token: string;
-  token_type: string;
-}
 
-// 修改Login接口请求参数和返回值类型
-interface LoginRequest {
-  account: string;
-  password: string;
-}
 
-const AuthPage = ({ }) => {
+
+
+const AuthPage = ({}) => {
 
   // 获取参数
   const searchParams = useSearchParams();
@@ -69,24 +56,24 @@ const AuthPage = ({ }) => {
     }
 
     let strength = 0;
-
+    
     // 长度检查
     if (password.length >= 8) strength += 25;
-
+    
     // 包含数字
     if (/\d/.test(password)) strength += 25;
-
+    
     // 包含小写字母
     if (/[a-z]/.test(password)) strength += 25;
-
+    
     // 包含大写字母或特殊字符
     if (/[A-Z]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength += 25;
-
+    
     let label = "";
     if (strength <= 25) label = "弱";
     else if (strength <= 75) label = "中";
     else label = "强";
-
+    
     setPasswordStrength({ value: strength, label });
   };
 
@@ -96,7 +83,7 @@ const AuthPage = ({ }) => {
       setUsernameAvailable(null);
       return;
     }
-
+    
     // 这里应该是一个API调用，现在只是模拟
     setTimeout(() => {
       setUsernameAvailable(!['admin', 'test', 'user'].includes(username));
@@ -118,54 +105,44 @@ const AuthPage = ({ }) => {
     setIsLoading(true);
     setError('');
     try {
-      const loginData: LoginRequest = {
-        account: username,
+      const response = await apiService.auth.login({
+        account:username,
         password
-      };
-
-      // 直接调用API，避免使用可能不匹配的类型
-      const response = await fetch('http://localhost:8000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(loginData)
       });
+      if (response) {
+        // 保存登录信息
+        localStorage.setItem('token', response["access_token"]);
 
-      if (response.ok) {
-        const data: Token = await response.json();
-        // 保存登录信息到localStorage
-        localStorage.setItem('token', data.access_token);
 
-        // 同时保存token到cookie以供中间件使用（7天过期）
-        document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+        // 获取存储信息
+        if(is_pay){
 
-        // 根据参数决定跳转路径
-        if (is_pay) {
-          router.push("/dashboard/inspiration");
+          router.push("/dashboard/inspiration")
 
           // 获取金额
-          const amount = localStorage.getItem('amount');
+         let amount = localStorage.get('amount');
 
-          // 支付
-          const payResponse = await apiService.alipay.creat(amount || "0");
+         // 支付
+         const response = await apiService.alipay.creat(amount);
+         console.log(JSON.stringify(response))
+        // 支付链接
+         let link = response['link']
+         console.log("link" + link)
 
-          // 支付链接
-          const paymentLink = payResponse?.link;
+         // 新开窗口打开支付链接
+         window.open(link_str, '_blank');
 
-          // 新开窗口打开支付链接
-          if (paymentLink) {
-            window.open(paymentLink, '_blank');
-          }
-        } else {
-          router.push("/dashboard");
+        // 弹出对话框
+
+        }else{
+          router.push("/dashboard")
         }
+        
       } else {
-        setError('登录失败，请检查您的用户名和密码');
+        setError(response.message || '登录失败，请检查您的用户名和密码');
       }
     } catch (error) {
       setError('登录时发生错误');
-      console.error('登录错误:', error);
     } finally {
       setIsLoading(false);
     }
@@ -193,13 +170,13 @@ const AuthPage = ({ }) => {
     }
   };
 
-
+  
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       {/* 左侧创意展示区 */}
       <div className="w-full md:w-3/5 bg-gradient-to-br from-blue-900 to-red-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
-        <motion.div
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -208,7 +185,7 @@ const AuthPage = ({ }) => {
           <h1 className="text-4xl font-bold mb-6">开启你的AI创作之旅</h1>
           <p className="text-xl mb-4">用AI释放你的创作潜能</p>
           <p className="text-lg mb-8">加入10,000+作家的智能创作社区</p>
-
+          
           {/* 创意元素：AI生成的小说片段 */}
           <div className="backdrop-blur-sm bg-white/10 rounded-lg p-6 mb-8 max-w-md">
             <h3 className="text-lg font-semibold mb-2">AI创作样例:</h3>
@@ -216,7 +193,7 @@ const AuthPage = ({ }) => {
               "山雨欲来风满楼，她凝视着窗外翻涌的乌云，指尖在键盘上轻轻敲击。人工智能提供的情节建议在屏幕上流淌，她微笑着接受了其中一个转折点。这个由算法与人类灵感共同孕育的故事，正在以前所未有的方式展开..."
             </p>
           </div>
-
+          
           {/* 用户评价 */}
           <div className="mt-auto">
             <div className="flex items-center space-x-4">
@@ -228,7 +205,7 @@ const AuthPage = ({ }) => {
             </div>
           </div>
         </motion.div>
-
+        
         {/* 装饰元素 */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
           <img src="https://images.unsplash.com/photo-1519682577862-22b62b24e493?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="背景" className="w-full h-full object-cover" />
@@ -237,7 +214,7 @@ const AuthPage = ({ }) => {
           <p>已有12,463位创作者加入</p>
         </div>
       </div>
-
+      
       {/* 右侧表单区 */}
       <div className="w-full md:w-2/5 bg-background p-8 flex flex-col justify-center items-center">
         <Link href="/">
@@ -245,63 +222,65 @@ const AuthPage = ({ }) => {
             <Logo isCollapsed={false} />
           </div>
         </Link>
-
+        
         <Card className="w-full max-w-md p-6 shadow-lg bg-background bg-opacity-60 backdrop-filter backdrop-blur-sm">
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "login"
-                ? "bg-secondary shadow-sm p-b-3 after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                : "text-gray-600 hover:text-gray-900"
-                }`} value="login">登录</TabsTrigger>
-              <TabsTrigger className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "register"
-                ? "bg-secondary shadow-sm  after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                : "text-gray-600 hover:text-gray-900"
-                }`} value="register">注册</TabsTrigger>
+              <TabsTrigger  className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "login" 
+                  ? "bg-secondary shadow-sm p-b-3 after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`} value="login">登录</TabsTrigger>
+              <TabsTrigger className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
+                activeTab === "register" 
+                  ? "bg-secondary shadow-sm  after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full" 
+                  : "text-gray-600 hover:text-gray-900"
+              }`} value="register">注册</TabsTrigger>
             </TabsList>
-
+            
             {/* 登录表单 */}
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <h2 className="text-2xl font-bold text-center text-foreground mb-6">欢迎回到创作空间</h2>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="login-username" className="flex items-center">
                     <FaUser className="mr-2 text-blue-700" size={14} />
                     用户名/邮箱
                   </Label>
-                  <Input
-                    id="login-username"
-                    type="text"
+                  <Input 
+                    id="login-username" 
+                    type="text" 
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="输入您的用户名或邮箱"
+                    placeholder="输入您的用户名或邮箱" 
                     className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="login-password" className="flex items-center">
                     <FaLock className="mr-2 text-red-700" size={14} />
                     密码
                   </Label>
-                  <Input
-                    id="login-password"
-                    type="password"
+                  <Input 
+                    id="login-password" 
+                    type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="输入您的密码"
+                    placeholder="输入您的密码" 
                     className="focus:ring-2 focus:ring-red-100 transition-all"
                     required
                   />
                 </div>
-
+                
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Checkbox
-                      id="remember-me"
-                      checked={rememberMe}
-                      onCheckedChange={(value) => setRememberMe(!!value)}
+                    <Checkbox 
+                      id="remember-me" 
+                      checked={rememberMe} 
+                      onCheckedChange={(value) => setRememberMe(!!value)} 
                     />
                     <Label htmlFor="remember-me" className="ml-2 text-sm">记住我</Label>
                   </div>
@@ -309,36 +288,36 @@ const AuthPage = ({ }) => {
                     忘记密码?
                   </Link>
                 </div>
-
-                <Button
-                  type="submit"
+                
+                <Button 
+                  type="submit" 
                   className="w-full hover:cursor-pointer bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg transition-all"
-
+               
                 >
                   登录
                 </Button>
-
-
+                
+                
               </form>
-
-
+              
+              
             </TabsContent>
-
+            
             {/* 注册表单 */}
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
                 <h2 className="text-2xl font-bold text-center text-foreground mb-6">加入AI创作新时代</h2>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="register-username" className="flex items-center">
                     <FaUser className="mr-2 text-blue-700" size={14} />
                     用户名
                   </Label>
                   <div className="relative">
-                    <Input
-                      id="register-username"
-                      type="text"
-                      placeholder="创建一个独特的作家身份"
+                    <Input 
+                      id="register-username" 
+                      type="text" 
+                      placeholder="创建一个独特的作家身份" 
                       value={username}
                       onChange={handleUsernameChange}
                       className="focus:ring-2 focus:ring-blue-100 transition-all pr-10"
@@ -358,32 +337,32 @@ const AuthPage = ({ }) => {
                     <p className="text-xs text-blue-500 mt-1">该用户名已被使用</p>
                   )}
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="register-email" className="flex items-center">
                     <FaEnvelope className="mr-2 text-blue-700" size={14} />
                     邮箱
                   </Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    placeholder="用于账号激活和密码找回"
+                  <Input 
+                    id="register-email" 
+                    type="email" 
+                    placeholder="用于账号激活和密码找回" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="register-password" className="flex items-center">
                     <FaLock className="mr-2 text-blue-700" size={14} />
                     密码
                   </Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    placeholder="至少8个字符，包含字母和数字"
+                  <Input 
+                    id="register-password" 
+                    type="password" 
+                    placeholder="至少8个字符，包含字母和数字" 
                     value={password}
                     onChange={handlePasswordChange}
                     className="focus:ring-2 focus:ring-blue-100 transition-all"
@@ -395,9 +374,9 @@ const AuthPage = ({ }) => {
                       <div className="flex justify-between text-xs">
                         <span>密码强度:</span>
                         <span className={
-                          passwordStrength.label === "弱" ? "text-red-500" :
-                            passwordStrength.label === "中" ? "text-yellow-500" :
-                              "text-green-500"
+                          passwordStrength.label === "弱" ? "text-red-500" : 
+                          passwordStrength.label === "中" ? "text-yellow-500" : 
+                          "text-green-500"
                         }>
                           {passwordStrength.label}
                         </span>
@@ -405,16 +384,16 @@ const AuthPage = ({ }) => {
                     </>
                   )}
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password" className="flex items-center">
                     <FaLock className="mr-2 text-blue-700" size={14} />
                     确认密码
                   </Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="再次输入您的密码"
+                  <Input 
+                    id="confirm-password" 
+                    type="password" 
+                    placeholder="再次输入您的密码" 
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="focus:ring-2 focus:ring-blue-100 transition-all"
@@ -424,7 +403,7 @@ const AuthPage = ({ }) => {
                     <p className="text-xs text-red-500 mt-1">两次输入的密码不一致</p>
                   )}
                 </div>
-
+                
                 <div className="flex items-center space-x-2">
                   <Checkbox id="terms" required />
                   <Label htmlFor="terms" className="text-xs">
@@ -434,20 +413,20 @@ const AuthPage = ({ }) => {
                     <Link href="/privacy" className="text-blue-700 hover:underline">隐私政策</Link>
                   </Label>
                 </div>
-
-                <Button
-                  type="submit"
+                
+                <Button 
+                  type="submit" 
                   className="w-full bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg hover:cursor-pointer transition-all"
                   disabled={!username || !email || !password || password !== confirmPassword || !usernameAvailable}
                 >
                   开始创作
                 </Button>
               </form>
-
+              
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
-                  已有账号?
-                  <button
+                  已有账号? 
+                  <button 
                     onClick={() => setActiveTab("login")}
                     className="ml-1 text-blue-700 hover:underline font-medium"
                   >
@@ -458,10 +437,10 @@ const AuthPage = ({ }) => {
             </TabsContent>
           </Tabs>
         </Card>
-
+        
         {/* 额外选项 */}
         <div className="mt-6 flex flex-col items-center space-y-4">
-
+          
           <div className="flex items-center space-x-2 text-xs text-gray-600">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -469,15 +448,15 @@ const AuthPage = ({ }) => {
             </svg>
             <span>您的数据安全受到保护</span>
           </div>
-
-          <Button
-            variant="link"
+          
+          <Button 
+            variant="link" 
             className="text-xs hover:cursor-pointer text-gray-500"
             onClick={() => document.getElementById('why-register')?.classList.toggle('hidden')}
           >
             为什么需要注册?
           </Button>
-
+          
           <div id="why-register" className="hidden bg-gray-100 p-3 rounded-lg text-xs text-gray-700 max-w-xs">
             <ul className="list-disc list-inside space-y-1">
               <li>保存您的所有创作内容</li>

@@ -13,7 +13,9 @@ interface StartProps {
 
 const AIStoryApplication = ({ onToggleView }: StartProps) => {
   const router = useRouter();
+  // 获取参数
   const searchParams = useSearchParams();
+
   const prompt = searchParams.get('prompt');
   // States for application
   const [page, setPage] = useState('input'); // 'input', 'loading', 'story'
@@ -144,7 +146,6 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
       if (status && status.result_id) {
         // @ts-ignore - 确保API响应类型与实际返回值匹配
         console.log("准备跳转到:", `/dashboard/inspiration/${status.result_id}?is_new=true`);
-        
         // @ts-ignore - 确保API响应类型与实际返回值匹配
         router.push(`/dashboard/inspiration/${status.result_id}?is_new=true`);
       } else {

@@ -25,8 +25,10 @@ export interface Character{
   name:string;
   description:string;
   image_url:string;
-  session_id:string;
+  // session_id:string;
   prompt:string;
+  is_used:boolean;
+  user_id:string;
 }
 
 export interface RegisterRequest {
@@ -35,11 +37,20 @@ export interface RegisterRequest {
   password: string;
 }
 
-export interface CreateTaskRequest{
+export interface CreateInspirationRequest{
   prompt:string;
   user_id:number;
   task_type:string;
   is_continue:boolean;
+}
+
+export interface CreateCrazyRequest{
+  type:string;
+  category:string;
+  seeds:string[];
+  chapter_count:number;
+  task_type:string;
+  user_id:number;
 }
 
 export interface TaskStatusRequest{
@@ -147,13 +158,12 @@ export interface Message {
 
 export interface Session{
   id:string;
-  character_id:string;
-  user_id:string;
   created_at:string;
   updated_at:string;
   character:Character;
   messages:Message[];
   user:User;
+  last_message:string;
 }
 
 export interface Novel{
@@ -161,9 +171,11 @@ export interface Novel{
   user_id:string;
   title: string;
   description:string;
-  chapters:Chapter[]
+  chapters:Chapter[];
   is_top: boolean;
   is_archive: boolean;
+  updated_at:string;
+  created_at:string;
 }
 
 

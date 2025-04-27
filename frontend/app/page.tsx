@@ -74,10 +74,10 @@ export default function HomePage() {
           
           {/* 桌面导航 */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">AI拆书</Link>
+            {/* <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">AI拆书</Link>
             <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">小说生成</Link>
             <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">灵感创作</Link>
-            <Link href="#" className="hover:text-[#7b1fa2] transition-colors">个人中心</Link>
+            <Link href="#" className="hover:text-[#7b1fa2] transition-colors">个人中心</Link> */}
             <Link href="/pricing" className="hover:text-[#7b1fa2] transition-colors">定价</Link>
             <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl">
               开始创作
@@ -777,12 +777,12 @@ export default function HomePage() {
             
             <div>
               <h3 className="font-bold mb-4">功能</h3>
-              <ul className="space-y-2 opacity-70">
+              {/* <ul className="space-y-2 opacity-70">
                 <li><Link href="#" className="hover:underline">AI拆书</Link></li>
                 <li><Link href="#" className="hover:underline">小说生成</Link></li>
                 <li><Link href="#" className="hover:underline">灵感创作</Link></li>
                 <li><Link href="#" className="hover:underline">写作辅助</Link></li>
-              </ul>
+              </ul> */}
             </div>
             
             <div>

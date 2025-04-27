@@ -4,7 +4,7 @@ import tempfile
 from typing import AsyncGenerator, Optional
 import uuid
 import aiofiles
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Body
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 import httpx
 from openai import AsyncOpenAI

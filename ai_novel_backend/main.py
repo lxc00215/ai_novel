@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 
 from fastapi.staticfiles import StaticFiles
 from routes import alipay_routes, book_generation_routes, feature_routes, alipay_routes
-from my_filter.sesitive_filter import SensitiveWordFilter, get_word_filter
 sys.path.append("routes")
 from sqlalchemy.orm import configure_mappers
 from fastapi import Depends, FastAPI, HTTPException
@@ -18,7 +17,6 @@ from database import User
 # 全局变量引用
 mcp_client = None
 mcp_config_path = "mcp_servers.json"
-
 
 # 应用生命周期管理
 @asynccontextmanager
@@ -46,26 +44,26 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="AI Novel Management System", lifespan=lifespan)
 
 # CORS配置
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost",
-    "http://localhost:5173",  # Vite开发服务器默认端口
-    "http://192.168.0.1:3000",  # 局域网IP，根据实际调整
-    # 添加其他前端域名，如需要
-]
+# origins = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "http://localhost",
+#     "http://localhost:5173",  # Vite开发服务器默认端口
+#     "http://192.168.0.1:3000",  # 局域网IP，根据实际调整
+#     # 添加其他前端域名，如需要
+# ]
 
-# 优先应用CORS中间件
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https?://.*\.yourdomain\.com",  # 如果有自定义域名，可以使用正则匹配
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,  # 预检请求的缓存时间（秒）
-)
+# # 优先应用CORS中间件
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_origin_regex=r"https?://.*\.yourdomain\.com",  # 如果有自定义域名，可以使用正则匹配
+#     allow_credentials=True,
+#     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+#     allow_headers=["*"],
+#     expose_headers=["*"],
+#     max_age=600,  # 预检请求的缓存时间（秒）
+# )
 
 @app.on_event("startup")
 async def startup_event():
@@ -97,6 +95,14 @@ app.include_router(feature_routes.router)
 app.include_router(alipay_routes.router)
 
 configure_mappers()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 在生产环境中应该设置具体的域名，而不是 "*"
+    allow_credentials=True,
+    allow_methods=["*"],  # 允许所有方法
+    allow_headers=["*"],  # 允许所有请求头
+)
+
 
 # 初始化过滤器并添加中间件
 filter_instance = get_filter()

@@ -19,25 +19,24 @@ export default function WritingPage({ params }: { params: Promise<{ id: string }
         is_top: false,
         is_archive: false
     })
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                console.log("id" + id);
-                const res = await apiService.novels.getChapters(id)
-                if (res) {
-                    console.log(JSON.stringify(res))
-                    setNovel(res)
-                }
-            } catch (e) {
+    useEffect( () => {
+       async function fetchData() {
+        try{
+            const res = await apiService.novels.getChapters(id)
+            if(res){
+                console.log(JSON.stringify(res))
+                setNovel(res)
             }
+        }catch(e){
         }
+       }
 
-        fetchData();
-
-    }, [id])
+       fetchData();
+  
+    },[id])
     return (
-        <WritingInterface
-            setNovel={setNovel}
-            novel={novel} />
+        <WritingInterface 
+        setNovel={setNovel}
+        novel={novel} />
     )
 }
