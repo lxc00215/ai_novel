@@ -1,27 +1,29 @@
+from typing import Callable
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import  select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 import asyncio
-from database import  BookBreakdownResult, Character, CrazyWalk2Result, CrazyWalkResult, InspirationResult, async_session, get_db  # 导入session工厂
+from dao.CrazyWalk import CrazyWalkService
+from database import  BookBreakdownResult, Character, CrazyWalkResult, InspirationResult, async_session, get_db  # 导入session工厂
 
 from dao.inspirate import InspirationService
 from database import Task
 from models import TaskTypeEnum
-from routes.ai_routes import generate_images
-from schemas import GenerateImageRequest, SampleTaskRequest, SampleTaskResponse, TaskCreate, TaskResponse
+from schemas import SampleTaskResponse, TaskResponse
 router = APIRouter(prefix="/task", tags=["task"])
 
 @router.post("/new",response_model=SampleTaskResponse)
 async def create_task(task_data: dict):
     """创建新任务并异步处理"""
     print(f"task_data: {task_data}")
+    
     try:
         # 创建任务记录
         task = Task(
             user_id=task_data['user_id'],
             task_type=task_data['task_type'],
-            prompt=task_data['prompt'],
+            prompt="prompt",
             status="processing",
             completion_percentage=0,
             created_at=datetime.now(),
@@ -44,20 +46,11 @@ async def create_task(task_data: dict):
 async def process_task(task_id: int, task_data: dict):
     """异步处理任务并更新进度和结果"""
     try:
-        # 更新20%进度 - 开始处理
-        await update_progress(task_id, 20)
-        
-        # 更新50%进度 - 准备调用API
-        await update_progress(task_id, 50)
-        
         result_id = None
         if task_data['task_type'] == "INSPIRATION":
-            # 更新70%进度 - 开始调用API
-            await update_progress(task_id, 70)
-            # 等待API调用完成
             result_id = await process_task_inspiration(task_data)
-            print(f"result_data: {result_id}")
-        print("到这里了")
+        elif task_data['task_type'] == "CRAZY_WALK":
+            result_id = await process_task_crazy_walk(task_id,task_data)
         # API调用完成后，更新完成状态和结果
         async with async_session() as db:
             await db.execute(
@@ -159,16 +152,6 @@ async def get_task_status(task_id: int, db: AsyncSession = Depends(get_db)):
                             "content": crazy_walk_result.content
                         }
 
-                elif task.result_type == TaskTypeEnum.CRAZY_WALK_2:
-                    query = select(CrazyWalk2Result).where(CrazyWalk2Result.id == task.result_id)
-                    result = await db.execute(query)
-                    crazy_walk_2_result = result.scalar_one_or_none()
-                    if crazy_walk_2_result:
-                        result_data = {
-                            "title": crazy_walk_2_result.title,
-                            "content": crazy_walk_2_result.content,
-                            "additional_info": crazy_walk_2_result.additional_info
-                        }
 
                 elif task.result_type == TaskTypeEnum.BOOK_BREAKDOWN:
                     query = select(BookBreakdownResult).where(BookBreakdownResult.id == task.result_id)
@@ -195,6 +178,19 @@ async def get_task_status(task_id: int, db: AsyncSession = Depends(get_db)):
 
     print(f"response: {response}")
     return response
+
+async def process_task_crazy_walk(task_id: int,task_data: dict)->int:
+    """处理疯狂行走任务"""
+    # 更新任务
+
+    service = CrazyWalkService()
+    try:
+        result = await service.generate_novel_in_background(task_id,task_data,update_progress)
+
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 async def process_task_inspiration(task_data: dict)->int:
     """处理灵感任务"""

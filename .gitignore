@@ -16,3 +16,8 @@ logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+*.zip
+frontend/.env.local
+frontend/package-lock.json
+frontend/package.json
+frontend/next.config.js

@@ -90,10 +90,10 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
 
       const response = await apiService.ai.generateContent(storyBackground, writingStyle, requirements);
 
-      if (response && response.data) {
+      if (response ) {
         toast.success('内容生成成功');
         if (onContentGenerated) {
-          onContentGenerated(response.data);
+          onContentGenerated(response);
         }
         closeAIPanel();
       } else {

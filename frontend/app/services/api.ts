@@ -2,13 +2,11 @@
 
 import { get } from 'http';
 import {
-  ApiResponse,
   LoginRequest,
   RegisterRequest,
   AuthResponse,
   Novel,
   // CreateNovelRequest,
-  CreateTaskRequest,
   SimpleTask,
   TaskStatusResponse,
   TaskResponse,
@@ -18,7 +16,9 @@ import {
   Chapter,
   ImageObject,
   ContinueRequest,
-  ContinueResponse
+  ContinueResponse,
+  CreateInspirationRequest,
+  CreateCrazyRequest
 } from './types';
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 import { create } from 'domain';
@@ -120,7 +120,7 @@ const apiService = {
   auth: {
     // 登录
 
-    login: async (data: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
+    login: async (data: LoginRequest): Promise<AuthResponse> => {
       console.log(JSON.stringify(data) + ":登录");
       const response = await request('/auth/login', {
         method: 'POST',
@@ -141,7 +141,7 @@ const apiService = {
     },
 
     // 注册
-    register: async (data: RegisterRequest): Promise<ApiResponse<AuthResponse>> => {
+    register: async (data: RegisterRequest): Promise<AuthResponse> => {
       const response = await request('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -161,7 +161,7 @@ const apiService = {
     },
 
     // 退出登录
-    logout: async (): Promise<ApiResponse<any>> => {
+    logout: async (): Promise<any> => {
       // 调用后端登出接口（如果需要）
       const response = await request('/auth/logout', {
         method: 'POST',
@@ -202,7 +202,7 @@ const apiService = {
 
   spirate: {
 
-    continue: async (inspiration_id: string, choice: string): Promise<ApiResponse<ContinueResponse>> => {
+    continue: async (inspiration_id: string, choice: string): Promise<ContinueResponse> => {
       return request(`/spirate/continue/${inspiration_id}`, {
         method: 'POST',
         body: JSON.stringify({ choice }),
@@ -233,7 +233,7 @@ const apiService = {
       });
       return response;
     },
-    update: async (data: Partial<Inspiration>): Promise<ApiResponse<Inspiration>> => {
+    update: async (data: Partial<Inspiration>): Promise<Inspiration> => {
       return request(`/spirate/update`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -278,7 +278,7 @@ const apiService = {
       })
     },
     // 生成小说内容
-    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<ApiResponse<string>> => {
+    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<string> => {
       return request('/ai/generate', {
         method: 'POST',
         body: JSON.stringify({
@@ -468,7 +468,7 @@ const apiService = {
     },
 
 
-    generateImage: async (prompt: string): Promise<ApiResponse<ImageObject>> => {
+    generateImage: async (prompt: string): Promise<ImageObject> => {
       const response = await request('/ai/generate_images', {
         method: 'POST',
         body: JSON.stringify({ prompt, user_id: 4, size: "1280x960" }),
@@ -480,7 +480,7 @@ const apiService = {
       return response;
     },
     // 获取写作建议
-    getSuggestions: async (content: string): Promise<ApiResponse<string[]>> => {
+    getSuggestions: async (content: string): Promise<string[]> => {
       return request('/ai/suggestions', {
         method: 'POST',
         body: JSON.stringify({ content }),
@@ -576,7 +576,7 @@ const apiService = {
   },
 
   novels: {
-    create: async (title: string, description: string): Promise<ApiResponse<Novel>> => {
+    create: async (title: string, description: string): Promise<Novel> => {
       return request(`/novels/create`, {
         method: 'POST',
         body: JSON.stringify(
@@ -600,7 +600,7 @@ const apiService = {
         }
       })
     },
-    updateNovel: async (id: string, data: Partial<Novel>): Promise<ApiResponse<Novel>> => {
+    updateNovel: async (id: string, data: Partial<Novel>): Promise<Novel> => {
       return request(`/novels/${id}/updateNovel`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -610,7 +610,7 @@ const apiService = {
       })
     },
 
-    createChapter: async (id: string, data: Partial<Chapter>): Promise<ApiResponse<Chapter>> => {
+    createChapter: async (id: string, data: Partial<Chapter>): Promise<Chapter> => {
       return request(`/novels/${id}/chapters`, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -620,7 +620,7 @@ const apiService = {
       })
     },
 
-    updateChapter: async (id: string, order: number, data: Partial<Chapter>): Promise<ApiResponse<Chapter>> => {
+    updateChapter: async (id: string, order: number, data: Partial<Chapter>): Promise<Chapter> => {
       console.log("updateChapter", JSON.stringify(data));
       return request(`/novels/${id}/chapters/${order}`, {
         method: 'PUT',
@@ -630,7 +630,7 @@ const apiService = {
         }
       })
     },
-    getChapters: async (id: string): Promise<ApiResponse<Chapter[]>> => {
+    getChapters: async (id: string): Promise<Chapter[]> => {
       return request(`/novels/${id}/chapters`, {
         method: 'GET',
         headers: {
@@ -638,7 +638,7 @@ const apiService = {
         }
       })
     },
-    getNovel: async (id: string): Promise<ApiResponse<Novel>> => {
+    getNovel: async (id: string): Promise<Novel[]> => {
       return request(`/novels/${id}/novel`, {
         method: 'GET',
         headers: {
@@ -649,7 +649,7 @@ const apiService = {
   },
 
   character: {
-    update: async (id: number, data: Partial<Character>): Promise<ApiResponse<Character>> => {
+    update: async (id: number, data: Partial<Character>): Promise<Character> => {
       console.log("update", JSON.stringify(data));
       return request(`/character/${id}`, {
         method: 'PUT',
@@ -659,7 +659,7 @@ const apiService = {
         }
       })
     },
-    getCharacters: async (user_id: number): Promise<ApiResponse<Character[]>> => {
+    getCharacters: async (user_id: number): Promise<Character[]> => {
       return request(`/character/${user_id}`, {
         method: 'GET',
         headers: {
@@ -671,7 +671,7 @@ const apiService = {
 
   task: {
     //创建任务
-    create: async (data: CreateTaskRequest): Promise<ApiResponse<SimpleTask>> => {
+    create: async (data: CreateInspirationRequest | CreateCrazyRequest): Promise<SimpleTask> => {
 
       try {
         const response = await request('/task/new', {
@@ -687,7 +687,7 @@ const apiService = {
         throw error;
       }
     },
-    status: async (taskId: string): Promise<ApiResponse<TaskResponse>> => {
+    status: async (taskId: string): Promise<TaskResponse> => {
       try {
         const response = await request(`/task/status/${taskId}`);
         return response;

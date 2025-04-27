@@ -84,7 +84,6 @@ class OpenAIBridge:
             raise e
 
         
-        
     async def chat_stream(self, messages: List[Dict], options: Dict = {}) -> Dict:
 
    

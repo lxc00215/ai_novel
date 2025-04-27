@@ -1,3 +1,4 @@
+import os
 import uuid
 from pydantic import ConfigDict
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -6,15 +7,13 @@ from sqlalchemy import Column, Float, Integer, String, Text, Boolean, DateTime, 
 from datetime import datetime
 
 from models import TaskTypeEnum
+from dotenv import load_dotenv
+load_dotenv()
 
-
-
-# 数据库URL
-DATABASE_URL = "mysql+aiomysql://root:shiyunlai123@localhost/novel"
 
 # 创建异步引擎
 engine = create_async_engine(
-    DATABASE_URL,
+    os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test.db"),
     echo=True,
     pool_size=5,  # 连接池大小
     max_overflow=10,  # 超过 pool_size 后最多可以创建的连接数
@@ -86,17 +85,8 @@ class Task(Base):
                     "created_at": result.created_at,
                     "updated_at": result.updated_at
                 }
-        elif self.result_type == TaskTypeEnum.CRAZY_WALK_2:
-            result = await session.get(CrazyWalk2Result, self.result_id)
-            if result:
-                return {
-                    "id": result.id,
-                    "title": result.title,
-                    "content": result.content,
-                    "additional_info": result.additional_info,
-                    "created_at": result.created_at,
-                    "updated_at": result.updated_at
-                }
+
+                
         elif self.result_type == TaskTypeEnum.BOOK_BREAKDOWN:
             result = await session.get(BookBreakdownResult, self.result_id)
             if result:
@@ -356,19 +346,18 @@ class CrazyWalkResult(Base):
     
     id = Column(Integer, primary_key=True)
     title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now())
-    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
-
-class CrazyWalk2Result(Base):
-    __tablename__ = 'crazy_walk_2_results'
+    description = Column(Text, nullable=True)  # 新增字段
+    novel_id = Column(Integer, ForeignKey('novels.id'), nullable=True)  # 新增字段
+    novel_type = Column(String(50), nullable=True)  # 新增字段
+    category = Column(String(50), nullable=True)  # 新增字段
+    seeds = Column(JSON, nullable=True)  # 新增字段
+    chapter_count = Column(Integer, nullable=True)  # 新增字段
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
-    id = Column(Integer, primary_key=True)
-    title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
-    additional_info = Column(JSON)
-    created_at = Column(DateTime, default=datetime.now())
-    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
+    # 如果需要关联关系
+    novel = relationship("Novels", backref="crazy_walk_results")
+  
 
 class BookBreakdownResult(Base):
     __tablename__ = 'book_breakdown_results'

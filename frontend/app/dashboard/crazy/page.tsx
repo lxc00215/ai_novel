@@ -6,10 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Settings, HelpCircle, X, Zap, BookOpen, Heart } from 'lucide-react';
+import { Settings, HelpCircle, X, Zap, BookOpen, Heart, History, Loader2 } from 'lucide-react';
+import apiService from '@/app/services/api';
+import { CreateCrazyRequest } from '@/app/services/types';
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Types
-type Gender = 'male' | 'female' | null;
 type Category = {
   id: string;
   name: string;
@@ -19,21 +29,28 @@ type Category = {
     name: string;
   }[];
 };
-type Seed = {
-  id: string;
-  name: string;
-  category: string;
-};
 
-export default function HomePage() {
+interface CrazyStartPageProps {
+  onToggleView: () => void;
+}
+
+
+
+export default function CrazyStartPage({ onToggleView }: CrazyStartPageProps) {
+  const router = useRouter();
   // State
-  const [selectedGender, setSelectedGender] = useState<Gender>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<string>("male");
+  const [selectedCategory, setSelectedCategory] = useState<string>("fantasy");
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
   const [useSeed, setUseSeed] = useState(false);
   const [selectedSeeds, setSelectedSeeds] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(5000);
   const [chapterCount, setChapterCount] = useState(5);
+  
+  // 任务状态
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [taskId, setTaskId] = useState<string>("");
 
   // Sample data
   const maleCategories: Category[] = [
@@ -104,6 +121,39 @@ export default function HomePage() {
     { id: 'conflict', name: '冲突', seeds: ['情感纠葛', '权力斗争', '生死劫难', '世界危机'] }
   ];
 
+  const handleStart = async () => {
+    setIsLoading(true);
+    
+    try {
+      const request: CreateCrazyRequest = {
+        type: selectedGender,
+        category: selectedCategory,
+        seeds: selectedSeeds,
+        chapter_count: chapterCount,
+        task_type: "CRAZY_WALK",
+        user_id: 4,
+      };
+      
+      // 发送创建任务请求
+      const response = await apiService.task.create(request);
+
+      console.log(JSON.stringify(response))
+      
+      // 如果成功创建任务
+      if (response ) {
+        // 显示成功提示
+        toast.success("任务已成功创建！");
+        // 显示任务进行中的弹窗
+        setShowTaskDialog(true);
+      }
+    } catch (error) {
+      console.error("创建任务失败:", error);
+      toast.error("创建任务失败，请稍后重试");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const toggleSeed = (seedId: string) => {
     if (selectedSeeds.includes(seedId)) {
       setSelectedSeeds(selectedSeeds.filter(id => id !== seedId));
@@ -165,11 +215,11 @@ export default function HomePage() {
   };
   const removeOption = (option: { type: string, id: string }) => {
     if (option.type === 'gender') {
-      setSelectedGender(null);
-      setSelectedCategory(null);
+      setSelectedGender("");
+      setSelectedCategory("");
       setSelectedSubcategories([]);
     } else if (option.type === 'category') {
-      setSelectedCategory(null);
+      setSelectedCategory("");
       setSelectedSubcategories([]);
     } else if (option.type === 'subcategory') {
       setSelectedSubcategories(selectedSubcategories.filter(id => id !== option.id));
@@ -177,8 +227,28 @@ export default function HomePage() {
       setSelectedSeeds(selectedSeeds.filter(id => id !== option.id));
     }
   };
+
+  const navigateToHistory = () => {
+    router.push('/dashboard/crazy/history');
+  };
+  
+ 
+  
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* 页面顶部添加历史记录按钮 */}
+      <div className="container mx-auto p-4 flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-2"
+          onClick={()=>navigateToHistory()}
+        >
+          <History size={16} />
+          历史记录
+        </Button>
+      </div>
+      
       <main className="flex-1 container mx-auto p-4">
         {/* Gender Selection */}
         <section className="py-6">
@@ -416,10 +486,8 @@ export default function HomePage() {
           <div className="flex justify-center mt-10 mb-4">
             <Button 
               size="lg"
-              onClick={() => {
-                console.log('开始创作');
-              }}
-              disabled={!selectedGender || !selectedCategory || selectedSubcategories.length === 0}
+              onClick={handleStart}
+              disabled={!selectedGender || !selectedCategory || selectedSubcategories.length === 0 || isLoading}
               className={`
                 w-full max-w-md py-8 font-bold text-xl tracking-wide transition-all duration-300 
                 bg-gradient-to-r from-[#e7000b] to-[#155dfc] border-none
@@ -430,14 +498,50 @@ export default function HomePage() {
               `}
             >
               <div className="absolute inset-0 bg-black/10 rounded-xl"></div>
-              <div className="relative flex items-center justify-center">
-                <Zap className="mr-3 h-7 w-7" />
-                开始创作
+              <div className="relative flex items-center hover:cursor-pointer justify-center">
+                {isLoading ? (
+                  <Loader2 className="mr-3 h-7 w-7 animate-spin" />
+                ) : (
+                  <Zap className="mr-3 h-7 w-7" />
+                )}
+                {isLoading ? "处理中..." : "开始创作"}
               </div>
             </Button>
           </div>
         </div>
       </div>
+
+      {/* 任务进行中的弹窗 */}
+      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-center font-bold">任务正在后台进行中</DialogTitle>
+            <DialogDescription className="text-center mt-2">
+              您可以前往历史记录页面查看任务进度，或继续创建新的任务。<br />
+              我们会尽快处理您的请求，请耐心等待。
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex justify-center gap-4 mt-4">
+            <Button 
+              className='hover:cursor-pointer'
+              variant="outline" 
+              onClick={() => setShowTaskDialog(false)}
+            >
+              继续创作
+            </Button>
+            <Button 
+              className='hover:cursor-pointer'
+              onClick={() => {
+                setShowTaskDialog(false);
+                navigateToHistory();
+              }}
+            >
+              查看进度
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <style jsx global>{`
         @keyframes fadeIn {

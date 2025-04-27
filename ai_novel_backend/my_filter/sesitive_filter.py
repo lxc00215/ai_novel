@@ -137,9 +137,6 @@ def is_excluded_path(path: str) -> bool:
             return True
     return False
 
-# 导入必要的依赖
-
-
 class SensitiveWordMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, word_filter: SensitiveWordFilter):
         super().__init__(app)
@@ -149,7 +146,7 @@ class SensitiveWordMiddleware(BaseHTTPMiddleware):
         # 仅处理POST/PUT/PATCH请求
         if request.method in ["POST", "PUT", "PATCH"]:
             if is_excluded_path(request.url):
-                print("排除敏感词过滤", json.loads(await request.body()))
+                # print("排除敏感词过滤", json.loads(await request.body()))
                 return await call_next(request)
             try:
                 body = await request.body()

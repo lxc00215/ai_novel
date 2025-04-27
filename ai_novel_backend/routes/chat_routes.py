@@ -3,13 +3,13 @@
 from fastapi import APIRouter, Depends
 from requests import session
 from sqlalchemy import delete, select
-from database import  Character, ChatMessage, ChatSession, get_db
+from database import  Character, ChatMessage, ChatSession, User, get_db
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from routes.feature_routes import get_feature_by_name
 from schemas import ChatMessageRequest, ChatSessionRequest
 from openai import AsyncOpenAI  # 确保导入异步客户端
-
+from sqlalchemy.orm import joinedload,selectinload
 router = APIRouter(prefix="/chat")
     
 from sqlalchemy import select
@@ -50,14 +50,18 @@ async def get_user_sessions(
     db: AsyncSession = Depends(get_db)
 ):
     # 首先获取会话列表
-    sessions_query = select(ChatSession).where(ChatSession.user_id == user_id).order_by(ChatSession.updated_at.desc()).limit(1)
+    sessions_query = select(ChatSession).options(
+        selectinload(ChatSession.messages),
+        joinedload(ChatSession.character),
+        joinedload(ChatSession.user)
+    ).where(ChatSession.user_id == user_id).order_by(ChatSession.updated_at.desc()).limit(1)
     result = await db.execute(sessions_query)
     sessions = result.scalars().all()
     
-    # 然后获取每个会话的消息
-    sessions_with_messages = await get_chat_sessions(db, sessions)
+    # # 然后获取每个会话的消息
+    # sessions_with_messages = await get_chat_sessions(db, sessions)
     
-    return sessions_with_messages
+    return sessions
 
 # 在路由处理函数中使用
 @router.get("/sessions/{user_id}")
@@ -89,7 +93,13 @@ async def get_chat_history(session_id: int,db: AsyncSession = Depends(get_db)):
 async def clear_session(sessionId: int,db: AsyncSession = Depends(get_db)):
     """清除该会话下的全部消息"""
     query = delete(ChatMessage).where(ChatMessage.session_id == sessionId)
-    await db.execute(query)
+    # 清除session的last_message和last_message_time
+    session_query = select(ChatSession).where(ChatSession.id == sessionId)
+    session = await db.execute(session_query)
+    session = session.scalar_one_or_none()
+    session.last_message = None
+    session.last_message_time = None
+    session.updated_at = datetime.now()
     await db.commit()
     return {"message": "Session messages cleared successfully"}
 
@@ -107,6 +117,23 @@ async def get_or_create_session(
     )
     result = await db.execute(query)
     existing_session = result.scalar_one_or_none()
+
+    # 查询角色
+    character_query = select(Character).where(Character.id == request.character_id)
+    character = await db.execute(character_query)
+    character = character.scalar_one_or_none()
+
+    # 如果角色不存在，则创建角色
+    if not character:
+        raise HTTPException(status_code=404, detail="Character not found")
+    # 查询用户
+    user_query = select(User).where(User.id == request.user_id)
+    user = await db.execute(user_query)
+    user = user.scalar_one_or_none()
+
+    # 如果用户不存在，则创建用户
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # 如果会话不存在，创建新会话
     if not existing_session:
@@ -120,9 +147,17 @@ async def get_or_create_session(
         await db.commit()
         await db.refresh(new_session)
         return new_session
-    
-    # 如果创建了新会话，则返回新会话
-    return existing_session
+    # 构建返回对象
+
+    data = {
+        "id": existing_session.id,
+        "created_at": existing_session.created_at,
+        "updated_at": existing_session.updated_at,
+        "character": character,
+        "user": user,
+        "last_message": existing_session.last_message
+    }
+    return data
 
 from fastapi import Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -247,18 +282,18 @@ async def generate_response(
             new_db.add(ai_message)
             await new_db.commit()
             await new_db.refresh(ai_message)
-            # 更新会话时间
-            session.updated_at = datetime.now()
-            await new_db.commit()
-            # await new_db.refresh(session)
-
-            # # 更新最后一条消息
+            
+            # 更新会话ID为当前会话ID的最后一条消息
+            session_query = select(ChatSession).where(ChatSession.id == session_id)
+            result = await new_db.execute(session_query)
+            session = result.scalar_one_or_none()
             session.last_message = accumulated_message
             session.last_message_time = datetime.now()
             await new_db.commit()
+
             # await new_db.refresh(session)
             
-            yield "data: [DONE]\n\n"
+            yield "data:\n\n"
             
     except Exception as e:
         print(f"Error in generate_response: {str(e)}")
