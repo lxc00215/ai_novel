@@ -29,7 +29,6 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
 
   // 处理卡片点击
   const handleCardClick = () => {
-    console.log(`打开作品: ${work.title}`);
     router.push(`/dashboard/writing/${work.id}`);
   };
 

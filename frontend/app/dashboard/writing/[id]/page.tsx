@@ -16,7 +16,6 @@ export default function WritingPage({ params }: { params: Promise<{ id: string }
         try{
             const res = await apiService.novels.getChapters(id)
 
-            console.log("res",JSON.stringify(res));
             if(res){
                 setNovel(res as unknown as Novel)
             }

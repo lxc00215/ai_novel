@@ -21,7 +21,6 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  //   const [bookId, setBookId] = useState(novel[0].book_id);
   const [searchText, setSearchText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [searchResults, setSearchResults] = useState({
@@ -30,6 +29,20 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
     currentIndex: -1
   });
 
+  // 确保novel不为空 构建novel对象守卫
+  const safeNovel = {
+    id: "",
+    title: "",
+    description: "",
+    chapters: [],
+    user_id: "",
+    is_top: false,
+    is_archive: false,
+    updated_at: "",
+    created_at: ""
+  }
+
+  const [localNovel,setLocalNovel] = useState<Novel>(safeNovel);
 
   const [aiPanelWidth, setAiPanelWidth] = useState(350); // 默认宽度
   const [isDragging, setIsDragging] = useState(false);
@@ -61,29 +74,37 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
 
   const editorRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    // 如果novel.chapters不存在或为空，初始化一个默认章节
-    if (!novel.chapters || novel.chapters.length === 0) {
-      const defaultChapter: Chapter = {
-        id: "default",
-        title: "第1章",
-        content: "",
-        order: 1,
-        book_id: novel.id || "0",
-        summary: "",
-        prompt: ""
-      };
-
-      setNovel({
-        ...novel,
-        chapters: [defaultChapter]
-      });
-      setCurrentOrder(0);
-    } else if (currentOrder === 0 && novel.chapters.length > 0) {
-      // 如果还没有选中章节但有章节列表，选中第一个
-      console.log(novel.chapters[0].order);
-      console.log(JSON.stringify(novel.chapters[0]));
-      setCurrentOrder(0);
+    const fun = ()=>{
+      if (!(novel)) {
+        return;
+      }else if(novel.chapters.length === 0){
+        const defaultChapter: Chapter = {
+          id: "default",
+          title: "新建章节",
+          content: "",
+          order: 1,
+          book_id:  "0",
+          summary: "",
+          prompt: "",
+        };
+        setNovel({
+          ...novel,
+          chapters: [defaultChapter]
+        });
+        console.log("新建章节" + JSON.stringify(novel.chapters));
+        setLocalNovel(
+          novel
+        );
+        setCurrentOrder(novel.chapters[0].order);
+      }else if(novel.chapters.length > 0 && currentOrder === 0){
+        setLocalNovel(novel);
+        setCurrentOrder(novel.chapters[0].order);
+      }else{
+        setLocalNovel(novel);
+      }
+     
     }
+    fun();
   }, [novel, setNovel]);
 
 
@@ -130,22 +151,21 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
   };
 
   const getCurrentChapter = (): Chapter => {
-    if (!novel.chapters || novel.chapters.length === 0) {
+    if (!novel) {
       // 返回一个默认章节对象，防止错误
       return {
         id: "default",
         title: "未命名章节",
         content: "",
         order: 1,
-        book_id: novel.id || "0",
+        book_id:  "0",
         summary: "",
         prompt: ""
       };
     }
-
+    
     // 查找当前选中的章节
     const chapter = novel.chapters.find(c => c.order === currentOrder);
-
     // 如果未找到，返回第一个章节
     return chapter || novel.chapters[0];
   };
@@ -190,7 +210,6 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
     // 保存到数据库
     const response = await apiService.novels.createChapter(novel.id, newChapter);
     if (response) {
-      console.log("成功了");
     }
 
     setNovel({ ...novel, chapters: [...novel.chapters, newChapter] });
@@ -373,7 +392,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
       {/* Left Sidebar - novel */}
       <div className={`border-r transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
         <Sidebar
-          chapters={novel.chapters}
+          chapters={localNovel.chapters}
           currentOrder={currentOrder}
           setCurrentOrder={setCurrentOrder}
           addNewChapter={addNewChapter}
@@ -385,7 +404,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Toolbar */}
         <Toolbar
-          book_title={novel.title}
+          book_title={localNovel.title}
           toggleAIPanel={toggleAIPanel}
           toggleFullscreen={toggleFullscreen}
           toggleSidebar={toggleSidebar}

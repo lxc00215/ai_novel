@@ -8,6 +8,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import { Character, InspirationDetail } from '@/app/services/types';
 import { toast } from 'sonner';
+
+
 async function getInspirationData(id: string) {
   try {
     const response = await request(`/spirate/${id}`, {
@@ -403,6 +405,23 @@ export default function SpirateDetail() {
       return ''; // 返回空字符串表示生成失败
     }
   };
+  // 添加一个 useEffect 来监听所有图片是否生成完成
+  // useEffect(() => {
+  //   if (allImagesGenerated && updatedStoryLines.length > 0 && typewriterMode) {
+  //     // 所有图片都生成完成，将更新后的内容保存到后端
+  //     const saveContent = async () => {
+  //       try {
+  //         await apiService.spirate.update( {
+  //           id:inspiration?.id,
+  //           content: updatedStoryLines.join('\n')
+  //         });
+  //       } catch (error) {
+  //         console.error('Error saving story content:', error);
+  //       }
+  //     };
+  //     // saveContent();
+  //   }
+  // }, [allImagesGenerated, updatedStoryLines]);
 
   //解析时间  只保留年月日
   function parseTime(time: string) {
@@ -662,7 +681,7 @@ export default function SpirateDetail() {
                   image_url: char.image_url,
                   prompt: char.prompt
                 };
-              
+
                 //跳转页面
                 router.push(`/dashboard/messages?characterId=${char.id}`);
               }} className="text-xs mt-1 h-6 px-2">
