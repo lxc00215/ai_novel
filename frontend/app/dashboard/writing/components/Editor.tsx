@@ -426,64 +426,66 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
   }, [localContent, searchResults]);
 
   return (
-    <div className="h-full flex flex-col p-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-4 pb-20 flex flex-col h-full bg-black text-white">
+      {/* 章节标题 */}
+      <div className="flex items-center mb-4">
         <input
           type="text"
           value={localTitle}
           onChange={handleTitleChange}
           onBlur={handleTitleBlur}
-          className="text-2xl font-medium bg-transparent border-none focus:outline-none focus:ring-0 w-full"
+          className="text-2xl font-bold w-full border-none p-2 bg-black text-white focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+          placeholder="章节标题"
         />
-
       </div>
 
-      {/* 编辑器区域 */}
       <div className="relative flex-1">
+        {/* 主要编辑区域 */}
         <Textarea
           ref={editorRef}
           value={localContent}
-          onChange={(e) => handleContentChange(e)}
-          className="resize-none text-lg border-none focus:outline-none focus:ring-0 w-full h-full"
-          placeholder="开始写作吧..."
-          style={{ minHeight: textareaHeight }}
+          onChange={handleContentChange}
+          placeholder="在这里开始写作..."
+          className="w-full h-full min-h-[300px] resize-none p-4 bg-black text-white border-gray-700 focus:ring-blue-500 focus:border-blue-500"
+          style={{
+            height: textareaHeight,
+            lineHeight: '1.7',
+            fontSize: '1.1rem',
+          }}
         />
 
-        {/* AI操作工具栏 - 选中文本时显示 */}
+        {/* AI工具栏 - 只在文本选中时显示 */}
         {showAIToolbar && (
           <div
             ref={aiToolbarRef}
-            className={cn(
-              "absolute bottom-4 left-1/2 transform -translate-x-1/2",
-              "flex items-center gap-2 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg p-2 border z-10"
-            )}
+            className="absolute bottom-4 right-4 bg-gray-900 border border-gray-700 rounded-md shadow-lg p-1 flex"
           >
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              className="bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
+              className="text-blue-400 hover:text-blue-300 hover:bg-gray-800"
               onClick={() => handleAIAction('expand')}
             >
               <Sparkles className="h-4 w-4 mr-1" />
-              AI扩写
+              扩写
             </Button>
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              className="bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+              className="text-purple-400 hover:text-purple-300 hover:bg-gray-800"
               onClick={() => handleAIAction('rewrite')}
             >
               <Wand2 className="h-4 w-4 mr-1" />
-              AI改写
+              改写
             </Button>
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+              className="text-green-400 hover:text-green-300 hover:bg-gray-800"
               onClick={() => handleAIAction('polish')}
             >
               <Paintbrush className="h-4 w-4 mr-1" />
-              AI润色
+              润色
             </Button>
           </div>
         )}

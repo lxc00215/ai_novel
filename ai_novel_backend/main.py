@@ -7,11 +7,13 @@ from routes import alipay_routes, book_generation_routes, feature_routes, alipay
 from my_filter.sesitive_filter import SensitiveWordFilter, get_word_filter
 sys.path.append("routes")
 from sqlalchemy.orm import configure_mappers
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routes import ai_routes, chapter_routes, character_routes, chat_routes, spirate_routes, user_routes, novel_routes, auth_routes, task_routes
 from my_filter.sesitive_filter import SensitiveWordMiddleware, get_filter
 from util.mcpHub import MCPClient
+from auth import get_current_user
+from database import User
 
 # 全局变量引用
 mcp_client = None
@@ -99,6 +101,19 @@ configure_mappers()
 # 初始化过滤器并添加中间件
 filter_instance = get_filter()
 app.add_middleware(SensitiveWordMiddleware, word_filter=filter_instance)
+
+# 添加一个测试的受保护API路由
+@app.get("/protected")
+async def protected_route(current_user: User = Depends(get_current_user)):
+    """
+    测试需要认证的路由。
+    只有登录用户才能访问此路由。
+    """
+    return {
+        "message": "你已通过身份验证",
+        "user_id": current_user.id,
+        "account": current_user.account
+    }
 
 @app.get("/")
 async def root():

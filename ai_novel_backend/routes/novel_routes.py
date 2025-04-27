@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db, User, Novels, GeneratedChapter
 from schemas import BookGenerationCreate, ChapterCreate, ChapterResponse, ChapterUpdate, NovelResponse, NovelUpdate
 # from schemas import CrazyNovelCreate, NovelCreate, NovelUpdate, NovelResponse, PaginatedResponse
-# from auth import get_current_user
+from auth import get_current_user  # 导入获取当前用户的函数
 # from datetime import datetime
 # from dao.crazy1novel import write_novel_free
 # import asyncio
@@ -25,13 +25,13 @@ router = APIRouter(prefix="/novels", tags=["novels"])
 @router.post("/create", response_model=None)
 async def create_novel(
     request: BookGenerationCreate,
-    # current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # 获取当前登录用户
 ):
    async with async_session() as db:
 
     # 创建一本什么都没的空小说
         novel = Novels(
-            user_id=4,
+            user_id=current_user.id,  # 使用当前登录用户的ID
             title=request.title,
             description=request.description,
             created_at=datetime.now(),

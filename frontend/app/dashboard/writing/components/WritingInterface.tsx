@@ -369,9 +369,9 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
     };
   }, []);
   return (
-    <div className={`flex h-screen bg-background text-foreground overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
+    <div className={`flex h-screen bg-black text-white overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
       {/* Left Sidebar - novel */}
-      <div className={`border-r transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
+      <div className={`border-r border-gray-600 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
         <Sidebar
           chapters={novel.chapters}
           currentOrder={currentOrder}
@@ -382,7 +382,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden bg-black">
         {/* Toolbar */}
         <Toolbar
           book_title={novel.title}
@@ -402,7 +402,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
         {/* Right AI Panel */}
         <div className="flex flex-1 overflow-hidden">
           {/* Editor */}
-          <div ref={editorRef} className="flex-1 overflow-auto">
+          <div ref={editorRef} className="flex-1 overflow-auto bg-black text-white">
             <Editor
               chapter={getCurrentChapter()}
               updateTitle={(newTitle: string) => {
