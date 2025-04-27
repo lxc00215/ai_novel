@@ -59,9 +59,7 @@ const handleApiError = (error: any) => {
 };
 
 // 封装请求函数
-export const request = async (url: string, options: RequestInit = {
-
-}, base_url = "/api/proxy") => {
+export const request = async (url: string, options: RequestInit = {}, base_url = "http://localhost:8000") => {
   try {
     const response = await fetch(base_url + url, options);
 
@@ -81,7 +79,6 @@ export const request = async (url: string, options: RequestInit = {
       return response; // 直接返回 response 对象,不要尝试 JSON 解析
     }
 
-
     return await response.json();
   } catch (error) {
     return handleApiError(error);
@@ -93,30 +90,30 @@ const apiService = {
 
   alipay: {
     creat: async (amount: string) => {
-      return await request('/alipay/create', {
+      const response = await request('/alipay/create', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           amount: amount,
-          description: "充值"
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+          description: "订阅会员服务"
+        })
       });
+      return response;
     },
-    checkOrder: async (orderInfo: any) => {
-      return await request('/alipay/check', {
-        method: 'post',
-        body: JSON.stringify({
-          "order_info": orderInfo
-        }),
+    checkOrder: async (orderInfo: string) => {
+      const response = await request('/alipay/check', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
-
-      })
+        },
+        body: JSON.stringify({
+          order_info: orderInfo
+        })
+      });
+      return response;
     }
-
   },
 
   // 认证相关 API

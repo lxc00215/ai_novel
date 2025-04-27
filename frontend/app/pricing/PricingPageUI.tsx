@@ -137,88 +137,82 @@ export default function PricingPageUI() {
   
 
   // 修改处理点击函数，先显示确认对话框
-  const handleSubscribeClick = async (plan, amount) => {
-    // 保存当前选择的计划和金额
+  const handleSubscribeClick = async (plan: any, amount: string) => {
     setSelectedPlan(plan);
     setPaymentAmount(amount);
-    
-    // 判断是否登录
-    const user = localStorage.getItem('token');
-    
-    if (user) {
-      try {
-        let tempwindow = window.open('about:blank', '_blank');
-        // 显示加载状态
-        setIsLoading(true);
-        
-        // 调用支付API
-        const response = await apiService.alipay.creat(amount);
-        
-        // 提取支付链接
-        let link = response['link'];
-        // 去掉双引号
-        let link_str = link.match(/\((.*?)\)/)[1].replaceAll('"', '');
-        console.log("支付链接:", link_str);
-        setLinkStr(link_str)
-            // 保存订单信息
-        console.log("订单信息:", response['order_info']);
-        console.log("订单信息:", response);
-        setOrderInfo(response['order_info']);
 
-        tempwindow.location.href = link_str;
-
-
-        
-       try {
-  // 使用window.open直接打开，并确保捕获返回值
-  const newWindow = window.open('about:blank', '_blank');
-  
-  // 如果newWindow存在，我们就能控制它
-  if (newWindow) {
-  console.log("到这里了")
-    newWindow.location.href = link_str;
-    
-    // 如果支付页面未能成功打开，给用户提示
-    if (newWindow.closed || !newWindow.opener) {
-      toast("支付页面可能被浏览器拦截", {
-        description: "请允许弹出窗口或使用下面的按钮手动打开支付页面",
-      });
-    }
-  } else {
-    // window.open返回null，可能是被浏览器拦截
-    toast("支付页面被浏览器拦截", {
-      description: "请允许弹出窗口或使用下面的按钮手动打开支付页面",
-    });
-  }
-} catch (error) {
-  console.error("打开支付页面失败", error);
-  toast("支付页面打开失败", {
-    description: "请使用下面的按钮手动打开支付页面",
-  });
-}
-        // 关闭加载框，显示支付确认对话框
-        setIsLoading(false);
-        setShowPaymentDialog(true);
-        
-        // 开始轮询支付状态
-        setIsPolling(true);
-        setPollingCount(0);
-      } catch (error) {
-        setIsLoading(false);
-        toast("发起支付失败",
-            {
-          description: "请稍后再试或联系客服",
-          action:{
-            label:'稍后',
-            onClick:()=>{}
+    // 判断是否登录（假设token存储在localStorage）
+    const userToken = localStorage.getItem('token');
+    if (!userToken) {
+      // 未登录，提示用户，用户点击登录后，跳转到登录页
+      toast("请先登录", {
+        description: "请先登录后再进行支付",
+        action: {
+          label: "登录",
+          onClick: () => {
+            // 跳转到登录页
+            localStorage.setItem("amount", amount);
+            router.push('/auth?is_pay=true');
           }
-        });
-        console.error("支付处理出错", error);
+        }
+      });
+      return;
+    }
+
+    // 已登录，继续支付逻辑
+    try {
+      setIsLoading(true);
+      const response = await apiService.alipay.creat(amount);
+      
+      // 从响应中提取支付链接
+      // 注意：后端返回的link格式为 "网页支付链接: [点击完成支付](实际链接)"
+      const linkMatch = response.link.match(/\[点击完成支付\]\((.*?)\)/);
+      if (!linkMatch) {
+        throw new Error('支付链接格式错误');
       }
-    } else {
-      // 未登录，保存金额并跳转到登录页
-      localStorage.setItem("amount", amount);
-      router.push('/auth?is_pay=true');
+      
+      const paymentLink = linkMatch[1];
+      setLinkStr(paymentLink);
+      
+      // 保存订单信息
+      setOrderInfo(response.order_info);
+      
+      // 打开支付页面
+      const newWindow = window.open('about:blank', '_blank');
+      if (newWindow) {
+        newWindow.location.href = paymentLink;
+        
+        // 如果支付页面未能成功打开，给用户提示
+        if (newWindow.closed || !newWindow.opener) {
+          toast("支付页面可能被浏览器拦截", {
+            description: "请允许弹出窗口或使用下面的按钮手动打开支付页面",
+          });
+        }
+      } else {
+        // window.open返回null，可能是被浏览器拦截
+        toast("支付页面被浏览器拦截", {
+          description: "请允许弹出窗口或使用下面的按钮手动打开支付页面",
+        });
+      }
+      
+      // 关闭加载框，显示支付确认对话框
+      setIsLoading(false);
+      setShowPaymentDialog(true);
+      
+      // 开始轮询支付状态
+      setIsPolling(true);
+      setPollingCount(0);
+      
+    } catch (error) {
+      setIsLoading(false);
+      toast("发起支付失败", {
+        description: "请稍后再试或联系客服",
+        action: {
+          label: '稍后',
+          onClick: () => {}
+        }
+      });
+      console.error("支付处理出错", error);
     }
   };
 
@@ -370,7 +364,11 @@ export default function PricingPageUI() {
           setShowPaymentDialog(open);
         }
       }}>
-        <DialogContent className="sm:max-w-md">
+        {/* 自定义全屏蒙版 */}
+        {showPaymentDialog && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" />
+        )}
+        <DialogContent className="sm:max-w-md z-50">
           <DialogHeader>
             <DialogTitle className="text-xl text-center font-bold">支付确认</DialogTitle>
           </DialogHeader>
