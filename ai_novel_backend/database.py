@@ -12,7 +12,7 @@ load_dotenv()
 
 # 创建异步引擎
 engine = create_async_engine(
-    os.getenv("DATABASE_URL", "mysql+aiomysql://root:root@localhost/novel"),
+    os.getenv("DATABASE_URL", "mysql+aiomysql://root:shiyunlai123@localhost/novel"),
     echo=True,
     pool_size=5,  # 连接池大小
     max_overflow=10,  # 超过 pool_size 后最多可以创建的连接数
