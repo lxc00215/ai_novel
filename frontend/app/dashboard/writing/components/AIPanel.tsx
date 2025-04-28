@@ -87,13 +87,13 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       const requirements = requirementsMode === 'preset'
         ? selectedRequirementsPreset
         : customRequirements;
-
+      console.log("标记1")
       const response = await apiService.ai.generateContent(storyBackground, writingStyle, requirements);
-
-      if (response ) {
+      console.log("AI生成内容:", response);
+      if (response && response.success) {
         toast.success('内容生成成功');
         if (onContentGenerated) {
-          onContentGenerated(response);
+          onContentGenerated(typeof response.data === 'string' ? response.data : JSON.stringify(response.data));
         }
         closeAIPanel();
       } else {
