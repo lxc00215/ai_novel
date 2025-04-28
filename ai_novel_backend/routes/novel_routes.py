@@ -25,13 +25,13 @@ router = APIRouter(prefix="/novels", tags=["novels"])
 @router.post("/create", response_model=None)
 async def create_novel(
     request: BookGenerationCreate,
-    current_user: User = Depends(get_current_user),  # 获取当前登录用户
+    # current_user: User = Depends(get_current_user),  # 获取当前登录用户
 ):
    async with async_session() as db:
 
     # 创建一本什么都没的空小说
         novel = Novels(
-            user_id=current_user.id,  # 使用当前登录用户的ID
+            user_id=request.user_id,  # 使用当前登录用户的ID
             title=request.title,
             description=request.description,
             created_at=datetime.now(),

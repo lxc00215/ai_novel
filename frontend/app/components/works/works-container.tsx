@@ -38,13 +38,23 @@ export default function WorksContainer() {
 
   // 处理创建作品提交
   const handleCreateSubmit = async (title: string, description: string) => {
-    // 创建新作品并添加到列表
-    const newWork = await apiService.novels.create(title, description);
-    console.log(JSON.stringify(newWork));
-    if (newWork) {
-      // 跳转页面
-      console.log(newWork);
-      router.push(`/dashboard/writing/${newWork.id}`);
+    try {
+      const response = await apiService.novels.create(title, description);
+
+      if (response && response.success && response.data) {
+        // 获取新作品数据
+        const newWork = response.data;
+        console.log("作品创建成功:", newWork);
+
+        // 跳转到写作页面
+        router.push(`/dashboard/writing/${newWork.id}`);
+      } else {
+        console.error("创建作品失败:", response);
+        // 可以在这里添加错误提示
+      }
+    } catch (error) {
+      console.error("创建作品时出错:", error);
+      // 可以在这里添加错误提示
     }
   };
 
@@ -54,7 +64,7 @@ export default function WorksContainer() {
     try {
       const { getCurrentUserId } = await import('@/app/utils/jwt')
       const userId = getCurrentUserId();
-      const response = await apiService.novels.getNovel(userId.toString());
+      const response = await apiService.novels.getNovel(`${userId}`);
       if (response) {
         const normalWorks: Novel[] = [];
         const archivedWorks: Novel[] = [];
@@ -71,7 +81,7 @@ export default function WorksContainer() {
       }
     } catch (error: any) {
       console.error("获取作品数据失败:", error);
-      
+
       // 检查是否是 404 错误
       if (error.response && error.response.status === 404) {
         // 使用 toast 显示提示
@@ -85,21 +95,26 @@ export default function WorksContainer() {
     }
   };
 
-
   // 归档动作发出执行的方法
   const handleArchive = async (id: string, isArchive: boolean) => {
     try {
       const response = await apiService.novels.updateNovel(id, { is_archive: isArchive });
 
-      if (response && response.data) {
+      if (response && response.success && response.data) {
         if (isArchive) {
           // 从作品列表移除，添加到归档列表
           setWorks(prev => prev.filter(item => item.id !== id));
-          setAchiveWorks(prev => [...prev, response.data]);
+          // 确保response.data不为undefined
+          if (response.data) {
+            setAchiveWorks(prev => [...prev, response.data as Novel]);
+          }
         } else {
           // 从归档列表移除，添加到作品列表
           setAchiveWorks(prev => prev.filter(item => item.id !== id));
-          setWorks(prev => [...prev, response.data]);
+          // 确保response.data不为undefined
+          if (response.data) {
+            setWorks(prev => [...prev, response.data as Novel]);
+          }
         }
       }
     } catch (error) {
@@ -110,7 +125,7 @@ export default function WorksContainer() {
   // 处理作品删除
   const handleDelete = async (id: string) => {
     try {
-      await apiService.novels.deleteNovel(id);
+      await apiService.novels.delete(id);
       // 删除成功后从列表中移除
       setWorks(prev => prev.filter(item => item.id !== id));
       setAchiveWorks(prev => prev.filter(item => item.id !== id));

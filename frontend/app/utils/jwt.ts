@@ -31,17 +31,29 @@ export function getCurrentUserId(): number {
   try {
     // 从 localStorage 获取 token
     const token = localStorage.getItem('token');
-    if (!token) return 0;
-    
+    if (!token) {
+      // 尝试从user对象中获取用户ID
+      const userJson = localStorage.getItem('user');
+      if (userJson) {
+        try {
+          const user = JSON.parse(userJson);
+          return user.id ? parseInt(user.id) : 0;
+        } catch (e) {
+          console.error('解析用户数据失败:', e);
+        }
+      }
+      return 0;
+    }
+
     // 解析 token
     const payload = parseJwt(token);
     if (!payload) return 0;
-    
+
     // 获取用户 ID
     // 注意：根据你的 JWT 结构，用户 ID 可能存储在不同的字段中
     // 常见的字段有：sub, user_id, id 等
     const userId = payload.sub || payload.user_id || payload.id;
-    
+
     return userId ? parseInt(userId) : 0;
   } catch (error) {
     console.error('获取用户 ID 失败:', error);
@@ -57,17 +69,17 @@ export function isTokenValid(): boolean {
   try {
     const token = localStorage.getItem('token');
     if (!token) return false;
-    
+
     const payload = parseJwt(token);
     if (!payload) return false;
-    
+
     // 检查 token 是否过期
     const exp = payload.exp;
     if (exp && typeof exp === 'number') {
       // exp 是 UNIX 时间戳（秒），需要转换为毫秒
       return Date.now() < exp * 1000;
     }
-    
+
     return true;
   } catch (error) {
     console.error('检查 token 有效性失败:', error);

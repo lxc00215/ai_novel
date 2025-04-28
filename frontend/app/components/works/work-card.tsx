@@ -171,7 +171,7 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
   return (
     <>
       <Card
-        className="hover:shadow-md transition-all duration-300 relative cursor-pointer hover:-translate-y-1 bg-black border-gray-800"
+        className="hover:shadow-md transition-all duration-300 relative cursor-pointer hover:-translate-y-1"
         onClick={handleCardClick}
       >
         {/* 置顶标识 */}
@@ -190,12 +190,12 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
             </div>
 
             <div className="flex-1">
-              <CardTitle className="text-lg truncate text-white">{work.title}</CardTitle>
+              <CardTitle className="text-lg truncate">{work.title}</CardTitle>
               <div className="mt-1 flex flex-wrap gap-2">
-                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-800 text-gray-300">
+                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
                   小说
                 </span>
-                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-800 text-gray-300">
+                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
                   诗
                 </span>
               </div>
@@ -204,7 +204,7 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
         </CardHeader>
 
         <CardContent>
-          <p className="text-sm text-gray-400 mb-4 bg-gray-900 p-2 rounded">
+          <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-2 rounded">
             {work.description || "暂无描述"}
           </p>
 
@@ -213,7 +213,7 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
             <Button
               variant="outline"
               size="sm"
-              className="bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white gap-1 px-4 transition-transform hover:-translate-y-1"
+              className="bg-gray-100 hover:bg-gray-200 gap-1 px-4 transition-transform hover:-translate-y-1"
               onClick={(e) => handleButtonClick(e, "新建章节")}
             >
               <Plus size={14} />
@@ -229,40 +229,40 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
                 ref={buttonRef}
                 variant="outline"
                 size="sm"
-                className="text-emerald-400 border-emerald-900 bg-gray-900 hover:bg-gray-800 gap-1 px-4 transition-transform hover:-translate-y-1"
+                className="text-emerald-600 border-emerald-200 bg-white hover:bg-emerald-50 gap-1 px-4 transition-transform hover:-translate-y-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Settings size={14} className="text-emerald-400" />
+                <Settings size={14} className="text-emerald-600" />
                 <span>作品管理</span>
               </Button>
 
               {/* 悬浮式下拉菜单 */}
               {menuOpen && (
                 <div
-                  className="absolute right-0 mt-1 w-40 bg-gray-900 rounded-md shadow-lg z-20 border border-gray-700 overflow-hidden"
+                  className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-20 border overflow-hidden"
                   onMouseEnter={handleMenuMouseEnter}
                   onMouseLeave={handleMouseLeave}
                 >
                   <div className="py-1">
-                    <button onClick={handleInfoDialog} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
+                    <button onClick={handleInfoDialog} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
                       <Info size={14} /> 作品信息
                     </button>
-                    <button onClick={handleDeleteDialog} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2 text-red-400">
+                    <button onClick={handleDeleteDialog} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 text-red-500">
                       <Trash size={14} /> 删除作品
                     </button>
-                    <button onClick={handleSplit} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
+                    <button onClick={handleSplit} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
                       <FileText size={14} /> 拆书
                     </button>
-                    <button onClick={toggleTop} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
+                    <button onClick={toggleTop} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
                       <ArrowUp size={14} />  {isTop ? "取消置顶" : "置顶"}
                     </button>
-                    <button onClick={toggleArchive} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
+                    <button onClick={toggleArchive} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
                       <ArrowDown size={14} />  {isArchive ? "取消归档" : "归档"}
                     </button>
-                    <button onClick={handleExport} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
+                    <button onClick={handleExport} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
                       <FileOutput size={14} /> 作品导出
                     </button>
-                    <button onClick={handleTutorial} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
+                    <button onClick={handleTutorial} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
                       <HelpCircle size={14} /> 新手教程
                     </button>
                   </div>
