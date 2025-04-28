@@ -3,7 +3,7 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi.staticfiles import StaticFiles
-from routes import alipay_routes, book_generation_routes, feature_routes, alipay_routes
+from routes import alipay_routes, book_generation_routes, crazy_routes, feature_routes, alipay_routes
 sys.path.append("routes")
 from sqlalchemy.orm import configure_mappers
 from fastapi import Depends, FastAPI, HTTPException
@@ -93,6 +93,7 @@ app.include_router(character_routes.router)
 app.include_router(chat_routes.router)
 app.include_router(feature_routes.router)
 app.include_router(alipay_routes.router)
+app.include_router(crazy_routes.router)
 
 configure_mappers()
 app.add_middleware(

@@ -41,10 +41,11 @@ export default function WorksContainer() {
     try {
       const response = await apiService.novels.create(title, description);
 
-      if (response && response.success && response.data) {
+      if (response) {
         // 获取新作品数据
-        const newWork = response.data;
-        console.log("作品创建成功:", newWork);
+        const newWork = response;
+
+        console.log("新作品数据:", JSON.stringify(newWork));
 
         // 跳转到写作页面
         router.push(`/dashboard/writing/${newWork.id}`);
@@ -100,20 +101,20 @@ export default function WorksContainer() {
     try {
       const response = await apiService.novels.updateNovel(id, { is_archive: isArchive });
 
-      if (response && response.success && response.data) {
+      if (response) {
         if (isArchive) {
           // 从作品列表移除，添加到归档列表
           setWorks(prev => prev.filter(item => item.id !== id));
           // 确保response.data不为undefined
-          if (response.data) {
-            setAchiveWorks(prev => [...prev, response.data as Novel]);
+          if (response) {
+            setAchiveWorks(prev => [...prev, response as Novel]);
           }
         } else {
           // 从归档列表移除，添加到作品列表
           setAchiveWorks(prev => prev.filter(item => item.id !== id));
-          // 确保response.data不为undefined
-          if (response.data) {
-            setWorks(prev => [...prev, response.data as Novel]);
+          // 确保response不为undefined
+          if (response) {
+            setWorks(prev => [...prev, response as Novel]);
           }
         }
       }
@@ -139,7 +140,7 @@ export default function WorksContainer() {
     try {
       const response = await apiService.novels.updateNovel(id, { title, description });
 
-      if (response && response.data) {
+      if (response) {
         // 更新作品列表中的作品信息
         setWorks(prev => prev.map(item =>
           item.id === id ? { ...item, title, description } : item

@@ -17,7 +17,9 @@ export default function WritingPage({ params }: { params: Promise<{ id: string }
         chapters: [],
         user_id: '',
         is_top: false,
-        is_archive: false
+        is_archive: false,
+        created_at: '',
+        updated_at: ''
     })
     useEffect( () => {
        async function fetchData() {
@@ -25,7 +27,7 @@ export default function WritingPage({ params }: { params: Promise<{ id: string }
             const res = await apiService.novels.getChapters(id)
             if(res){
                 console.log(JSON.stringify(res))
-                setNovel(res)
+                setNovel(res as unknown as Novel)
             }
         }catch(e){
         }

@@ -38,7 +38,7 @@ export default function CrazyHistoryPage() {
   // 加载任务列表
   const loadTasks = async () => {
     try {
-      const response = await apiService.task.getByType('CRAZY_WALK', 4);
+      const response = await apiService.task.getByType('CRAZY_WALK', 7);
       if (response) {
         setTasks(response);
       }
@@ -118,7 +118,7 @@ export default function CrazyHistoryPage() {
     }
     
     // 跳转到结果页面，根据实际情况调整路径
-    router.push(`/dashboard/crazy/result/${task.id}`);
+    router.push(`/dashboard/crazy/history/${task.id}`);
   };
   
   // 初始加载和自动刷新设置

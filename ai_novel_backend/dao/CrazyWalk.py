@@ -4,8 +4,11 @@ from typing import Callable
 import asyncio
 import json
 
-from database import CrazyWalkResult, GeneratedChapter, Novels,async_session
+from sqlalchemy import select, update
+
+from database import CrazyWalkResult, GeneratedChapter, Novels, Task,async_session
 from bridge.openai_bridge import OpenAIBridge, openai_bridge
+from models import TaskTypeEnum
 
 
 # 定义不同类型小说的提示词模板
@@ -110,19 +113,7 @@ class CrazyWalkService:
                 background = outline_data.get("background","啥也没有")
 
                 # 创建一本小说
-
-                novel_id = 0
-                async with async_session() as db:
-
-                    novel = Novels(
-                        user_id=4,
-                        title=novel_title,
-                        description=background,
-                        chapters=[]
-                    )
-                    db.add(novel)
-                    await db.commit()
-                    novel_id = novel.id
+                res_id = 0
                 async with async_session() as db:
 
                     result = CrazyWalkResult(
@@ -131,12 +122,11 @@ class CrazyWalkService:
                         category=task_data['category'],
                         seeds=task_data['seeds'],
                         chapter_count=task_data['chapter_count'],
-                        description=background,
-                        novel_id=novel_id
+                        description=background
                     )
                     db.add(result)
                     await db.commit()
-                
+                    res_id = result.id
                 # 2. 开始逐章生成内容
                 previous_chapter_content = ""
                 chapter_ids = []
@@ -193,12 +183,13 @@ class CrazyWalkService:
                     ], {"model": "gemini-2.0-flash-lite-preview-02-05", "temperature": 0.7, "max_tokens": 3000})
                     # 创建章节
                     chapter = GeneratedChapter(
-                        book_id=novel_id,
+                        book_id=res_id,
                         order=index+1,
                         title=chapter_title,
                         content=chapter_content,
                         created_at=datetime.now(),
-                        updated_at=datetime.now()
+                        updated_at=datetime.now(),
+                        book_type=TaskTypeEnum.CRAZY_WALK
                     )
 
                     async with async_session() as db:
@@ -218,12 +209,12 @@ class CrazyWalkService:
                     
                     # 暂停一下，避免API限流
                     await asyncio.sleep(1)
-
-                # 更新小说章节
+                print("res_id",res_id)
+                # 更新任务
                 async with async_session() as db:
-                    novel = await db.get(Novels, novel_id)
-                    novel.chapter_ids = chapter_ids
+                    await db.execute(update(Task).where(Task.id == task_id).values(result_id=res_id))
                     await db.commit()
+
             except Exception as e:
                 print(f"Error generating novel: {str(e)}")
 

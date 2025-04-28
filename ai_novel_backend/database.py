@@ -7,12 +7,11 @@ from datetime import datetime
 
 from models import TaskTypeEnum
 from dotenv import load_dotenv
+
 load_dotenv()
-
-
 # 创建异步引擎
 engine = create_async_engine(
-    os.getenv("DATABASE_URL", "mysql+aiomysql://root:shiyunlai123@localhost/novel"),
+    os.getenv("DATABASE_URL", "mysql+aiomysql://root:ccc@localhost/novel"),
     echo=True,
     pool_size=5,  # 连接池大小
     max_overflow=10,  # 超过 pool_size 后最多可以创建的连接数
@@ -24,9 +23,6 @@ async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False
 
 # 创建基类
 Base = declarative_base()
-
-
-
 
 # 获取数据库会话
 async def get_db():
@@ -233,7 +229,6 @@ class Novels(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     title = Column(String(255), nullable=False)
-    chapters = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     description = Column(Text, nullable=True)
@@ -254,6 +249,7 @@ class GeneratedChapter(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
     summary = Column(Text, nullable=False)
+    book_type = Column(Enum(TaskTypeEnum), nullable=False)
 
     book = relationship("Novels", back_populates="chapters")
 
@@ -346,16 +342,14 @@ class CrazyWalkResult(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)  # 新增字段
-    novel_id = Column(Integer, ForeignKey('novels.id'), nullable=True)  # 新增字段
     novel_type = Column(String(50), nullable=True)  # 新增字段
     category = Column(String(50), nullable=True)  # 新增字段
     seeds = Column(JSON, nullable=True)  # 新增字段
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     chapter_count = Column(Integer, nullable=True)  # 新增字段
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
-    # 如果需要关联关系
-    novel = relationship("Novels", backref="crazy_walk_results")
   
 
 class BookBreakdownResult(Base):

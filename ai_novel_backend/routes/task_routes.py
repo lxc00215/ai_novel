@@ -98,9 +98,25 @@ async def update_progress(task_id: int, percentage: int):
 @router.get("/get-by-type")
 async def get_task_by_type(task_type: TaskTypeEnum,user_id: int):
     """根据任务类型获取任务"""
-    async with async_session() as db:
-        query = select(Task).where(Task.task_type == task_type,Task.user_id == user_id)
-        result = await db.execute(query)
+
+    # 获取全部crazy_walk 任务，以及对应的results
+
+
+    if task_type == TaskTypeEnum.CRAZY_WALK:
+        async with async_session() as db:
+            # 获取所有crazy_walk_results
+            query = select(Task).where(Task.task_type == TaskTypeEnum.CRAZY_WALK)
+            result = await db.execute(query)
+            tasks = result.scalars().all()
+            for task in tasks:
+                query = select(CrazyWalkResult).where(CrazyWalkResult.id == task.result_id)
+                result = await db.execute(query)
+                task.result = result.scalar_one_or_none()
+            return tasks
+    else:
+        async with async_session() as db:
+            query = select(Task).where(Task.task_type == task_type,Task.user_id == user_id)
+            result = await db.execute(query)
         return result.scalars().all()
 
 @router.get("/status/{task_id}")
@@ -183,7 +199,6 @@ async def get_task_status(task_id: int, db: AsyncSession = Depends(get_db)):
             "error": "任务处理失败"
         }
 
-    print(f"response: {response}")
     return response
 
 async def process_task_crazy_walk(task_id: int,task_data: dict)->int:
@@ -193,7 +208,6 @@ async def process_task_crazy_walk(task_id: int,task_data: dict)->int:
     service = CrazyWalkService()
     try:
         result = await service.generate_novel_in_background(task_id,task_data,update_progress)
-
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -228,11 +242,7 @@ async def process_task_inspiration(task_data: dict)->int:
                 await db.refresh(character_result)
                 character_ids.append(character_result.id)
 
-        
-        
         # cover_image = await generate_images(GenerateImageRequest(prompt=task_data['prompt'],size='1280x960',user_id=task_data['user_id']))
-        
-
 
         inspiration_result = InspirationResult(
             title=result['title'],

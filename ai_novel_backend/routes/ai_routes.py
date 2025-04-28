@@ -21,7 +21,6 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 UPLOAD_DIR = "static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-
 @router.post("/upload-file")
 async def upload_file(
     file: UploadFile = File(...), 

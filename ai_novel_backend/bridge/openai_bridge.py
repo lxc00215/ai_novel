@@ -84,7 +84,7 @@ class OpenAIBridge:
             raise e
 
         
-    async def chat_stream(self, messages: List[Dict], options: Dict = {}) -> Dict:
+    async def chat_stream(self, messages: List[Dict], options: Dict = {}):
 
    
         """基础聊天请求"""
