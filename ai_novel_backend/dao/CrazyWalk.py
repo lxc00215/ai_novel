@@ -139,6 +139,7 @@ class CrazyWalkService:
                 
                 # 2. 开始逐章生成内容
                 previous_chapter_content = ""
+                chapter_ids = []
                 for index, chapter in enumerate(chapters_data):
                     chapter_title = chapter.get("title", f"第{index+1}章")
                     chapter_summary = chapter.get("summary", "")
@@ -204,6 +205,7 @@ class CrazyWalkService:
                         db.add(chapter)
                         await db.commit()
                         await db.refresh(chapter)
+                        chapter_ids.append(chapter.id)
 
                     # 更新任务进度
                     await update_progress(task_id,10 + int(90 * (index + 1) / len(chapters_data)))
@@ -217,6 +219,11 @@ class CrazyWalkService:
                     # 暂停一下，避免API限流
                     await asyncio.sleep(1)
 
+                # 更新小说章节
+                async with async_session() as db:
+                    novel = await db.get(Novels, novel_id)
+                    novel.chapter_ids = chapter_ids
+                    await db.commit()
             except Exception as e:
                 print(f"Error generating novel: {str(e)}")
 

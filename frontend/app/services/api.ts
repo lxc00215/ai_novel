@@ -695,6 +695,19 @@ const apiService = {
         // 这里可以添加特定于状态查询的错误处理
         throw error;
       }
+    },
+    getByType: async (taskType: string, userId: number) => {
+      try {
+        const response = await request(`/task/get-by-type?task_type=${taskType}&user_id=${userId}`, {
+          method: 'GET'
+        });
+        
+
+        return response;
+      } catch (error) {
+        console.error('获取任务列表失败:', error);
+        throw error;
+      }
     }
   }
 

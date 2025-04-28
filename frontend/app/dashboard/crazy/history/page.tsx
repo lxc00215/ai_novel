@@ -6,34 +6,14 @@ import { ArrowLeft, BookOpen, RefreshCw, Loader2 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import apiService from '@/app/services/api';
-import { Task, TaskResponse } from '@/app/services/types';
+import { Task } from '@/app/services/types';
 
 // 添加API方法获取暴走模式任务列表
 // 这个方法需要在 app/services/api.ts 中添加
-const getTasks = async (taskType: string, userId: number) => {
-  try {
-    const response = await fetch(`/api/tasks?type=${taskType}&user_id=${userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error('获取任务列表失败');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('获取任务列表失败:', error);
-    throw error;
-  }
-};
-interface CrazyHistoryPageProps {
-  onToggleView: () => void;
-}
 
-export default function CrazyHistoryPage({ onToggleView }: CrazyHistoryPageProps) {
+
+
+export default function CrazyHistoryPage() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,13 +38,13 @@ export default function CrazyHistoryPage({ onToggleView }: CrazyHistoryPageProps
   // 加载任务列表
   const loadTasks = async () => {
     try {
-      // 假设使用固定的用户ID 4，实际应用中应该从用户登录信息中获取
-      const response = await getTasks('CRAZY_WALK', 4);
-      if (response && response.data) {
-        setTasks(response.data);
+      const response = await apiService.task.getByType('CRAZY_WALK', 4);
+      if (response) {
+        setTasks(response);
       }
     } catch (error) {
-      toast.error('获取任务列表失败，请稍后重试');
+      toast.error('获取任务列表失败，请稍后重试')
+
     } finally {
       setIsLoading(false);
     }
@@ -161,12 +141,12 @@ export default function CrazyHistoryPage({ onToggleView }: CrazyHistoryPageProps
   }, [tasks]);
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
+      <div className="container   mx-auto p-4">
+        <div className="flex justify-between hover:cursor-pointer items-center mb-6">
           <Button 
             variant="ghost" 
             className="flex items-center gap-2"
-            onClick={() => onToggleView()}
+            onClick={() => router.push('/dashboard/crazy')}
           >
             <ArrowLeft size={16} />
             返回暴走模式
@@ -221,7 +201,7 @@ export default function CrazyHistoryPage({ onToggleView }: CrazyHistoryPageProps
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-medium">
-                        任务 ID: {task.id.slice(0, 8)}...
+                        任务 ID: {task.id}
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         创建时间: {new Date(task.created_at).toLocaleString()}

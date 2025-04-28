@@ -1,16 +1,14 @@
-// pages/index.tsx
 'use client'
+
 import { useState } from 'react';
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { X, Zap, BookOpen, Heart, History, Loader2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Settings, HelpCircle, X, Zap, BookOpen, Heart, History, Loader2 } from 'lucide-react';
-import apiService from '@/app/services/api';
-import { CreateCrazyRequest } from '@/app/services/types';
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import apiService from '@/app/services/api';
+import { CreateCrazyRequest } from '@/app/services/types';
 
 // Types
 type Category = {
@@ -30,13 +30,7 @@ type Category = {
   }[];
 };
 
-interface CrazyStartPageProps {
-  onToggleView: () => void;
-}
-
-
-
-export default function CrazyStartPage({ onToggleView }: CrazyStartPageProps) {
+export default function CrazyStartPage() {
   const router = useRouter();
   // State
   const [selectedGender, setSelectedGender] = useState<string>("male");
@@ -44,13 +38,11 @@ export default function CrazyStartPage({ onToggleView }: CrazyStartPageProps) {
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
   const [useSeed, setUseSeed] = useState(false);
   const [selectedSeeds, setSelectedSeeds] = useState<string[]>([]);
-  const [wordCount, setWordCount] = useState(5000);
   const [chapterCount, setChapterCount] = useState(5);
   
   // 任务状态
   const [isLoading, setIsLoading] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
-  const [taskId, setTaskId] = useState<string>("");
 
   // Sample data
   const maleCategories: Category[] = [
@@ -232,17 +224,16 @@ export default function CrazyStartPage({ onToggleView }: CrazyStartPageProps) {
     router.push('/dashboard/crazy/history');
   };
   
- 
-  
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* 页面顶部添加历史记录按钮 */}
-      <div className="container mx-auto p-4 flex justify-end">
+      <div className="container hover:cursor-pointer mx-auto p-4 flex justify-end"
+        onClick={()=>navigateToHistory()}
+      >
         <Button 
           variant="outline" 
           size="sm" 
           className="flex items-center gap-2"
-          onClick={()=>navigateToHistory()}
         >
           <History size={16} />
           历史记录

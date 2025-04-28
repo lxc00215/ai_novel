@@ -95,6 +95,13 @@ async def update_progress(task_id: int, percentage: int):
         )
         await db.commit()
 
+@router.get("/get-by-type")
+async def get_task_by_type(task_type: TaskTypeEnum,user_id: int):
+    """根据任务类型获取任务"""
+    async with async_session() as db:
+        query = select(Task).where(Task.task_type == task_type,Task.user_id == user_id)
+        result = await db.execute(query)
+        return result.scalars().all()
 
 @router.get("/status/{task_id}")
 async def get_task_status(task_id: int, db: AsyncSession = Depends(get_db)):
