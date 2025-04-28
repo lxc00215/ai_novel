@@ -11,7 +11,7 @@ import CreateWorkDialog from "./create-work-dialog";
 import apiService from "@/app/services/api";
 import { useRouter } from "next/navigation";
 import { Novel } from "@/app/services/types";
-
+import { toast } from "sonner"
 
 export default function WorksContainer() {
 
@@ -69,12 +69,22 @@ export default function WorksContainer() {
         setWorks(normalWorks);
         setAchiveWorks(archivedWorks);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("获取作品数据失败:", error);
+      
+      // 检查是否是 404 错误
+      if (error.response && error.response.status === 404) {
+        // 使用 toast 显示提示
+        toast.info("您当前还未创建小说哦", {
+          position: "top-center",
+          duration: 3000,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
 
   // 归档动作发出执行的方法
   const handleArchive = async (id: string, isArchive: boolean) => {
@@ -163,13 +173,13 @@ export default function WorksContainer() {
   return (
     <div className="container mx-auto py-8 px-4">
       <Tabs defaultValue="works" onValueChange={handleTabChange} className="w-full">
-        <div className="bg-background rounded-lg shadow-sm mb-8">
-          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-background rounded-lg">
+        <div className="bg-black rounded-lg shadow-sm mb-8">
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-black rounded-lg">
             <TabsTrigger
               value="works"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "works"
-                  ? "bg-background shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "bg-gray-900 shadow-sm font-medium text-white after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
+                : "text-gray-300 hover:text-white"
                 }`}
             >
               作品
@@ -177,16 +187,16 @@ export default function WorksContainer() {
             <TabsTrigger
               value="published"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "published"
-                  ? "bg-background shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "bg-gray-900 shadow-sm font-medium text-white after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
+                : "text-gray-300 hover:text-white"
                 }`}>
               已归档
             </TabsTrigger>
             <TabsTrigger
               value="recycled"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "recycled"
-                  ? "bg-black shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "bg-gray-900 shadow-sm font-medium text-white after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
+                : "text-gray-300 hover:text-white"
                 }`}
             >
               回收站

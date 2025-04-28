@@ -103,9 +103,9 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
   const toggleTop = async (e: React.MouseEvent) => {
     e.stopPropagation();
     // 发请求
-    const res = await apiService.novels.updateNovel(work.id, {is_top: !isTop});
+    const res = await apiService.novels.updateNovel(work.id, { is_top: !isTop });
     console.log(JSON.stringify(res));
-    if(res) {
+    if (res) {
       setIsTop(!isTop);
     } else {
       // 处理失败情况
@@ -170,8 +170,8 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
 
   return (
     <>
-      <Card 
-        className="hover:shadow-md transition-all duration-300 relative cursor-pointer hover:-translate-y-1"
+      <Card
+        className="hover:shadow-md transition-all duration-300 relative cursor-pointer hover:-translate-y-1 bg-black border-gray-800"
         onClick={handleCardClick}
       >
         {/* 置顶标识 */}
@@ -181,88 +181,88 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
             <span>TOP</span>
           </div>
         )}
-        
+
         <CardHeader className="pb-2">
           <div className="flex gap-4">
             {/* 左侧绿色方块 */}
             <div className="w-16 h-16 bg-emerald-400 rounded-md flex items-center justify-center text-white font-medium">
               新建
             </div>
-            
+
             <div className="flex-1">
-              <CardTitle className="text-lg truncate">{work.title}</CardTitle>
+              <CardTitle className="text-lg truncate text-white">{work.title}</CardTitle>
               <div className="mt-1 flex flex-wrap gap-2">
-                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-800 text-gray-300">
                   小说
                 </span>
-                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+                <span className="inline-block px-2 py-1 text-xs rounded bg-gray-800 text-gray-300">
                   诗
                 </span>
               </div>
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
-          <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-2 rounded">
+          <p className="text-sm text-gray-400 mb-4 bg-gray-900 p-2 rounded">
             {work.description || "暂无描述"}
           </p>
-          
+
           {/* 底部按钮区域 */}
           <div className="flex justify-between items-center">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-gray-100 hover:bg-gray-200 gap-1 px-4 transition-transform hover:-translate-y-1"
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-gray-900 text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white gap-1 px-4 transition-transform hover:-translate-y-1"
               onClick={(e) => handleButtonClick(e, "新建章节")}
             >
               <Plus size={14} />
               <span>新建章节</span>
             </Button>
-            
-            <div 
-              className="relative" 
+
+            <div
+              className="relative"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
-              <Button 
+              <Button
                 ref={buttonRef}
-                variant="outline" 
-                size="sm" 
-                className="text-emerald-600 border-emerald-200 bg-white hover:bg-emerald-50 gap-1 px-4 transition-transform hover:-translate-y-1"
+                variant="outline"
+                size="sm"
+                className="text-emerald-400 border-emerald-900 bg-gray-900 hover:bg-gray-800 gap-1 px-4 transition-transform hover:-translate-y-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Settings size={14} className="text-emerald-600" />
+                <Settings size={14} className="text-emerald-400" />
                 <span>作品管理</span>
               </Button>
-              
+
               {/* 悬浮式下拉菜单 */}
               {menuOpen && (
-                <div 
-                  className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-20 border overflow-hidden"
+                <div
+                  className="absolute right-0 mt-1 w-40 bg-gray-900 rounded-md shadow-lg z-20 border border-gray-700 overflow-hidden"
                   onMouseEnter={handleMenuMouseEnter}
                   onMouseLeave={handleMouseLeave}
                 >
                   <div className="py-1">
-                    <button onClick={handleInfoDialog} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    <button onClick={handleInfoDialog} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
                       <Info size={14} /> 作品信息
                     </button>
-                    <button onClick={handleDeleteDialog} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 text-red-500">
+                    <button onClick={handleDeleteDialog} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2 text-red-400">
                       <Trash size={14} /> 删除作品
                     </button>
-                    <button onClick={handleSplit} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    <button onClick={handleSplit} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
                       <FileText size={14} /> 拆书
                     </button>
-                    <button onClick={toggleTop} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    <button onClick={toggleTop} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
                       <ArrowUp size={14} />  {isTop ? "取消置顶" : "置顶"}
                     </button>
-                    <button onClick={toggleArchive} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    <button onClick={toggleArchive} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
                       <ArrowDown size={14} />  {isArchive ? "取消归档" : "归档"}
                     </button>
-                    <button onClick={handleExport} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    <button onClick={handleExport} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
                       <FileOutput size={14} /> 作品导出
                     </button>
-                    <button onClick={handleTutorial} className="w-full text-left text-black px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    <button onClick={handleTutorial} className="w-full text-left text-gray-300 px-4 py-2 text-sm hover:bg-gray-800 flex items-center gap-2">
                       <HelpCircle size={14} /> 新手教程
                     </button>
                   </div>
@@ -285,13 +285,13 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end gap-2 sm:justify-end mt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowDeleteDialog(false)}
             >
               取消
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={confirmDelete}
             >
@@ -303,7 +303,7 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
 
 
       {/* 作品信息编辑弹窗（复用CreateWorkDialog） */}
-      <CreateWorkDialog 
+      <CreateWorkDialog
         open={showInfoDialog}
         onOpenChange={setShowInfoDialog}
         onSubmit={handleUpdateWork}

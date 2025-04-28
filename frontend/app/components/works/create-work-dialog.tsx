@@ -17,9 +17,9 @@ interface CreateWorkDialogProps {
   submitButtonText?: string;
 }
 
-export default function CreateWorkDialog({ 
-  open, 
-  onOpenChange, 
+export default function CreateWorkDialog({
+  open,
+  onOpenChange,
   onSubmit,
   initialTitle = "新建作品",
   initialDescription = "",
@@ -30,11 +30,11 @@ export default function CreateWorkDialog({
   const [description, setDescription] = useState(initialDescription);
   const [titleCount, setTitleCount] = useState(initialTitle.length);
   const [descriptionCount, setDescriptionCount] = useState(initialDescription.length);
-  
+
   // 最大字符限制
   const MAX_TITLE_LENGTH = 30;
   const MAX_DESCRIPTION_LENGTH = 500;
-  
+
   // 重置表单或设置初始值
   useEffect(() => {
     if (open) {
@@ -44,7 +44,7 @@ export default function CreateWorkDialog({
       setDescriptionCount(initialDescription.length);
     }
   }, [open, initialTitle, initialDescription]);
-  
+
   // 处理标题变化，更新字符计数
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
@@ -53,7 +53,7 @@ export default function CreateWorkDialog({
       setTitleCount(newTitle.length);
     }
   };
-  
+
   // 处理描述变化，更新字符计数
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newDescription = e.target.value;
@@ -62,7 +62,7 @@ export default function CreateWorkDialog({
       setDescriptionCount(newDescription.length);
     }
   };
-  
+
   // 处理表单提交
   const handleSubmit = async () => {
     if (title.trim()) {
@@ -70,20 +70,20 @@ export default function CreateWorkDialog({
       onOpenChange(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background">
+      <DialogContent className="sm:max-w-md bg-black border-gray-800 text-white">
         <DialogHeader className="flex justify-between items-center">
-          <DialogTitle className="text-lg">{dialogTitle}</DialogTitle>
-          <DialogClose className="h-6 w-6 hover:cursor-pointer opacity-70" />
+          <DialogTitle className="text-lg text-white">{dialogTitle}</DialogTitle>
+          <DialogClose className="h-6 w-6 hover:cursor-pointer text-gray-300 hover:text-white" />
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           {/* 作品名称 */}
           <div className="space-y-2">
             <div className="flex items-center">
-              <label htmlFor="workTitle" className="text-sm font-medium">
+              <label htmlFor="workTitle" className="text-sm font-medium text-gray-200">
                 作品名称 <span className="text-red-500">*</span>
               </label>
             </div>
@@ -92,18 +92,18 @@ export default function CreateWorkDialog({
                 id="workTitle"
                 value={title}
                 onChange={handleTitleChange}
-                className="pr-16"
+                className="pr-16 bg-gray-900 text-white border-gray-700 focus:border-emerald-500 focus:ring-emerald-500"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                 {titleCount} / {MAX_TITLE_LENGTH}
               </span>
             </div>
           </div>
-          
+
           {/* 作品简介 */}
           <div className="space-y-2">
             <div className="flex items-center">
-              <label htmlFor="workDescription" className="text-sm font-medium">
+              <label htmlFor="workDescription" className="text-sm font-medium text-gray-200">
                 作品简介（选填，不影响AI生成内容）
               </label>
             </div>
@@ -113,18 +113,18 @@ export default function CreateWorkDialog({
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="请输入作品简介"
-                className="resize-none min-h-[120px]"
+                className="resize-none min-h-[120px] bg-gray-900 text-white border-gray-700 focus:border-emerald-500 focus:ring-emerald-500"
               />
-              <span className="absolute right-3 bottom-3 text-xs text-gray-500">
+              <span className="absolute right-3 bottom-3 text-xs text-gray-400">
                 {descriptionCount} / {MAX_DESCRIPTION_LENGTH}
               </span>
             </div>
           </div>
         </div>
-        
+
         <DialogFooter>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             className="bg-emerald-500 hover:bg-emerald-600 text-white"
           >
             {submitButtonText}
