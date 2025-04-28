@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Plus, UploadCloud, Settings2 } from "lucide-react";
 import WorkCard from "./work-card";
 import CreateWorkCard from "./create-work-card";
 import EmptyState from "./empty-state";
