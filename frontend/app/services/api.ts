@@ -2,11 +2,13 @@
 
 import { get } from 'http';
 import {
+  ApiResponse,
   LoginRequest,
   RegisterRequest,
   AuthResponse,
   Novel,
   // CreateNovelRequest,
+  CreateTaskRequest,
   SimpleTask,
   TaskStatusResponse,
   TaskResponse,
@@ -16,9 +18,7 @@ import {
   Chapter,
   ImageObject,
   ContinueRequest,
-  ContinueResponse,
-  CreateInspirationRequest,
-  CreateCrazyRequest
+  ContinueResponse
 } from './types';
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 import { create } from 'domain';
@@ -32,6 +32,27 @@ interface ErrorResponse {
   message: string;
   status: number;
 }
+
+// JWT工具函数 - 从token中解析用户ID
+export const getUserIdFromToken = (): string | null => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    // JWT token由三部分组成，用点分隔：header.payload.signature
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    // 解码payload部分（第二部分）
+    const payload = JSON.parse(atob(parts[1]));
+
+    // 从payload中提取用户ID (sub字段)
+    return payload.sub || null;
+  } catch (error) {
+    console.error('解析token失败:', error);
+    return null;
+  }
+};
 
 // 封装错误处理函数
 const handleApiError = (error: any) => {
@@ -61,10 +82,31 @@ const handleApiError = (error: any) => {
 // 封装请求函数
 export const request = async (url: string, options: RequestInit = {}, base_url = "http://localhost:8000") => {
   try {
-    const response = await fetch(base_url + url, options);
+    // 获取认证令牌并添加到请求头
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    // 创建一个新的options对象，合并现有headers
+    const newOptions = {
+      ...options,
+      headers: {
+        ...options.headers,
+        // 如果有token，添加Authorization header
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    };
+
+    const response = await fetch(base_url + url, newOptions);
 
     // 检查响应状态
     if (!response.ok) {
+      // 处理401错误(token无效或过期)
+      if (response.status === 401) {
+        // 清除token并重定向到登录页
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/auth';
+      }
+
       const errorData: ErrorResponse = await response.json();
       throw {
         response: {
@@ -74,7 +116,7 @@ export const request = async (url: string, options: RequestInit = {}, base_url =
       };
     }
     // 检查是否是 SSE 请求
-    const headers = options.headers as Record<string, string>;
+    const headers = newOptions.headers as Record<string, string>;
     if (headers && headers['Accept'] === 'text/event-stream') {
       return response; // 直接返回 response 对象,不要尝试 JSON 解析
     }
@@ -119,8 +161,7 @@ const apiService = {
   // 认证相关 API
   auth: {
     // 登录
-
-    login: async (data: LoginRequest): Promise<AuthResponse> => {
+    login: async (data: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
       console.log(JSON.stringify(data) + ":登录");
       const response = await request('/auth/login', {
         method: 'POST',
@@ -133,7 +174,7 @@ const apiService = {
       // 如果登录成功，保存令牌和用户信息
       if (response.success && response.data) {
         const { token, user } = response.data;
-        if (token) localStorage.setItem('authToken', token);
+        if (token) localStorage.setItem('token', token);
         if (user) localStorage.setItem('user', JSON.stringify(user));
       }
 
@@ -141,7 +182,7 @@ const apiService = {
     },
 
     // 注册
-    register: async (data: RegisterRequest): Promise<AuthResponse> => {
+    register: async (data: RegisterRequest): Promise<ApiResponse<AuthResponse>> => {
       const response = await request('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -153,7 +194,7 @@ const apiService = {
       // 如果注册成功，保存令牌和用户信息
       if (response.success && response.data) {
         const { token, user } = response.data;
-        if (token) localStorage.setItem('authToken', token);
+        if (token) localStorage.setItem('token', token);
         if (user) localStorage.setItem('user', JSON.stringify(user));
       }
 
@@ -161,17 +202,22 @@ const apiService = {
     },
 
     // 退出登录
-    logout: async (): Promise<any> => {
+    logout: async (): Promise<ApiResponse<any>> => {
       // 调用后端登出接口（如果需要）
       const response = await request('/auth/logout', {
         method: 'POST',
       });
 
       // 无论成功与否，清除本地存储
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
 
       return response;
+    },
+
+    // 获取当前用户ID
+    getCurrentUserId: (): string | null => {
+      return getUserIdFromToken();
     },
 
     // 获取当前用户信息
@@ -202,7 +248,7 @@ const apiService = {
 
   spirate: {
 
-    continue: async (inspiration_id: string, choice: string): Promise<ContinueResponse> => {
+    continue: async (inspiration_id: string, choice: string): Promise<ApiResponse<ContinueResponse>> => {
       return request(`/spirate/continue/${inspiration_id}`, {
         method: 'POST',
         body: JSON.stringify({ choice }),
@@ -233,7 +279,7 @@ const apiService = {
       });
       return response;
     },
-    update: async (data: Partial<Inspiration>): Promise<Inspiration> => {
+    update: async (data: Partial<Inspiration>): Promise<ApiResponse<Inspiration>> => {
       return request(`/spirate/update`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -278,7 +324,7 @@ const apiService = {
       })
     },
     // 生成小说内容
-    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<string> => {
+    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<ApiResponse<string>> => {
       return request('/ai/generate', {
         method: 'POST',
         body: JSON.stringify({
@@ -290,57 +336,6 @@ const apiService = {
           'Content-Type': 'application/json'
         }
       });
-    },
-
-    // 流式生成小说内容
-    generateContentStream: async (prompt: string, writingStyle: string = "", requirements: string = "") => {
-      try {
-        const response = await request('/ai/generate', {
-          method: 'POST',
-          body: JSON.stringify({
-            prompt,
-            writing_style: writingStyle,
-            requirements,
-            is_stream: true
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'text/event-stream'
-          }
-        });
-
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-
-        if (!reader) {
-          throw new Error('No reader available');
-        }
-
-        // 返回一个异步生成器
-        return {
-          async *getStream() {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-
-              const chunk = decoder.decode(value);
-              const messages = chunk
-                .split('\n')
-                .filter(line => line.startsWith('data: '))
-                .map(line => line.slice(6)); // 移除 'data: ' 前缀
-
-              for (const message of messages) {
-                if (message.trim()) {
-                  yield message;
-                }
-              }
-            }
-          }
-        };
-      } catch (error) {
-        console.error('Error in generateContentStream:', error);
-        throw error;
-      }
     },
 
     // 流式AI扩写
@@ -468,10 +463,14 @@ const apiService = {
     },
 
 
-    generateImage: async (prompt: string): Promise<ImageObject> => {
+    generateImage: async (prompt: string): Promise<ApiResponse<ImageObject>> => {
+      // 导入工具函数获取用户 ID
+      const { getCurrentUserId } = await import('../utils/jwt');
+      const userId = getCurrentUserId();
+
       const response = await request('/ai/generate_images', {
         method: 'POST',
-        body: JSON.stringify({ prompt, user_id: 4, size: "1280x960" }),
+        body: JSON.stringify({ prompt, user_id: userId, size: "1280x960" }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -480,7 +479,7 @@ const apiService = {
       return response;
     },
     // 获取写作建议
-    getSuggestions: async (content: string): Promise<string[]> => {
+    getSuggestions: async (content: string): Promise<ApiResponse<string[]>> => {
       return request('/ai/suggestions', {
         method: 'POST',
         body: JSON.stringify({ content }),
@@ -576,14 +575,33 @@ const apiService = {
   },
 
   novels: {
-    create: async (title: string, description: string): Promise<Novel> => {
+    create: async (title: string, description: string): Promise<ApiResponse<Novel>> => {
+      // 从localStorage获取用户信息
+      const { getCurrentUserId } = await import('@/app/utils/jwt')
+      const userId = getCurrentUserId();
+
+      // 确保userId是字符串类型
+      const userIdStr = userId ? userId.toString() : "";
+
+      // 如果没有找到用户ID，抛出错误
+      if (!userId) {
+        throw new Error('创建小说User not authenticated');
+      }
+
+      // 打印确认发送的数据
+      console.log("创建小说 - 发送数据:", {
+        'title': title,
+        'description': description,
+        'user_id': userIdStr // 使用字符串类型
+      });
+
       return request(`/novels/create`, {
         method: 'POST',
         body: JSON.stringify(
           {
             'title': title,
             'description': description,
-            'user_id': '4'
+            'user_id': userIdStr // 使用字符串类型
           }
         ),
         headers: {
@@ -600,7 +618,7 @@ const apiService = {
         }
       })
     },
-    updateNovel: async (id: string, data: Partial<Novel>): Promise<Novel> => {
+    updateNovel: async (id: string, data: Partial<Novel>): Promise<ApiResponse<Novel>> => {
       return request(`/novels/${id}/updateNovel`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -610,7 +628,7 @@ const apiService = {
       })
     },
 
-    createChapter: async (id: string, data: Partial<Chapter>): Promise<Chapter> => {
+    createChapter: async (id: string, data: Partial<Chapter>): Promise<ApiResponse<Chapter>> => {
       return request(`/novels/${id}/chapters`, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -620,7 +638,7 @@ const apiService = {
       })
     },
 
-    updateChapter: async (id: string, order: number, data: Partial<Chapter>): Promise<Chapter> => {
+    updateChapter: async (id: string, order: number, data: Partial<Chapter>): Promise<ApiResponse<Chapter>> => {
       console.log("updateChapter", JSON.stringify(data));
       return request(`/novels/${id}/chapters/${order}`, {
         method: 'PUT',
@@ -630,7 +648,7 @@ const apiService = {
         }
       })
     },
-    getChapters: async (id: string): Promise<Chapter[]> => {
+    getChapters: async (id: string): Promise<ApiResponse<Chapter[]>> => {
       return request(`/novels/${id}/chapters`, {
         method: 'GET',
         headers: {
@@ -638,7 +656,7 @@ const apiService = {
         }
       })
     },
-    getNovel: async (id: string): Promise<Novel[]> => {
+    getNovel: async (id: string): Promise<ApiResponse<Novel>> => {
       return request(`/novels/${id}/novel`, {
         method: 'GET',
         headers: {
@@ -649,7 +667,7 @@ const apiService = {
   },
 
   character: {
-    update: async (id: number, data: Partial<Character>): Promise<Character> => {
+    update: async (id: number, data: Partial<Character>): Promise<ApiResponse<Character>> => {
       console.log("update", JSON.stringify(data));
       return request(`/character/${id}`, {
         method: 'PUT',
@@ -659,7 +677,7 @@ const apiService = {
         }
       })
     },
-    getCharacters: async (user_id: number): Promise<Character[]> => {
+    getCharacters: async (user_id: number): Promise<ApiResponse<Character[]>> => {
       return request(`/character/${user_id}`, {
         method: 'GET',
         headers: {
@@ -671,7 +689,7 @@ const apiService = {
 
   task: {
     //创建任务
-    create: async (data: CreateInspirationRequest | CreateCrazyRequest): Promise<SimpleTask> => {
+    create: async (data: CreateTaskRequest): Promise<ApiResponse<SimpleTask>> => {
 
       try {
         const response = await request('/task/new', {
@@ -687,7 +705,7 @@ const apiService = {
         throw error;
       }
     },
-    status: async (taskId: string): Promise<TaskResponse> => {
+    status: async (taskId: string): Promise<ApiResponse<TaskResponse>> => {
       try {
         const response = await request(`/task/status/${taskId}`);
         return response;
@@ -709,8 +727,32 @@ const apiService = {
         throw error;
       }
     }
-  }
+  },
 
+  // 设置认证相关函数
+  setupAuth: () => {
+    // 检查token是否存在
+    const checkAuthToken = (): boolean => {
+      const token = localStorage.getItem('token');
+      return !!token;
+    };
+
+    // 检查token是否有效
+    const isAuthenticated = (): boolean => {
+      return checkAuthToken();
+    };
+
+    // 获取当前用户ID
+    const getCurrentUserId = (): string | null => {
+      return getUserIdFromToken();
+    };
+
+    return {
+      checkAuthToken,
+      isAuthenticated,
+      getCurrentUserId
+    };
+  },
 };
 
 export default apiService; 

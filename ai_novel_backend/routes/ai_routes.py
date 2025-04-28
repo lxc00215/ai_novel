@@ -10,10 +10,11 @@ import httpx
 from openai import AsyncOpenAI
 from requests import Session
 from sqlalchemy import select
-from database import BookBreakdown, File as FileModel, get_db
+from database import BookBreakdown, File as FileModel, get_db, User
 from routes.feature_routes import get_feature_by_name
 from schemas import AIAnalysisRequest, AIExpandRequest, BookBreakdownResponse, FileResponse, GenerateImageRequest, ImageResponse
 from bridge.openai_bridge import OpenAIBridge
+from auth import get_current_user  # 导入获取当前用户的函数
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -22,7 +23,11 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @router.post("/upload-file")
-async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_file(
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # 获取当前登录用户
+):
     try:
         # 生成唯一文件ID
         file_id = str(uuid.uuid4())
@@ -45,7 +50,7 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
             "file_path": file_path,
             "content_type": file.content_type,
             "file_size": len(content),
-            "user_id": 4
+            "user_id": current_user.id  # 使用当前登录用户的ID
         }
         # 保存文件信息到数据库
 
@@ -59,7 +64,7 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
             original_filename=file.filename,
             content_type=file.content_type,
             file_size=len(content),
-            user_id=4,
+            user_id=current_user.id,  # 使用当前登录用户的ID
             upload_date=new_file.upload_date
         )
         

@@ -6,37 +6,37 @@ import { Button } from "@/components/ui/button";
 
 export default function CreateWorkCard() {
   return (
-    <Card 
-      className="border border-dashed bg-background 
+    <Card
+      className="border border-dashed border-gray-700 bg-black 
       transition-all duration-300 hover:cursor-pointer hover:-translate-y-1"
     >
       {/* 上半部分 - 新建作品图标与文字 */}
       <CardContent className="flex flex-col items-center justify-center pt-8 pb-4">
-        <div className="w-16 h-16 rounded-full border-2 border-gray-400 flex items-center justify-center mb-3">
-          <Plus className="h-8 w-8 text-foreground" />
+        <div className="w-16 h-16 rounded-full border-2 border-gray-600 flex items-center justify-center mb-3">
+          <Plus className="h-8 w-8 text-gray-300" />
         </div>
-        <p className="text-foreground font-medium">新建作品</p>
+        <p className="text-gray-300 font-medium">新建作品</p>
       </CardContent>
-      
+
       {/* 下半部分 - 按钮区域 */}
-      <div className="border-t border-dashed py-4 px-6 flex flex-wrap gap-3 justify-center bg-background">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="bg-background hover:bg-gray-200 hover:cursor-pointer gap-1 px-4 shadow-sm"
+      <div className="border-t border-dashed border-gray-700 py-4 px-6 flex flex-wrap gap-3 justify-center bg-black">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white hover:cursor-pointer gap-1 px-4 shadow-sm"
           onClick={(e) => e.stopPropagation()} // 防止冒泡，但父组件会处理实际创建
         >
           <Plus size={14} />
-          <span>新建作品</span>
+          <span>开始写作</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="bg-background hover:bg-gray-200 hover:cursor-pointer gap-1 px-4 shadow-sm"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white hover:cursor-pointer gap-1 px-4 shadow-sm"
           onClick={(e) => e.stopPropagation()} // 防止冒泡
         >
           <Upload size={14} />
-          <span>导入作品</span>
+          <span>已有作品</span>
         </Button>
       </div>
     </Card>

@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
+import {
   Maximize2,
   BookOpen,
   Save,
@@ -39,14 +39,14 @@ interface ToolbarProps {
   book_title: string;
   openCharacterLibrary: () => void;
   openTermLibrary: () => void;
-  className?:string
+  className?: string
   toggleSidebar: () => void;
   onSearchKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 
 }
 
-export default function Toolbar({ 
-  toggleAIPanel, 
+export default function Toolbar({
+  toggleAIPanel,
   toggleFullscreen,
   toggleSidebar,
   onSave,
@@ -55,7 +55,7 @@ export default function Toolbar({
   onCopy,
   openCharacterLibrary,
   openTermLibrary,
-  className='',
+  className = '',
   onSearchKeyDown,
   book_title
 }: ToolbarProps) {
@@ -152,90 +152,92 @@ export default function Toolbar({
   };
 
   const firstRowButtons = [
-    {icon: <Menu className="h-4 w-4" />,position: MenuTooltipPosition,ref: MenuButtonRef, tooltip: "菜单", onClick: toggleSidebar, },
-    {icon: <Maximize2 className="h-4 w-4" />,position: MaximizeTooltipPosition,ref: MaximizeButtonRef, tooltip: "沉浸模式", onClick: toggleFullscreen},
-    {icon: <BookOpen className="h-4 w-4" />,position: BookOpenTooltipPosition,ref: BookOpenButtonRef, tooltip: "备忘录", onClick: openNotes},
+    { icon: <Menu className="h-4 w-4 text-white" />, position: MenuTooltipPosition, ref: MenuButtonRef, tooltip: "菜单", onClick: toggleSidebar, },
+    { icon: <Maximize2 className="h-4 w-4 text-white" />, position: MaximizeTooltipPosition, ref: MaximizeButtonRef, tooltip: "沉浸模式", onClick: toggleFullscreen },
+    { icon: <BookOpen className="h-4 w-4 text-white" />, position: BookOpenTooltipPosition, ref: BookOpenButtonRef, tooltip: "备忘录", onClick: openNotes },
   ]
 
-  const firstRow = ()=>{
-    return firstRowButtons.map((button)=>{
+  const firstRow = () => {
+    return firstRowButtons.map((button) => {
       return (
-        <div 
-        key={button.tooltip}
-  className="relative hover:cursor-pointer"
-  onMouseEnter={() => {setHoveredButton(button.tooltip);
-    const rect = button.ref.current?.getBoundingClientRect();
-    if (rect) {
-        if(button.tooltip === "菜单"){
-            setMenuTooltipPosition({
-                top: rect.bottom + window.scrollY + 10,
-                left: rect.left + rect.width / 2 + window.scrollX
-            });
-        }
-        if(button.tooltip === "沉浸模式"){
-            setMaximizeTooltipPosition({
-                top: rect.bottom + window.scrollY + 10,
-                left: rect.left + rect.width / 2 + window.scrollX
-            });
-        }
-        if(button.tooltip === "备忘录"){
-            setBookOpenTooltipPosition({
-                top: rect.bottom + window.scrollY + 10,
-                left: rect.left + rect.width / 2 + window.scrollX
-            });
-        }
-  }}}
-  onMouseLeave={() => setHoveredButton(null)}
-  ref={button.ref}
->
-  <Button 
-    variant="ghost" 
-    size="icon" 
-    className={`h-8 w-8 transition-colors ${
-      hoveredButton === button.tooltip ? 'border-blue-500 text-blue-500' : ''
-    }`}
-    onClick={button.onClick}>
-    {button.icon}
-  </Button>
-  
-  {hoveredButton === button.tooltip && portalEl && createPortal(
-    <div 
-      className="fixed bg-gray-600 text-white rounded px-2 py-1 z-[9999] text-xs font-normal"
-      style={{
-        top: `${button.position.top}px`,
-        left: `${button.position.left}px`,
-        transform: 'translateX(-50%)',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        whiteSpace: 'nowrap'
-      }}
-    >
-      {button.tooltip}
-    </div>,
-    portalEl
-  )}
-</div>
-    )})
+        <div
+          key={button.tooltip}
+          className="relative hover:cursor-pointer"
+          onMouseEnter={() => {
+            setHoveredButton(button.tooltip);
+            const rect = button.ref.current?.getBoundingClientRect();
+            if (rect) {
+              if (button.tooltip === "菜单") {
+                setMenuTooltipPosition({
+                  top: rect.bottom + window.scrollY + 10,
+                  left: rect.left + rect.width / 2 + window.scrollX
+                });
+              }
+              if (button.tooltip === "沉浸模式") {
+                setMaximizeTooltipPosition({
+                  top: rect.bottom + window.scrollY + 10,
+                  left: rect.left + rect.width / 2 + window.scrollX
+                });
+              }
+              if (button.tooltip === "备忘录") {
+                setBookOpenTooltipPosition({
+                  top: rect.bottom + window.scrollY + 10,
+                  left: rect.left + rect.width / 2 + window.scrollX
+                });
+              }
+            }
+          }}
+          onMouseLeave={() => setHoveredButton(null)}
+          ref={button.ref}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 transition-colors text-white ${hoveredButton === button.tooltip ? 'border-blue-500 text-blue-400' : ''
+              }`}
+            onClick={button.onClick}>
+            {button.icon}
+          </Button>
+
+          {hoveredButton === button.tooltip && portalEl && createPortal(
+            <div
+              className="fixed bg-gray-600 text-white rounded px-2 py-1 z-[9999] text-xs font-normal"
+              style={{
+                top: `${button.position.top}px`,
+                left: `${button.position.left}px`,
+                transform: 'translateX(-50%)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {button.tooltip}
+            </div>,
+            portalEl
+          )}
+        </div>
+      )
+    })
   }
 
 
   const buttons = [
     //撤回 撤销撤回 复制 替换 排版 角色库 词条库 沉浸模式 备忘录 保存 历史记录 设置 返回上一页 使用AI生成内容 AI扩写润色 AI续写 AI拆书 AI起名
-    {icon: <Undo className="h-4 w-4" />, tooltip: "撤回", onClick: onUndo, },
-    {icon: <Redo className="h-4 w-4" />, tooltip: "撤销撤回", onClick: onRedo},
-    {icon: <Copy className="h-4 w-4" />, tooltip: "复制", onClick: onCopy},
-    {icon: <Replace className="h-4 w-4" />, tooltip: "替换", onClick: taggleReplace},
-    {icon: <Search className="h-4 w-4" />, tooltip: "搜索", actions: [{label: "本章搜索", onClick: taggleSearch}, {label: "全书搜索", onClick: handleSearch}]},
+    { icon: <Undo className="h-4 w-4 text-white" />, tooltip: "撤回", onClick: onUndo, },
+    { icon: <Redo className="h-4 w-4 text-white" />, tooltip: "撤销撤回", onClick: onRedo },
+    { icon: <Copy className="h-4 w-4 text-white" />, tooltip: "复制", onClick: onCopy },
+    { icon: <Replace className="h-4 w-4 text-white" />, tooltip: "替换", onClick: taggleReplace },
+    { icon: <Search className="h-4 w-4 text-white" />, tooltip: "搜索", actions: [{ label: "本章搜索", onClick: taggleSearch }, { label: "全书搜索", onClick: handleSearch }] },
 
-    {icon: <AlignLeft className="h-4 w-4" />, tooltip: "排版", onClick: handleFormat},
-    {icon: <Users className="h-4 w-4" />, tooltip: "角色库", onClick: openCharacterLibrary},
-    {icon: <Tag className="h-4 w-4" />, tooltip: "词条库", onClick: openTermLibrary},
+    { icon: <AlignLeft className="h-4 w-4 text-white" />, tooltip: "排版", onClick: handleFormat },
+    { icon: <Users className="h-4 w-4 text-white" />, tooltip: "角色库", onClick: openCharacterLibrary },
+    { icon: <Tag className="h-4 w-4 text-white" />, tooltip: "词条库", onClick: openTermLibrary },
   ]
 
   const aiButtons = [
-    {icon: <Sparkles className="h-4 w-4" />,title:"AI写作", tooltip: "使用AI生成内容", onClick: toggleAIPanel},
-    {icon: <PenTool className="h-4 w-4" />,title:"AI续写", tooltip: "在文本末尾使用AI续写内容", onClick: toggleAIPanel},
-    {icon: <BookAnalyze className="h-4 w-4" />,title:"AI拆书", tooltip: "跳转至AI拆书功能", onClick: toggleAIPanel},
-    {icon: <NameTag className="h-4 w-4" />,title:"AI起名", tooltip: "使用AI生成名称", onClick: toggleAIPanel},
+    { icon: <Sparkles className="h-4 w-4" />, title: "AI写作", tooltip: "使用AI生成内容", onClick: toggleAIPanel },
+    { icon: <PenTool className="h-4 w-4" />, title: "AI续写", tooltip: "在文本末尾使用AI续写内容", onClick: toggleAIPanel },
+    { icon: <BookAnalyze className="h-4 w-4" />, title: "AI拆书", tooltip: "跳转至AI拆书功能", onClick: toggleAIPanel },
+    { icon: <NameTag className="h-4 w-4" />, title: "AI起名", tooltip: "使用AI生成名称", onClick: toggleAIPanel },
   ]
 
   const aiButton = () => {
@@ -243,7 +245,7 @@ export default function Toolbar({
       const isAiHovered = hoveredButton === button.tooltip;
       const buttonRef = useRef<HTMLDivElement>(null);
       const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-      
+
       // 当按钮被悬浮时计算提示框位置
       useEffect(() => {
         if (isAiHovered && buttonRef.current) {
@@ -254,30 +256,29 @@ export default function Toolbar({
           });
         }
       }, [isAiHovered]);
-      
+
       return (
-        <div 
+        <div
           ref={buttonRef}
-          key={button.tooltip} 
+          key={button.tooltip}
           className="relative text-foreground hover:cursor-pointer"
           onMouseEnter={() => setHoveredButton(button.tooltip)}
           onMouseLeave={() => setHoveredButton(null)}
         >
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className={`bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 ${
-              isAiHovered ? 'border-blue-500' : ''
-            }`}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 ${isAiHovered ? 'border-blue-500' : ''
+              }`}
             onClick={button.onClick}
           >
             {button.icon}
             {button.title}
           </Button>
-          
+
           {/* 使用portal将提示框渲染到body */}
           {isAiHovered && portalEl && createPortal(
-            <div 
+            <div
               className="fixed bg-gray-100 text-black border border-gray-200 rounded-md shadow-md z-[9999] py-1"
               style={{
                 top: `${tooltipPosition.top}px`,
@@ -304,7 +305,7 @@ export default function Toolbar({
       const isHovered = hoveredButton === button.tooltip;
       const buttonRef = useRef<HTMLDivElement>(null);
       const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-      
+
       useEffect(() => {
         if (isHovered && buttonRef.current) {
           const rect = buttonRef.current.getBoundingClientRect();
@@ -314,29 +315,28 @@ export default function Toolbar({
           });
         }
       }, [isHovered]);
-      
+
       return (
-        <div 
+        <div
           ref={buttonRef}
-          key={button.tooltip} 
+          key={button.tooltip}
           className="relative hover:cursor-pointer"
           onMouseEnter={() => setHoveredButton(button.tooltip)}
           onMouseLeave={() => setHoveredButton(null)}
         >
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`h-8 w-8 transition-colors ${
-              isHovered ? 'border-blue-500 text-blue-500' : ''
-            }`} 
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 transition-colors text-white ${isHovered ? 'border-blue-500 text-blue-400' : ''
+              }`}
             onClick={button.onClick}
           >
             {button.icon}
           </Button>
-          
+
           {/* 简化的灰色提示框 */}
           {isHovered && portalEl && createPortal(
-            <div 
+            <div
               className="fixed bg-gray-600 text-white rounded px-2 py-1 z-[9999] text-xs font-normal"
               style={{
                 top: `${tooltipPosition.top}px`,
@@ -349,7 +349,7 @@ export default function Toolbar({
               {button.actions ? (
                 <div className="flex flex-col">
                   {button.actions.map((action, index) => (
-                    <button 
+                    <button
                       key={index}
                       className="text-left hover:bg-gray-700 px-2 py-1 rounded w-full"
                       onClick={(e) => {
@@ -371,16 +371,16 @@ export default function Toolbar({
         </div>
       );
     });
-     
+
     return tooltipButtons;
   };
-  
+
   return (
-      <div className={`border-b bg-background  sticky top-0 ${className}`}>
+    <div className={`border-b bg-background  sticky top-0 ${className}`}>
       {/* First Row */}
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-3">
-         {firstRow()}
+          {firstRow()}
         </div>
         <div className="text-lg  font-medium">{book_title}</div>
         <div className="flex items-center gap-3">
@@ -396,7 +396,7 @@ export default function Toolbar({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -409,7 +409,7 @@ export default function Toolbar({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -424,16 +424,16 @@ export default function Toolbar({
           </TooltipProvider>
         </div>
       </div>
-      
+
       {/* Second Row */}
       <div className="flex items-center p-2 gap-2 overflow-x-auto">
         {/* Regular Editing Icons */}
-       {tooltipButtons()}
-        
+        {tooltipButtons()}
+
         {/* AI Feature Buttons */}
         <div className="flex items-center gap-2 ml-2 overflow-x-auto">
-          
-        {aiButton()}
+
+          {aiButton()}
         </div>
       </div>
 
@@ -442,10 +442,10 @@ export default function Toolbar({
         <div className="flex items-center px-3 py-2 gap-2 border-t bg-background">
           <div className="flex-1 flex items-center gap-2">
             <div className="flex-1">
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 className="w-full"
-                placeholder="查找..." 
+                placeholder="查找..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 onKeyDown={onSearchKeyDown}
@@ -453,11 +453,11 @@ export default function Toolbar({
             </div>
           </div>
           <Button size="sm" variant="outline" onClick={handleSearch}>
-          搜索
-        </Button>
-        <Button size="sm"  onClick={() => setIsSearchActive(false)}>
-          <X className="h-4 w-4" />
-        </Button>
+            搜索
+          </Button>
+          <Button size="sm" onClick={() => setIsSearchActive(false)}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       )}
       {/* If replace mode is active, show the replace input */}
@@ -465,20 +465,20 @@ export default function Toolbar({
         <div className="flex items-center px-3 py-2 gap-2 border-t bg-gray-50">
           <div className="flex-1 flex items-center gap-2">
             <div className="flex-1">
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 className="w-full"
-                placeholder="查找..." 
+                placeholder="查找..."
                 value={searchText}
                 onKeyDown={onSearchKeyDown}
                 onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
             <div className="flex-1">
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 className="w-full"
-                placeholder="替换为..." 
+                placeholder="替换为..."
                 value={replaceText}
                 onChange={(e) => setReplaceText(e.target.value)}
               />
@@ -491,8 +491,8 @@ export default function Toolbar({
             <Button size="sm" variant="outline" onClick={handleReplaceAll}>
               全部替换
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="ghost"
               className="p-1 h-7 w-7"
               onClick={() => setIsReplaceActive(false)}

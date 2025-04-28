@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Plus, UploadCloud, Settings2 } from "lucide-react";
 import WorkCard from "./work-card";
 import CreateWorkCard from "./create-work-card";
 import EmptyState from "./empty-state";
@@ -9,7 +11,7 @@ import CreateWorkDialog from "./create-work-dialog";
 import apiService from "@/app/services/api";
 import { useRouter } from "next/navigation";
 import { Novel } from "@/app/services/types";
-
+import { toast } from "sonner"
 
 export default function WorksContainer() {
 
@@ -36,13 +38,23 @@ export default function WorksContainer() {
 
   // 处理创建作品提交
   const handleCreateSubmit = async (title: string, description: string) => {
-    // 创建新作品并添加到列表
-    const newWork = await apiService.novels.create(title, description);
-    console.log(JSON.stringify(newWork));
-    if (newWork) {
-      // 跳转页面
-      console.log(newWork);
-      router.push(`/dashboard/writing/${newWork.id}`);
+    try {
+      const response = await apiService.novels.create(title, description);
+
+      if (response && response.success && response.data) {
+        // 获取新作品数据
+        const newWork = response.data;
+        console.log("作品创建成功:", newWork);
+
+        // 跳转到写作页面
+        router.push(`/dashboard/writing/${newWork.id}`);
+      } else {
+        console.error("创建作品失败:", response);
+        // 可以在这里添加错误提示
+      }
+    } catch (error) {
+      console.error("创建作品时出错:", error);
+      // 可以在这里添加错误提示
     }
   };
 
@@ -50,7 +62,9 @@ export default function WorksContainer() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await apiService.novels.getNovel("4");
+      const { getCurrentUserId } = await import('@/app/utils/jwt')
+      const userId = getCurrentUserId();
+      const response = await apiService.novels.getNovel(`${userId}`);
       if (response) {
         const normalWorks: Novel[] = [];
         const archivedWorks: Novel[] = [];
@@ -65,27 +79,42 @@ export default function WorksContainer() {
         setWorks(normalWorks);
         setAchiveWorks(archivedWorks);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("获取作品数据失败:", error);
+
+      // 检查是否是 404 错误
+      if (error.response && error.response.status === 404) {
+        // 使用 toast 显示提示
+        toast.info("您当前还未创建小说哦", {
+          position: "top-center",
+          duration: 3000,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 归档动作发出执行的方法
   const handleArchive = async (id: string, isArchive: boolean) => {
     try {
       const response = await apiService.novels.updateNovel(id, { is_archive: isArchive });
 
-      if (response) {
+      if (response && response.success && response.data) {
         if (isArchive) {
           // 从作品列表移除，添加到归档列表
           setWorks(prev => prev.filter(item => item.id !== id));
-          // 修复: 确保 response.data 不为 undefined
-          setAchiveWorks(prev => [...prev, response as Novel]);
+          // 确保response.data不为undefined
+          if (response.data) {
+            setAchiveWorks(prev => [...prev, response.data as Novel]);
+          }
         } else {
           // 从归档列表移除，添加到作品列表
           setAchiveWorks(prev => prev.filter(item => item.id !== id));
-          setWorks(prev => [...prev, response as Novel]);
+          // 确保response.data不为undefined
+          if (response.data) {
+            setWorks(prev => [...prev, response.data as Novel]);
+          }
         }
       }
     } catch (error) {
@@ -110,7 +139,7 @@ export default function WorksContainer() {
     try {
       const response = await apiService.novels.updateNovel(id, { title, description });
 
-      if (response && response) {
+      if (response && response.data) {
         // 更新作品列表中的作品信息
         setWorks(prev => prev.map(item =>
           item.id === id ? { ...item, title, description } : item
@@ -159,13 +188,13 @@ export default function WorksContainer() {
   return (
     <div className="container mx-auto py-8 px-4">
       <Tabs defaultValue="works" onValueChange={handleTabChange} className="w-full">
-        <div className="bg-background rounded-lg shadow-sm mb-8">
-          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-background rounded-lg">
+        <div className="bg-black rounded-lg shadow-sm mb-8">
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-black rounded-lg">
             <TabsTrigger
               value="works"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "works"
-                  ? "bg-background shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "bg-gray-900 shadow-sm font-medium text-white after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
+                : "text-gray-300 hover:text-white"
                 }`}
             >
               作品
@@ -173,16 +202,16 @@ export default function WorksContainer() {
             <TabsTrigger
               value="published"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "published"
-                  ? "bg-background shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "bg-gray-900 shadow-sm font-medium text-white after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
+                : "text-gray-300 hover:text-white"
                 }`}>
               已归档
             </TabsTrigger>
             <TabsTrigger
               value="recycled"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "recycled"
-                  ? "bg-black shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
-                  : "text-gray-600 hover:text-gray-900"
+                ? "bg-gray-900 shadow-sm font-medium text-white after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full"
+                : "text-gray-300 hover:text-white"
                 }`}
             >
               回收站
@@ -211,6 +240,7 @@ export default function WorksContainer() {
                   <div
                     key={work.id}
                     className="h-full"
+                    // 设置较高的z-index来确保下拉菜单不会被其他卡片遮挡
                     style={{ zIndex: works.length - index }}
                   >
                     <WorkCard
