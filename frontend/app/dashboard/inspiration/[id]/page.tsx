@@ -633,7 +633,7 @@ export default function SpirateDetail() {
         {displayedChoices.map((choice, idx) => (
           <div
             key={idx}
-            className="border border-yellow-600 rounded-lg p-3 cursor-pointer hover:bg-gray-900 transition-colors animate-slideIn"
+            className="border border-yellow-600 rounded-lg p-3 cursor-pointer hover:bg-gray-900 transition-colors animate-slideIn text-[hsl(188.77deg_100%_50%)]"
             onClick={() => handleChoiceSelect(choice)}
           >
             <span className="text-yellow-500 mr-2">★</span>
@@ -659,7 +659,7 @@ export default function SpirateDetail() {
   // 修改聊天部分的JSX，添加加载状态
   const renderChatSection = () => (
     <div className="mt-12 animate-fadeIn">
-      <h3 className="text-gray-400 mb-4">与角色聊天</h3>
+      <h3 className="text-[hsl(0deg_0%_100%)] mb-4">与角色聊天</h3>
       {isLoadingNextContent ? (
         <div className="h-24"></div> // 占位符，保持布局一致
       ) : (
@@ -669,7 +669,7 @@ export default function SpirateDetail() {
               <div className="w-12 h-12 rounded-full overflow-hidden mb-1">
                 <img src={char.image_url} alt={char.name} className="w-full h-full object-cover" />
               </div>
-              <span className="text-xs">{char.name.split(' ')[0]}</span>
+              <span className="text-xs text-[hsl(50deg_10%_100%)]">{char.name.split(' ')[0]}</span>
               <Button size="sm" variant="outline" onClick={async () => {
                 // 更新参数
                 const json_data: Character = {
@@ -684,7 +684,7 @@ export default function SpirateDetail() {
 
                 //跳转页面
                 router.push(`/dashboard/messages?characterId=${char.id}`);
-              }} className="text-xs mt-1 h-6 px-2">
+              }} className="text-xs mt-1 h-6 px-2 text-[hsl(50deg_10%_100%)] ">
                 聊天
               </Button>
             </div>

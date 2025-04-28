@@ -10,7 +10,7 @@ import httpx
 from openai import AsyncOpenAI
 from requests import Session
 from sqlalchemy import select
-from database import BookBreakdown, File as FileModel, get_db, User
+from database import BookBreakdown, File as FileModel, get_db, User, Character, async_session
 from routes.feature_routes import get_feature_by_name
 from schemas import AIAnalysisRequest, AIExpandRequest, BookBreakdownResponse, FileResponse, GenerateImageRequest, ImageResponse
 from bridge.openai_bridge import OpenAIBridge
@@ -226,14 +226,54 @@ async def analyze_file(
 
 @router.post("/generate_images", response_model=ImageResponse)
 async def generate_images(request: GenerateImageRequest):
+    # 1. 首先检查数据库中是否已经有与prompt匹配的角色且有image_url
+    existing_image_url = None
+    
+    # 使用数据库会话查询
+    async with async_session() as db:
+        try:
+            # 通过description字段精确匹配查询
+            query = select(Character).where(Character.description == request.prompt)
+            result = await db.execute(query)
+            character = result.scalar_one_or_none()
+            
+            # 如果找到角色且有图片URL
+            if character and character.image_url:
+                logger.info(f"Found existing character with matching description and image_url: {character.image_url}")
+                # 直接返回已有的图片URL
+                return ImageResponse(image=character.image_url, timings={"cache_hit": 0}, seed=0)
+                
+            # 如果没找到精确匹配，尝试模糊匹配
+            if not character:
+                logger.info("No exact match found, trying fuzzy match")
+                fuzzy_query = select(Character).where(Character.description.like(f"%{request.prompt}%"))
+                fuzzy_result = await db.execute(fuzzy_query)
+                characters = fuzzy_result.scalars().all()
+                
+                # 找到第一个有图片URL的角色
+                for char in characters:
+                    if char.image_url:
+                        logger.info(f"Found fuzzy match with image_url: {char.image_url}")
+                        return ImageResponse(image=char.image_url, timings={"cache_hit": 0}, seed=0)
+                        
+        except Exception as e:
+            logger.error(f"Error checking database for existing image: {str(e)}")
+            # 继续执行生成流程，不中断
+    
+    # 2. 如果数据库中没有，则调用AI服务生成新图片
+    logger.info("No matching image found in database, generating new image")
     bridge = OpenAIBridge()
     feature_config = get_feature_by_name("绘画")
     bridge.init({
         "api_key": feature_config["api_key"],
         "base_url": feature_config["base_url"],
     })
+    
     result = bridge.generate_image(request.prompt)
-    res = await transfer_image(result['images'][0]['url'])
+    print(result)
+    
+    # 3. 转存图片并更新数据库
+    res = await transfer_image(result['images'][0]['url'], request.prompt)
 
     return ImageResponse(image=res['image_url'], timings=result['timings'], seed=result['seed'])
 
@@ -378,30 +418,54 @@ async def upload_image(file_path: str) -> Optional[str]:
 
 
 @router.post("/transfer-image")
-async def transfer_image(image_url: str):
+async def transfer_image(image_url: str, prompt: Optional[str] = None):
     """转存图片：下载并重新上传"""
+    print("开始处理图片转存")
     try:
         logger.info(f"Processing image URL: {image_url}")
         
-        # 创建临时文件
-        temp_dir = tempfile.gettempdir()
+        # 使用固定目录而不是临时目录
+        temp_dir = "static/temp_images"
+        # 确保目录存在
+        os.makedirs(temp_dir, exist_ok=True)
+        
         temp_filename = f"{uuid.uuid4()}.jpg"
-        temp_path = os.path.join(temp_dir, temp_filename)
+        temp_path = os.path.join(os.path.abspath(temp_dir), temp_filename)
         logger.info(f"Temporary file path: {temp_path}")
         
         try:
-            # 下载图片
+            # 下载图片 - 使用同步方式处理
             logger.info("Downloading image...")
-            download_success = await download_image(image_url, temp_path)
-            if not download_success:
-                logger.error("Failed to download image")
-                raise HTTPException(status_code=400, detail="Failed to download image")
+            # 同步下载图片
+            import requests
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            }
+            response = requests.get(image_url, headers=headers, timeout=30.0, stream=True)
+            response.raise_for_status()
+            
+            # 检查内容类型
+            content_type = response.headers.get('content-type', '').lower()
+            if not (content_type.startswith('image/') or 'image' in content_type):
+                logger.error(f"Invalid content type: {content_type}")
+                raise HTTPException(status_code=400, detail="Invalid content type")
+                
+            # 保存图片到本地
+            with open(temp_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
             
             # 验证下载的文件
+            if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+                logger.error("Downloaded file is empty or doesn't exist")
+                raise HTTPException(status_code=400, detail="File download failed")
+                
             file_size = os.path.getsize(temp_path)
             logger.info(f"Downloaded file size: {file_size} bytes")
             
-            # 上传图片
+            # 上传图片 - 使用await调用异步函数
             logger.info("Uploading image...")
             new_url = await upload_image(temp_path)
             logger.info(f"Upload result URL: {new_url}")
@@ -412,8 +476,38 @@ async def transfer_image(image_url: str):
             
             full_url = f"https://img.leebay.cyou{new_url}"
             logger.info(f"Final URL: {full_url}")
+
+
+            # 如果提供了prompt，查找对应的Character并更新
+            if prompt:
+                from sqlalchemy import select, update
+                from database import Character, async_session
+
+                # 使用新的数据库会话
+                async with async_session() as db:
+                    try:
+                        # 通过description字段查询对应的Character
+                        query = select(Character).where(Character.description == prompt)
+                        result = await db.execute(query)
+                        character = result.scalar_one_or_none()
+
+                        if character:
+                            # 更新角色的image_url
+                            logger.info(f"Updating character {character.id} image_url to {full_url}")
+                            update_query = update(Character).where(Character.id == character.id).values(
+                                image_url=full_url)
+                            await db.execute(update_query)
+                            await db.commit()
+                            logger.info(f"Character {character.id} image_url updated successfully")
+                        else:
+                            logger.warning(f"No character found with description matching prompt: {prompt}")
+                    except Exception as e:
+                        await db.rollback()
+                        logger.error(f"Error updating character image_url: {str(e)}")
+                        logger.error(f"Traceback: {traceback.format_exc()}")
+
+
             return {"image_url": full_url}
-            
         except Exception as e:
             logger.error(f"Error in transfer process: {str(e)}")
             logger.error(f"Traceback: {traceback.format_exc()}")

@@ -41,9 +41,9 @@ export default function WorksContainer() {
     try {
       const response = await apiService.novels.create(title, description);
 
-      if (response && response.success && response.data) {
+      if (response) {
         // 获取新作品数据
-        const newWork = response.data;
+        const newWork = response;
         console.log("作品创建成功:", newWork);
 
         // 跳转到写作页面
