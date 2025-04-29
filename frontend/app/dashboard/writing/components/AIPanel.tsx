@@ -93,7 +93,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       if (response) {
         toast.success('内容生成成功');
         if (onContentGenerated) {
-          onContentGenerated(response);
+          onContentGenerated(response.data);
         }
         closeAIPanel();
       } else {
@@ -109,13 +109,13 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
   };
 
   return (
-    <div className="h-full flex flex-col bg-black text-white">
-      <div className="flex items-center justify-between p-3 border-b border-gray-700">
-        <h2 className="font-medium flex items-center gap-1 text-white">
+    <div className="h-full flex flex-col bg-background">
+      <div className="flex items-center justify-between p-3 border-b">
+        <h2 className="font-medium flex items-center gap-1">
           {expansionMode ? "AI续写" : "AI写作(一般用于章节正文写作)"}
-          <span className="text-xs text-green-500 bg-green-50/20 px-1 rounded">新手教程</span>
+          <span className="text-xs text-green-500 bg-green-50 px-1 rounded">新手教程</span>
         </h2>
-        <Button variant="ghost" size="icon" onClick={closeAIPanel} className="text-white hover:bg-gray-800">
+        <Button variant="ghost" size="icon" onClick={closeAIPanel}>
           <X className="h-5 w-5" />
         </Button>
       </div>
@@ -123,7 +123,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Label htmlFor="advanced-mode" className="font-medium text-white">高级功能</Label>
+            <Label htmlFor="advanced-mode" className="font-medium">高级功能</Label>
             <Switch
               id="advanced-mode"
               checked={showAdvanced}
@@ -133,19 +133,19 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
           </div>
         </div>
 
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-600">
           通过提供角色、词条、关联知识库等元数据，能够有效提高 AI 创作内容的质量和相关性。
         </p>
 
         <div className="space-y-2">
-          <Label htmlFor="ai-model" className="text-white">AI模型</Label>
+          <Label htmlFor="ai-model">AI模型</Label>
           <Select defaultValue={aiModel} onValueChange={setAiModel}>
-            <SelectTrigger id="ai-model" className="w-full bg-black border-gray-700 text-white">
+            <SelectTrigger id="ai-model" className="w-full bg-black">
               <SelectValue placeholder="选择AI模型" />
             </SelectTrigger>
             <SelectContent className="bg-black text-white border-gray-700">
-              <SelectItem value="家庭版" className="hover:bg-gray-800">家庭版</SelectItem>
-              <SelectItem value="平衡版" className="hover:bg-gray-800">平衡版</SelectItem>
+              <SelectItem value="察图版" className="hover:bg-gray-800">察图版</SelectItem>
+              <SelectItem value="文章版" className="hover:bg-gray-800">文章版</SelectItem>
               <SelectItem value="专业版" className="hover:bg-gray-800">专业版</SelectItem>
             </SelectContent>
           </Select>
@@ -154,11 +154,11 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         {showAdvanced && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="story-background" className="text-white">故事背景 (可以写小说类型如都市/脑洞/修仙，也可以简单交代前文剧情，也可以填"无")</Label>
+              <Label htmlFor="story-background">故事背景 (可以写小说类型如都市/脑洞/修仙，也可以简单交代前文剧情，也可以填"无")</Label>
               <Textarea
                 id="story-background"
-                className="resize-none h-24 bg-black border-gray-700 text-white"
-                placeholder="一个男孩面对信息爆炸的社会"
+                className="resize-none h-24"
+                placeholder="请输入故事背景"
                 value={storyBackground}
                 onChange={(e) => setStoryBackground(e.target.value)}
               />
@@ -168,18 +168,18 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="chapter-characters" className="text-white">本章角色卡 (创建角色卡提升100%生成效果，本章不出场角色不要选择)</Label>
+              <Label htmlFor="chapter-characters">本章角色卡 (创建角色卡提升100%生成效果，本章不出场角色不要选择)</Label>
               <div className="relative">
-                <Input id="chapter-characters" placeholder="请选择角色" className="bg-black border-gray-700 text-white" />
+                <Input id="chapter-characters" placeholder="请选择角色" />
                 <Search className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="character-relationship" className="text-white">角色关系: (可写临时/非核心角色，或者补充人物关系)</Label>
+              <Label htmlFor="character-relationship">角色关系: (可写临时/非核心角色，或者补充人物关系)</Label>
               <Textarea
                 id="character-relationship"
-                className="resize-none h-20 bg-black border-gray-700 text-white"
+                className="resize-none h-20"
                 placeholder=""
               />
               <div className="text-right text-xs text-gray-500">
@@ -188,9 +188,9 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="chapter-terms" className="text-white">本章词条卡 (本章未使用词条不要选择，词条太多可能会严重降低AI生成量)</Label>
+              <Label htmlFor="chapter-terms">本章词条卡 (本章未使用词条不要选择，词条太多可能会严重降低AI生成量)</Label>
               <div className="relative">
-                <Input id="chapter-terms" placeholder="请选择" className="bg-black border-gray-700 text-white" />
+                <Input id="chapter-terms" placeholder="请选择" />
                 <Search className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
             </div>
@@ -198,15 +198,15 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="story-plot" className="flex items-center text-white">
+          <Label htmlFor="story-plot" className="flex items-center">
             本章剧情 <span className="text-red-500 ml-1">*</span>
             <span className="text-xs text-gray-500 ml-2">(按 Alt+K/Command+K 或 <span className="text-blue-500 cursor-pointer">点这里</span> 打开快捷输入)</span>
             <Info className="h-4 w-4 text-gray-400 ml-1" />
           </Label>
           <Textarea
             id="story-plot"
-            className="resize-none h-24 bg-black border-gray-700 text-white"
-            placeholder="一个男孩面对信息爆炸的社会"
+            className="resize-none h-24 border-red-100"
+            placeholder="在这里输入你的剧情片段或者细纲"
             value={storyBackground}
             onChange={(e) => setStoryBackground(e.target.value)}
           />
@@ -219,14 +219,14 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="writing-style" className="text-white">写作风格 (AI只认出名的大神，如果不出名可以具体描写风格)</Label>
+          <Label htmlFor="writing-style">写作风格 (AI只认出名的大神，如果不出名可以具体描写风格)</Label>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
               className={cn(
-                "border-green-700 text-white",
-                writingStyleMode === "preset" ? "bg-green-900/70 text-green-400" : ""
+                "border-green-200",
+                writingStyleMode === "preset" ? "bg-green-50 text-green-600" : ""
               )}
               onClick={() => setWritingStyleMode("preset")}
             >
@@ -235,22 +235,19 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             <Button
               size="sm"
               variant="outline"
-              className={cn(
-                "border-green-700 text-white",
-                writingStyleMode === "custom" ? "bg-green-900/70 text-green-400" : ""
-              )}
+              className={writingStyleMode === "custom" ? "bg-green-50 text-green-600 border-green-200" : ""}
               onClick={() => setWritingStyleMode("custom")}
             >
               自定义
             </Button>
-            <Button size="sm" variant="outline" className="border-green-700 text-white">更多</Button>
+            <Button size="sm" variant="outline">更多</Button>
           </div>
 
           {writingStyleMode === "preset" ? (
             <>
               <div className="relative">
                 <div
-                  className="border border-gray-700 rounded-md p-3 bg-black text-white flex items-center justify-between cursor-pointer"
+                  className="border rounded-md p-3 bg-black text-white flex items-center justify-between cursor-pointer"
                   onClick={() => setShowStyleDropdown(!showStyleDropdown)}
                 >
                   <span>{selectedStylePreset}</span>
@@ -301,7 +298,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             <div className="space-y-2">
               <Textarea
                 placeholder="请输入自定义写作风格"
-                className="resize-none h-24 bg-black border-gray-700 text-white"
+                className="resize-none h-24"
                 value={customWritingStyle}
                 onChange={(e) => setCustomWritingStyle(e.target.value)}
               />
@@ -313,14 +310,14 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="writing-requirements" className="text-white">写作要求</Label>
+          <Label htmlFor="writing-requirements">写作要求</Label>
           <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
               className={cn(
-                "border-green-700 text-white",
-                requirementsMode === "preset" ? "bg-green-900/70 text-green-400" : ""
+                "border-green-200",
+                requirementsMode === "preset" ? "bg-green-50 text-green-600" : ""
               )}
               onClick={() => setRequirementsMode("preset")}
             >
@@ -329,63 +326,30 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             <Button
               size="sm"
               variant="outline"
-              className={cn(
-                "border-green-700 text-white",
-                requirementsMode === "custom" ? "bg-green-900/70 text-green-400" : ""
-              )}
+              className={requirementsMode === "custom" ? "bg-green-50 text-green-600 border-green-200" : ""}
               onClick={() => setRequirementsMode("custom")}
             >
               自定义
             </Button>
-            <Button size="sm" variant="outline" className="border-green-700 text-white">更多</Button>
+            <Button size="sm" variant="outline">更多</Button>
           </div>
 
           {requirementsMode === "preset" ? (
-            <>
-              <div className="relative">
-                <div
-                  className="border border-gray-700 rounded-md p-3 bg-black text-white flex items-center justify-between cursor-pointer"
-                  onClick={() => setShowRequirementsDropdown(!showRequirementsDropdown)}
-                >
-                  <span>{selectedRequirementsPreset || "请选择写作要求"}</span>
-                  <ChevronDown className="h-4 w-4 text-white" />
-                </div>
-
-                {showRequirementsDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 border border-gray-700 rounded-md shadow-lg bg-black text-white z-10">
-                    {requirementsPresets.map(req => (
-                      <div
-                        key={req.id}
-                        className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-700 last:border-b-0"
-                        onClick={() => {
-                          setSelectedRequirementsPreset(req.name);
-                          setShowRequirementsDropdown(false);
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className={`${selectedRequirementsPreset === req.name ? "font-medium" : ""}`}>
-                            {req.name}
-                          </span>
-                          {selectedRequirementsPreset === req.name && (
-                            <Check className="h-5 w-5 text-green-500" />
-                          )}
-                        </div>
-                        {selectedRequirementsPreset === req.name && (
-                          <div className="text-sm text-gray-300 mt-1">
-                            {req.detail}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
+            <Select onValueChange={setSelectedRequirementsPreset}>
+              <SelectTrigger className="bg-black">
+                <SelectValue placeholder="请选择写作要求" />
+              </SelectTrigger>
+              <SelectContent className="bg-black text-white border-gray-700">
+                {requirementsPresets.map(req => (
+                  <SelectItem key={req.id} value={req.name} className="hover:bg-gray-800">{req.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : (
             <div className="space-y-2">
               <Textarea
                 placeholder="请输入自定义写作要求"
-                className="resize-none h-24 bg-black border-gray-700 text-white"
+                className="resize-none h-24"
                 value={customRequirements}
                 onChange={(e) => setCustomRequirements(e.target.value)}
               />
@@ -479,9 +443,9 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         </div>
       </div>
 
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t">
         <Button
-          className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           onClick={handleGenerate}
           disabled={isLoading}
         >
