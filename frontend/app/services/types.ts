@@ -11,7 +11,10 @@ export interface User {
   id: string;
   account: string;
   email: string;
-  avatar?: string;
+  avatar_url?: string;
+  phone?: string;
+  bio?: string;
+  
 }
 
 // 认证相关类型
@@ -66,6 +69,7 @@ export interface TaskStatusResponse {
 export interface AuthResponse {
   token?: string;
   user?: User;
+  type?: string;
 }
 
 // 小说相关类型
