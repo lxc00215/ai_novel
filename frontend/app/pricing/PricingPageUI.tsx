@@ -87,17 +87,30 @@ export default function PricingPageUI() {
             
             // 更新会员状态
             try {
-              const vipType = selectedPlan?.name === "基础版" ? "basic" : "professional";
+              const subscriptionType = selectedPlan?.name === "基础版" ? "basic" : "professional";
               const durationMonths = annually ? 12 : 1;
-              await apiService.user.updateVip(vipType, durationMonths);
+              await apiService.user.updateVip(subscriptionType, durationMonths);
               
               // 更新本地存储的用户信息
               const userStr = localStorage.getItem('user');
               if (userStr) {
                 const user = JSON.parse(userStr);
-                user.is_vip = true;
-                user.vip_type = vipType;
-                user.vip_expire_time = new Date(Date.now() + durationMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+                user.subscription_type = subscriptionType;
+                user.subscription_start_date = new Date().toISOString();
+                user.subscription_end_date = new Date(Date.now() + durationMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+                // 设置配额
+                if (subscriptionType === 'basic') {
+                  user.remaining_chapters = 50;
+                  user.remaining_books = 3;
+                  user.remaining_outlines = 1;
+                  user.remaining_inspirations = 10;
+                } else if (subscriptionType === 'professional') {
+                  user.remaining_chapters = 150;
+                  user.remaining_books = 10;
+                  user.remaining_outlines = 3;
+                  user.remaining_inspirations = 30;
+                }
+                user.last_quota_reset_date = new Date().toISOString();
                 localStorage.setItem('user', JSON.stringify(user));
               }
             } catch (error) {
