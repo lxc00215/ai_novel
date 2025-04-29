@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, use } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { FaBook, FaLock, FaUser, FaEnvelope } from 'react-icons/fa';
-import { FaWeixin, FaQq } from 'react-icons/fa';
-import { SiSinaweibo } from 'react-icons/si';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import apiService from '../services/api';
 import Logo from '../components/logo';
-import { link } from 'fs';
 import { toast } from 'sonner';
 
 interface PasswordStrength {
@@ -24,43 +21,44 @@ interface PasswordStrength {
 
 }
 
-// 添加必要的接口定义
-interface ApiResponse<T> {
-  success?: boolean;
-  message?: string;
-  data?: T;
-}
 
-// 根据后端的定义
-interface Token {
-  access_token: string;
-  token_type: string;
-}
 
 // 修改Login接口请求参数和返回值类型
 interface LoginRequest {
   account: string;
   password: string;
 }
-
-const AuthPage = ({ }) => {
-
+const AuthPage = () => {
   // 获取参数
   const searchParams = useSearchParams();
-  const is_pay = searchParams.get('is_pay');
-
-
   const [activeTab, setActiveTab] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({ value: 0, label: "" });
   const [rememberMe, setRememberMe] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
   const [error, setError] = useState("");
+ 
+ 
+  useEffect(() => {
+    // 判断屏幕宽度是否为移动端
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setIsMobile(true);
+    }
+
+    // 如果用户已登录，则跳转
+    if (localStorage.getItem('isAuthenticated') === 'true') {
+      console.log('用户已登录，跳转');
+      // window.location.href = '/dashboard';
+    }
+
+  }, []);
 
   // 密码强度检查函数
   const checkPasswordStrength = (password: string) => {
@@ -93,9 +91,22 @@ const AuthPage = ({ }) => {
 
   // 用户名可用性检查（模拟）
   const checkUsernameAvailability = async (username: string) => {
+    if (!username) {
+      setUsernameAvailable(null);
+      return;
+    }
     // 调用API检查用户名是否可用
     const response = await apiService.auth.checkUsernameAvailability(username);
     setUsernameAvailable(response.success);
+  };
+
+  const checkEmailAvailability = async (email: string) => {
+    if (!email) {
+      setEmailAvailable(null);
+      return;
+    }
+    const response = await apiService.auth.checkEmailAvailability(email);
+    setEmailAvailable(response.success);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,58 +114,34 @@ const AuthPage = ({ }) => {
     checkPasswordStrength(e.target.value);
   };
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value);
-    checkUsernameAvailability(e.target.value);
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
     try {
       const loginData: LoginRequest = {
         account: username,
         password
       };
+      const response = await apiService.auth.login(loginData);
+      // console.log('设置新状态后:', { user: response.user, isAuthenticated: true });
+      if (response) {
 
-      // 直接调用API，避免使用可能不匹配的类型
-      const response = await fetch('http://localhost:8000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(loginData)
-      });
+        localStorage.setItem('isAuthenticated', 'true');
+        console.log('设置用户', response.user);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('token', response.token || '');
 
-      if (response.ok) {
-        const data: Token = await response.json();
-        // 保存登录信息到localStorage
-        localStorage.setItem('token', data.access_token);
+        // 设置cookie
+        document.cookie = `token=${response.token}; path=/;`;
 
-        // 同时保存token到cookie以供中间件使用（7天过期）
-        document.cookie = `token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-
-        // 根据参数决定跳转路径
-        if (is_pay) {
-          router.push("/dashboard/inspiration");
-
-          // 获取金额
-          const amount = localStorage.getItem('amount');
-
-          // 支付
-          const payResponse = await apiService.alipay.creat(amount || "0");
-
-          // 支付链接
-          const paymentLink = payResponse?.link;
-
-          // 新开窗口打开支付链接
-          if (paymentLink) {
-            window.open(paymentLink, '_blank');
-          }
-        } else {
-          router.push("/dashboard");
+        if(!rememberMe){
+          // 设置过期时间
+          const expiresAt = new Date();
+          expiresAt.setHours(expiresAt.getHours() + 1);
+          localStorage.setItem('expiresAt', expiresAt.toISOString());
         }
+
+        router.push("/dashboard");
       } else {
         setError('登录失败，请检查您的用户名和密码');
       }
@@ -162,13 +149,11 @@ const AuthPage = ({ }) => {
       setError('登录时发生错误');
       console.error('登录错误:', error);
     } finally {
-      setIsLoading(false);
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
     try {
       const registerData = {
@@ -178,75 +163,40 @@ const AuthPage = ({ }) => {
       };
       console.log('Sending registration data:', registerData);
 
-      const response = await fetch('http://localhost:8000/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(registerData)
-      });
+      const response = await apiService.auth.register(registerData);
+      if (response) {
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Registration successful:', data);
-        
         // 显示成功提示
         toast.success('注册成功！');
-        
-        // 保存注册信息到localStorage
-        localStorage.setItem('registeredAccount', username);
-        
-        // 延迟1秒后刷新页面
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        const errorData = await response.json();
-        console.error('Registration failed:', errorData);
-        
-        // 根据错误类型显示不同的错误信息
-        if (errorData.detail) {
-          if (errorData.detail.includes('already registered')) {
-            if (errorData.detail.includes('Username')) {
-              toast.error('用户名已被注册，请更换其他用户名');
-            } else if (errorData.detail.includes('email')) {
-              toast.error('该邮箱已被注册，请使用其他邮箱');
-            } else {
-              toast.error('该账号已被注册，请使用其他账号');
-            }
-          } else if (errorData.detail.includes('password')) {
-            toast.error('密码不符合要求，请确保密码至少8位，包含字母和数字');
-          } else if (errorData.detail.includes('email')) {
-            toast.error('邮箱格式不正确，请检查邮箱地址');
-          } else {
-            toast.error(errorData.detail || '注册失败，请检查您的信息');
-          }
-        } else {
-          toast.error('注册失败，请稍后重试');
+        // 设置登录状态
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('token', response.token || '');
+
+        if(!rememberMe){
+          // 设置过期时间
+          const expiresAt = new Date();
+          expiresAt.setHours(expiresAt.getHours() + 1);
+          localStorage.setItem('expiresAt', expiresAt.toISOString());
         }
+        // 跳转
+        router.push("/dashboard");
+      } else {
+        toast.error('注册失败，请检查您的用户名和密码');
       }
     } catch (error) {
       console.error('Registration error:', error);
       toast.error('注册时发生错误，请检查网络连接');
     } finally {
-      setIsLoading(false);
     }
   };
 
-  // 在组件加载时检查是否有注册信息
-  useEffect(() => {
-    const registeredAccount = localStorage.getItem('registeredAccount');
-    
-    if (registeredAccount) {
-      setUsername(registeredAccount);
-      // 清除存储的注册信息
-      localStorage.removeItem('registeredAccount');
-    }
-  }, []);
+
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       {/* 左侧创意展示区 */}
+      {!isMobile && (
       <div className="w-full md:w-3/5 bg-gradient-to-br from-blue-900 to-red-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -285,7 +235,8 @@ const AuthPage = ({ }) => {
         <div className="absolute bottom-5 right-5 text-sm opacity-70">
           <p>已有12,463位创作者加入</p>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* 右侧表单区 */}
       <div className="w-full md:w-2/5 bg-background p-8 flex flex-col justify-center items-center">
@@ -362,7 +313,6 @@ const AuthPage = ({ }) => {
                 <Button
                   type="submit"
                   className="w-full hover:cursor-pointer bg-gradient-to-r from-blue-800 to-red-800 hover:shadow-lg transition-all"
-
                 >
                   登录
                 </Button>
@@ -389,7 +339,8 @@ const AuthPage = ({ }) => {
                       type="text"
                       placeholder="创建一个独特的作家身份"
                       value={username}
-                      onChange={handleUsernameChange}
+                      onChange={(e) => setUsername(e.target.value)}
+                      onBlur={() => checkUsernameAvailability(username)}
                       className="focus:ring-2 focus:ring-blue-100 transition-all pr-10"
                       required
                     />
@@ -404,7 +355,7 @@ const AuthPage = ({ }) => {
                     )}
                   </div>
                   {username && usernameAvailable === false && (
-                    <p className="text-xs text-blue-500 mt-1">该用户名已被使用</p>
+                    <p className="text-xs text-red-500 mt-1">该用户名已被使用</p>
                   )}
                 </div>
 
@@ -416,12 +367,25 @@ const AuthPage = ({ }) => {
                   <Input
                     id="register-email"
                     type="email"
+                    onBlur={() => checkEmailAvailability(email)}
                     placeholder="用于账号激活和密码找回"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
+                  {emailAvailable !== null && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {emailAvailable ? (
+                          <span className="text-green-500">✓</span>
+                        ) : (
+                          <span className="text-red-500">✗</span>
+                        )}
+                      </div>
+                    )}
+                  {email && emailAvailable === false && (
+                    <p className="text-xs text-red-500 mt-1">该邮箱已被使用</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

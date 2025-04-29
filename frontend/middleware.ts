@@ -21,8 +21,8 @@ export function middleware(request: NextRequest) {
   // 需要身份验证的路径列表
   const authRequiredPaths = [
     '/settings',
-    '/profile',
     '/create',
+
   ]
 
   // 路径重定向映射

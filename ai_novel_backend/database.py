@@ -159,16 +159,6 @@ class User(Base):
     characters = relationship("Character", back_populates="user")
     chat_sessions = relationship("ChatSession", back_populates="user")
 
-# class ChatSession(Base):
-#     __tablename__ = 'chat_sessions'
-
-#     id = Column(Integer, primary_key=True)
-#     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-#     character_id = Column(Integer, ForeignKey('characters.id'), nullable=False)
-#     created_at = Column(DateTime, default=datetime.now())
-#     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
-#     last_message_time = Column(DateTime, default=datetime.now())
-#     last_message = Column(Text, nullable=True)
 
 
 class Prompt(Base):

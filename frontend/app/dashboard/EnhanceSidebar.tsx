@@ -30,6 +30,7 @@ import Logo from '../components/logo';
 import { SettingsDialog } from '@/app/components/SettingsDialog';
 import { ProfileDialog } from '@/app/components/ProfileDialog';
 import { useRouter } from 'next/navigation';
+import { User } from '../services/types';
 type NavItem = {
   label: string;
   icon: React.ReactNode;
@@ -43,17 +44,12 @@ export function EnhancedSidebar() {
   const { isCollapsed, toggleCollapse } = useSidebar();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
-
+  const [user, setUser] = useState<User | null>(null);
   // 获取用户信息
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedName = localStorage.getItem('userName');
-      const storedAvatar = localStorage.getItem('userAvatar');
-      
-      setUserName(storedName || '用户');
-      setUserAvatar(storedAvatar || null);
+      const storedUser = localStorage.getItem('user');
+      setUser(storedUser ? JSON.parse(storedUser) : null);
     }
   }, [profileOpen]); // 当个人信息弹窗关闭时重新加载数据
 
@@ -202,12 +198,12 @@ export function EnhancedSidebar() {
                   className="flex hover:cursor-pointer w-full gap-2 items-center justify-center px-10 py-2 rounded-md bg-gradient-to-r h-10 shadow-md from-indigo-700 to-rose-600 text-sm font-medium text-white hover:opacity-90 transition-opacity"
                 >
                   <Avatar className="h-8 w-8 border border-white/30">
-                    <AvatarImage src={userAvatar || undefined} />
+                    <AvatarImage src={user?.avatar_url || undefined} />
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
-                      {userName.charAt(0).toUpperCase()}
+                      {user?.account?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium">{userName}</span>
+                  <span className="font-medium">{user?.account}</span>
                 </Button>
                 
                 {/* 登录 */}
@@ -227,7 +223,6 @@ export function EnhancedSidebar() {
                   <span >退出登录</span>
                 </Button>)
 }
-                
                 {/* 设置按钮 */}
                 <Button
                   onClick={handleSettingsClick}
@@ -254,9 +249,9 @@ export function EnhancedSidebar() {
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-90 transition-opacity p-0 overflow-hidden"
                       >
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={userAvatar || undefined} />
+                          <AvatarImage src={user?.avatar_url || undefined} />
                           <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
-                            {userName.charAt(0).toUpperCase()}
+                            {user?.account?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                       </Button>
@@ -300,12 +295,6 @@ export function EnhancedSidebar() {
               </TooltipProvider>
               )
               }
-
-
-               
-              
-         
-                
                 <TooltipProvider delayDuration={300}>
                   <Tooltip>
                     <TooltipTrigger asChild>

@@ -142,12 +142,10 @@ async def update_vip_status(
             current_user.remaining_books = 10
             current_user.remaining_outlines = 3
             current_user.remaining_inspirations = 30
-        
         current_user.last_quota_reset_date = datetime.now()
         
         await db.commit()
         await db.refresh(current_user)
-        
         return current_user
         
     except Exception as e:

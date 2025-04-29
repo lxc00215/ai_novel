@@ -69,6 +69,7 @@ export interface TaskStatusResponse {
 export interface AuthResponse {
   token?: string;
   user?: User;
+  type?: string;
 }
 
 // 小说相关类型

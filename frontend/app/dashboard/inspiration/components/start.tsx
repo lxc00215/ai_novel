@@ -56,9 +56,8 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
   const getStories = async (page: number, pageSize: number) => {
     setIsHistoryLoading(true);
     try {
-      // 使用 jwt 工具函数获取用户 ID
-      const { getCurrentUserId } = await import('@/app/utils/jwt');
-      const userId = getCurrentUserId();
+      const user = localStorage.getItem('user')
+      const userId = JSON.parse(user || '{}').id;
       
       // 调用 API 获取故事列表，传入分页参数
       const response = await apiService.spirate.getStories(userId || 4, page, pageSize);
@@ -102,8 +101,8 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
     
     try {
       // 使用 jwt 工具函数获取用户 ID
-      const { getCurrentUserId } = await import('@/app/utils/jwt');
-      const userId = getCurrentUserId();
+      const user = localStorage.getItem('user')
+      const userId = JSON.parse(user || '{}').id;
       
       // 创建任务
       const simpleTask = await apiService.task.create({

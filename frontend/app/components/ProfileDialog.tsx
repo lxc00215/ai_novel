@@ -7,20 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Loader2, X, Camera, Check, User } from 'lucide-react'
+import { Loader2, X, Camera, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { User } from '../services/types'
+import apiService from '../services/api'
 
 // 用户信息类型
-type UserProfile = {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-}
+
 
 export function ProfileDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   // 用户信息
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [updating, setUpdating] = useState(false)
   
@@ -37,26 +34,17 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean, onOpenCha
       
       setLoading(true)
       try {
-        // 模拟从API获取用户信息
-        // 实际使用中替换为API调用
-        const token = localStorage.getItem('token')
+
+        const user = localStorage.getItem('user')
         
-        if (!token) {
+        if (!user) {
           throw new Error('未登录')
         }
         
-        // 模拟数据，实际项目中请替换为API调用
-        const mockUser = {
-          id: '1',
-          name: localStorage.getItem('userName') || '测试用户',
-          email: localStorage.getItem('userEmail') || 'user@example.com',
-          avatar: localStorage.getItem('userAvatar') || undefined
-        }
-        
-        setUserProfile(mockUser)
-        setUserName(mockUser.name)
-        setEmail(mockUser.email)
-        setAvatar(mockUser.avatar || null)
+        setUserProfile(JSON.parse(user))
+        setUserName(JSON.parse(user).account)
+        setEmail(JSON.parse(user).email)
+        setAvatar(JSON.parse(user).avatar_url || null)
       } catch (error) {
         console.error('获取用户信息失败:', error)
         toast.error('获取用户信息失败')
@@ -91,15 +79,25 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean, onOpenCha
     try {
       // 模拟API调用
       // 实际项目中替换为真实API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // 模拟保存到localStorage
-      localStorage.setItem('userName', userName)
-      localStorage.setItem('userEmail', email)
-      if (avatar) {
-        localStorage.setItem('userAvatar', avatar)
+      let image_url = null
+    //   先上传图片到图床
+    if (avatarFile) {
+      image_url = await apiService.utils.uploadImage(avatarFile)
+    }
+
+      console.log(image_url+"上传图片成功")
+      const user = localStorage.getItem('user')
+      const new_user = {
+        account: userName,
+        email: email,
+        avatar_url: image_url,
+        ...JSON.parse(user || '{}')
       }
+      const res = await apiService.user.updateUser(new_user)
       
+      console.log(JSON.stringify(res))
+      // 模拟保存到localStorage
+
       toast.success('个人信息更新成功')
       onOpenChange(false)
     } catch (error) {

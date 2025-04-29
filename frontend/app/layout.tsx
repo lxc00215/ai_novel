@@ -37,12 +37,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground`}>
-        <Providers
-        >
-          <SpeedInsights />
-          {children}
-          <Toaster />
-        </Providers>
+          <Providers
+          >
+            <SpeedInsights />
+            {children}
+            <Toaster />
+          </Providers>
       </body>
     </html>
   );

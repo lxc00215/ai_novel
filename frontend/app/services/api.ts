@@ -14,7 +14,8 @@ import {
   ImageObject,
   ContinueResponse,
   CreateCrazyRequest,
-  CreateInspirationRequest
+  CreateInspirationRequest,
+  User
 } from './types';
 import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 
@@ -157,9 +158,8 @@ const apiService = {
   auth: {
     // 检查用户名是否可用 
     checkUsernameAvailability: async (username: string ): Promise<{ success: boolean }> => {
-      const response = await request('/auth/check_username_available', {
+      const response = await request(`/auth/check_username_available/${username}`, {
         method: 'POST',
-        body: JSON.stringify({ username }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -169,9 +169,11 @@ const apiService = {
 
     // 检查邮箱是否可用
     checkEmailAvailability: async (email: string): Promise<{ success: boolean }> => {
-      const response = await request('/auth/check_email_available', {
+      const response = await request(`/auth/check_email_available/${email}`, {
         method: 'POST',
-        body: JSON.stringify({ email }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       return response;
     },
@@ -180,7 +182,6 @@ const apiService = {
     
     // 登录
     login: async (data: LoginRequest): Promise<AuthResponse> => {
-      console.log(JSON.stringify(data) + ":登录");
       const response = await request('/auth/login', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -189,12 +190,8 @@ const apiService = {
         }
       });
 
-      // 如果登录成功，保存令牌和用户信息
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-        if (token) localStorage.setItem('token', token);
-        if (user) localStorage.setItem('user', JSON.stringify(user));
-      }
+      console.log('登录响应', JSON.stringify(response));
+
 
       return response;
     },
@@ -259,13 +256,32 @@ const apiService = {
         }
       });
 
+
+
       console.log(JSON.stringify(response) + "下载图片并上传");
       return response.image_url;
     },
+
+    uploadImage: async (file: File): Promise<{success: boolean, data: {url: string}}> => {
+      // 创建FormData对象，用于文件上传
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await request(`/utils/upload-image`, {
+        method: 'POST',
+        body: formData,
+        // 不要手动设置Content-Type，让浏览器自动设置，包含boundary信息
+      });
+      
+      if (response.success) {
+        return response.data.url;
+      } else {
+        throw new Error(response.message || '上传图片失败');
+      }
+    }
   },
 
   spirate: {
-
     continue: async (inspiration_id: string, choice: string): Promise<ContinueResponse> => {
       return request(`/spirate/continue/${inspiration_id}`, {
         method: 'POST',
@@ -275,8 +291,6 @@ const apiService = {
         }
       });
     },
-
-
     get: async (id: string) => {
       console.log('Calling API with ID:', id); // 添加日志
       try {
@@ -319,7 +333,6 @@ const apiService = {
   },
   // AI 生成相关 API
   ai: {
-
     // 拆解
     analyze: async (file_id: string) => {
       return request(`/ai/analyze-file`, {
@@ -483,8 +496,9 @@ const apiService = {
 
     generateImage: async (prompt: string): Promise< ImageObject> => {
       // 导入工具函数获取用户 ID
-      const { getCurrentUserId } = await import('../utils/jwt');
-      const userId = getCurrentUserId();
+      
+      const user = localStorage.getItem('user')
+      const userId = JSON.parse(user || '{}').id;
 
       const response = await request('/ai/generate_images', {
         method: 'POST',
@@ -603,8 +617,8 @@ const apiService = {
   novels: {
     create: async (title: string, description: string): Promise<Novel> => {
       // 从localStorage获取用户信息
-      const { getCurrentUserId } = await import('@/app/utils/jwt')
-      const userId = getCurrentUserId();
+      const user = localStorage.getItem('user')
+      const userId = JSON.parse(user || '{}').id;
 
       // 确保userId是字符串类型
       const userIdStr = userId ? userId.toString() : "";
@@ -795,8 +809,18 @@ const apiService = {
         })
       });
       return response;
+    },
+    updateUser: async (profile: Partial<User>) => {
+      return request('/users/profile', {
+        method: 'POST',
+        body: JSON.stringify(profile),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
     }
   },
-};
 
+};
 export default apiService; 

@@ -21,17 +21,17 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import Logo from './components/logo';
-import { useAuth } from './hooks/useAuth';
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import LogoutButton from '@/app/components/LogoutButton';
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
-  const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("novels");
-  const { user, isAuthenticated } = useAuth();
+
+  const user = localStorage.getItem('user') == undefined ? null : JSON.parse('{}');
+  const isAuthenticated = localStorage.getItem('isAuthenticated') == undefined ? false : localStorage.getItem('isAuthenticated') === 'true';
 
   // 监听滚动事件
   useEffect(() => {
@@ -39,15 +39,11 @@ export default function HomePage() {
       setScrollY(window.scrollY);
     };
 
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 切换暗黑模式
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
-  };
 
   // 随机故事开头
   const storyStarters = [
@@ -81,42 +77,53 @@ export default function HomePage() {
           {/* 桌面导航 */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/pricing" className="hover:text-[#7b1fa2] transition-colors">定价</Link>
-            {isAuthenticated ? (
+            <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 hover:cursor-pointer text-white shadow-lg hover:shadow-xl" onClick={() => window.location.href = '/auth'}>
+                  开始创作
+                </Button>
+            <ThemeToggle />
+            {localStorage.getItem('isAuthenticated') ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center gap-2 px-2 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Avatar className="h-7 w-7 border border-gray-200 dark:border-gray-700">
                       {user?.avatar_url ? (
                         <img src={user.avatar_url} alt={user.account} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium">
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-600 to-violet-600 text-white font-medium text-xs">
                           {user?.account?.charAt(0) || 'U'}
                         </div>
                       )}
                     </Avatar>
-                    <span className="text-sm font-medium">{user?.account}</span>
+                    <span className="text-sm font-medium max-w-[80px] truncate">{user?.account || '用户'}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>个人中心</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-40 p-1 animate-in slide-in-from-top-2 duration-200"
+                  sideOffset={6}
+                >
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      localStorage.removeItem('isAuthenticated');
+                      localStorage.removeItem('user');
+                      localStorage.removeItem('token');
+                      window.location.href = '/auth';
+                    }}
+                    className="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <LogoutButton />
+                    <span>退出登录</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <>
-                <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl" onClick={() => window.location.href = '/auth'}>
-                  开始创作
-                </Button>
                 <Link href="/auth" className="hover:text-[#7b1fa2] transition-colors">登录</Link>
               </>
             )}
-            <ThemeToggle />
           </nav>
 
           {/* 移动端菜单按钮 */}
@@ -141,9 +148,6 @@ export default function HomePage() {
             )}
           >
             <nav className="flex flex-col space-y-3">
-              <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">AI拆书</Link>
-              <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">小说生成</Link>
-              <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">灵感创作</Link>
               {isAuthenticated ? (
                 <>
                   <div className="flex items-center gap-2 py-2 px-4">
@@ -163,10 +167,34 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white w-full" onClick={() => window.location.href = '/auth'}>
+                  <Button className="bg-gradient-to-r hover:opacity-90 hover:cursor-pointer from-[#1a237e] to-[#7b1fa2] text-white w-full" onClick={
+                    () => {
+                      if(isAuthenticated) {
+                        window.location.href = '/dashboard';
+                      } else {
+                        window.location.href = '/auth';
+                      }
+                    }
+                  }>
                     开始创作
                   </Button>
-                  <Link href="/auth" className="py-2 px-4 hover:bg-background rounded-md">登录</Link>
+                  {isAuthenticated ? (
+                      // 头像和用户名
+                      <div className="flex items-center gap-2 py-2 px-4">
+                        <Avatar className="h-8 w-8">
+                          {user?.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.account} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium">
+                              {user?.account?.charAt(0) || 'U'}
+                            </div>
+                          )}
+                        </Avatar>
+                        <span className="text-sm font-medium">{user?.account}</span>
+                      </div>
+                  ) : (
+                    <Link href="/auth" className="py-2 px-4 hover:bg-background rounded-md">登录</Link>
+                  )}
                 </>
               )}
             </nav>
@@ -206,7 +234,7 @@ export default function HomePage() {
                   专业的AI小说创作平台，助你轻松完成从灵感到成书的全过程
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Button variant="outline" className="border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={() => window.location.href = '/auth'}>
+                  <Button variant="outline" className="border-[#7b1fa2] hover:cursor-pointer hover:text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={() => window.location.href = '/auth'}>
                     免费体验
                   </Button>
                 </div>

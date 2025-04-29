@@ -3,8 +3,8 @@ import ahocorasick
 import os
 from functools import lru_cache
 # import pybloomfilter
-from fastapi import FastAPI, Request, Depends
-from typing import Set, Dict, List, Optional
+from fastapi import  Request
+from typing import Set, List
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import json
@@ -116,6 +116,8 @@ EXCLUDE_PATHS = [
     r"http://127.0.0.1:8000/chat/session/\d+/clear",
     r"http://127.0.0.1:8000/character/",
     "http://127.0.0.1:8000/spirate/update",
+    "http://127.0.0.1:8000/utils/upload-image",
+    "http://127.0.0.1:8000/utils/upload-file",
     # 使用正则表达式匹配任意数字
 ]
 
@@ -144,9 +146,6 @@ def is_excluded_path(path: str) -> bool:
     return False
 
 
-# 导入必要的依赖
-
-
 class SensitiveWordMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, word_filter: SensitiveWordFilter):
         super().__init__(app)
@@ -155,8 +154,10 @@ class SensitiveWordMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # 仅处理POST/PUT/PATCH请求
         if request.method in ["POST", "PUT", "PATCH"]:
+
             if is_excluded_path(request.url):
-                print("排除敏感词过滤", json.loads(await request.body()))
+
+                # print("排除敏感词过滤", json.loads(await request.body()))
                 return await call_next(request)
             try:
                 body = await request.body()

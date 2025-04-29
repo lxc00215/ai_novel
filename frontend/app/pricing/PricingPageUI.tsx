@@ -148,7 +148,6 @@ export default function PricingPageUI() {
         }
       }, 10000); // 每10秒查询一次
     }
-    
     return () => {
       if (pollingInterval) {
         clearInterval(pollingInterval);
@@ -201,6 +200,8 @@ export default function PricingPageUI() {
     // 已登录，继续支付逻辑
     try {
       setIsLoading(true);
+      const newWindow = window.open('about:blank', '_blank');
+
       const response = await apiService.alipay.creat(amount);
       
       // 从响应中提取支付链接
@@ -215,12 +216,13 @@ export default function PricingPageUI() {
       
       // 保存订单信息
       setOrderInfo(response.order_info);
+
+      console.log("paymentLink", paymentLink);
       
       // 打开支付页面
-      const newWindow = window.open('about:blank', '_blank');
       if (newWindow) {
         newWindow.location.href = paymentLink;
-        
+        console.log("到这里了")
         // 如果支付页面未能成功打开，给用户提示
         if (newWindow.closed || !newWindow.opener) {
           toast("支付页面可能被浏览器拦截", {
@@ -266,6 +268,13 @@ export default function PricingPageUI() {
         setShowPaymentDialog(false);
         setIsLoading(false);
         setIsPolling(false);
+
+        // 修改会员状态
+        const subscriptionType = selectedPlan?.name === "基础版" ? "basic" : "professional";
+        const durationMonths = annually ? 12 : 1;
+        await apiService.user.updateVip(subscriptionType, durationMonths);
+
+
         
         toast("支付成功",{
           description: "您的订阅已经生效，即将跳转到主页",
