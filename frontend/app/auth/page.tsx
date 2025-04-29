@@ -129,7 +129,8 @@ const AuthPage = () => {
         localStorage.setItem('isAuthenticated', 'true');
         console.log('设置用户', response.user);
         localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('token', response.token || '');
+        console.log('设置token', response.access_token || '');
+        localStorage.setItem('token', response.access_token || '');
 
         // 设置cookie
         document.cookie = `token=${response.token}; path=/;`;
@@ -171,7 +172,7 @@ const AuthPage = () => {
         // 设置登录状态
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('token', response.token || '');
+        localStorage.setItem('token', response.access_token || '');
 
         if (!rememberMe) {
           // 设置过期时间
