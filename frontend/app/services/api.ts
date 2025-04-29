@@ -74,7 +74,7 @@ const handleApiError = (error: any) => {
 };
 
 // 封装请求函数
-export const request = async (url: string, options: RequestInit = {}, base_url = "/api/proxy") => {
+export const request = async (url: string, options: RequestInit = {}) => {
   try {
     // 获取认证令牌并添加到请求头
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -88,9 +88,7 @@ export const request = async (url: string, options: RequestInit = {}, base_url =
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       }
     };
-    console.log("请求的url1" + base_url + url)
-    const response = await fetch(base_url + url, newOptions);
-    console.log("请求的url2" + base_url + url)
+    const response = await fetch(process.env.NEXT_PUBLIC_ENDPOINT + url, newOptions);
     // 检查响应状态
     if (!response.ok) {
       // 处理401错误(token无效或过期)
@@ -100,7 +98,6 @@ export const request = async (url: string, options: RequestInit = {}, base_url =
         localStorage.removeItem('user');
         window.location.href = '/auth';
       }
-
       const errorData: ErrorResponse = await response.json();
       throw {
         response: {
