@@ -43,8 +43,8 @@ const AuthPage = () => {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [error, setError] = useState("");
- 
- 
+
+
   useEffect(() => {
     // 判断屏幕宽度是否为移动端
     const isMobile = window.innerWidth < 768;
@@ -134,7 +134,7 @@ const AuthPage = () => {
         // 设置cookie
         document.cookie = `token=${response.token}; path=/;`;
 
-        if(!rememberMe){
+        if (!rememberMe) {
           // 设置过期时间
           const expiresAt = new Date();
           expiresAt.setHours(expiresAt.getHours() + 1);
@@ -173,7 +173,7 @@ const AuthPage = () => {
         localStorage.setItem('user', JSON.stringify(response.user));
         localStorage.setItem('token', response.token || '');
 
-        if(!rememberMe){
+        if (!rememberMe) {
           // 设置过期时间
           const expiresAt = new Date();
           expiresAt.setHours(expiresAt.getHours() + 1);
@@ -197,44 +197,44 @@ const AuthPage = () => {
     <div className="flex flex-col md:flex-row min-h-screen">
       {/* 左侧创意展示区 */}
       {!isMobile && (
-      <div className="w-full md:w-3/5 bg-gradient-to-br from-blue-900 to-red-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10"
-        >
-          <h1 className="text-4xl font-bold mb-6">开启你的AI创作之旅</h1>
-          <p className="text-xl mb-4">用AI释放你的创作潜能</p>
-          <p className="text-lg mb-8">加入10,000+作家的智能创作社区</p>
+        <div className="w-full md:w-3/5 bg-gradient-to-br from-blue-900 to-red-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative z-10"
+          >
+            <h1 className="text-4xl font-bold mb-6">开启你的AI创作之旅</h1>
+            <p className="text-xl mb-4">用AI释放你的创作潜能</p>
+            <p className="text-lg mb-8">加入10,000+作家的智能创作社区</p>
 
-          {/* 创意元素：AI生成的小说片段 */}
-          <div className="backdrop-blur-sm bg-white/10 rounded-lg p-6 mb-8 max-w-md">
-            <h3 className="text-lg font-semibold mb-2">AI创作样例:</h3>
-            <p className="italic text-sm">
-              "山雨欲来风满楼，她凝视着窗外翻涌的乌云，指尖在键盘上轻轻敲击。人工智能提供的情节建议在屏幕上流淌，她微笑着接受了其中一个转折点。这个由算法与人类灵感共同孕育的故事，正在以前所未有的方式展开..."
-            </p>
-          </div>
+            {/* 创意元素：AI生成的小说片段 */}
+            <div className="backdrop-blur-sm bg-white/10 rounded-lg p-6 mb-8 max-w-md">
+              <h3 className="text-lg font-semibold mb-2">AI创作样例:</h3>
+              <p className="italic text-sm">
+                "山雨欲来风满楼，她凝视着窗外翻涌的乌云，指尖在键盘上轻轻敲击。人工智能提供的情节建议在屏幕上流淌，她微笑着接受了其中一个转折点。这个由算法与人类灵感共同孕育的故事，正在以前所未有的方式展开..."
+              </p>
+            </div>
 
-          {/* 用户评价 */}
-          <div className="mt-auto">
-            <div className="flex items-center space-x-4">
-              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="用户头像" className="w-12 h-12 rounded-full" />
-              <div>
-                <p className="font-medium">"AI助手帮我突破了创作瓶颈，三个月内完成了我的第一部长篇小说！"</p>
-                <p className="text-sm opacity-75">- 陈晓，科幻小说作家</p>
+            {/* 用户评价 */}
+            <div className="mt-auto">
+              <div className="flex items-center space-x-4">
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="用户头像" className="w-12 h-12 rounded-full" />
+                <div>
+                  <p className="font-medium">"AI助手帮我突破了创作瓶颈，三个月内完成了我的第一部长篇小说！"</p>
+                  <p className="text-sm opacity-75">- 陈晓，科幻小说作家</p>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* 装饰元素 */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
-          <img src="https://images.unsplash.com/photo-1519682577862-22b62b24e493?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="背景" className="w-full h-full object-cover" />
-        </div>
-        <div className="absolute bottom-5 right-5 text-sm opacity-70">
-          <p>已有12,463位创作者加入</p>
-        </div>
+          {/* 装饰元素 */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
+            <img src="https://images.unsplash.com/photo-1519682577862-22b62b24e493?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="背景" className="w-full h-full object-cover" />
+          </div>
+          <div className="absolute bottom-5 right-5 text-sm opacity-70">
+            <p>已有12,463位创作者加入</p>
+          </div>
         </div>
       )}
 
@@ -375,14 +375,14 @@ const AuthPage = () => {
                     required
                   />
                   {emailAvailable !== null && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        {emailAvailable ? (
-                          <span className="text-green-500">✓</span>
-                        ) : (
-                          <span className="text-red-500">✗</span>
-                        )}
-                      </div>
-                    )}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {emailAvailable ? (
+                        <span className="text-green-500">✓</span>
+                      ) : (
+                        <span className="text-red-500">✗</span>
+                      )}
+                    </div>
+                  )}
                   {email && emailAvailable === false && (
                     <p className="text-xs text-red-500 mt-1">该邮箱已被使用</p>
                   )}
