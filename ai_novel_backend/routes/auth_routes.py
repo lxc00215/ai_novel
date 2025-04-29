@@ -9,6 +9,36 @@ from datetime import timedelta
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
+# 检查用户名是否可用（注册时）
+@router.post("/check_username_available", response_model=UserResponse)
+async def check_username_available(
+    username: str,
+    db: AsyncSession = Depends(get_db)
+):
+    # 检查用户名是否已存在
+    query = select(User).where(User.account == username)
+    result = await db.execute(query)
+    if result.scalar_one_or_none():
+        return {"message": "Username already exists","success": False}
+    
+    return {"message": "Username available","success": True}
+
+# 检查邮箱是否已存在
+@router.post("/check_email_available", response_model=UserResponse)
+async def check_email_available(
+    email: str,
+    db: AsyncSession = Depends(get_db)
+):
+    # 检查邮箱是否已存在
+    query = select(User).where(User.email == email)
+    result = await db.execute(query)
+    if result.scalar_one_or_none():
+        return {"message": "Email already registered","success": False}
+    
+    return {"message": "Email available","success": True}
+
+
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
     # 通过邮箱或账号查询用户

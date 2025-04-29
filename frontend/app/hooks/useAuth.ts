@@ -2,23 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { User } from '../services/types';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-}
 
 interface AuthState {
-  user: User | null;
+  user: User ;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
+const safeUser: User = {
+  id: '',
+  account: '',
+  email: '',
+  avatar_url: '',
+  phone: '',
+  bio: ''
+}
 export  function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
-    user: null,
+    user: safeUser,
     isAuthenticated: false,
     isLoading: true
   });
@@ -39,14 +42,14 @@ export  function useAuth() {
         } catch (error) {
           localStorage.removeItem('user');
           setAuthState({
-            user: null,
+            user: safeUser,
             isAuthenticated: false,
             isLoading: false
           });
         }
       } else {
         setAuthState({
-          user: null,
+          user: safeUser,
           isAuthenticated: false,
           isLoading: false
         });
@@ -67,9 +70,11 @@ export  function useAuth() {
       // 模拟成功登录
       const user: User = {
         id: '123456',
-        username,
+        account: username,
         email: `${username}@example.com`,
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+        avatar_url: 'https://randomuser.me/api/portraits/men/32.jpg',
+        phone: '',
+        bio: ''
       };
       
       if (rememberMe) {
@@ -99,9 +104,11 @@ export  function useAuth() {
       // 模拟成功注册
       const user: User = {
         id: '123456',
-        username,
+        account: username,
         email,
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+        avatar_url: 'https://randomuser.me/api/portraits/men/32.jpg',
+        phone: '',
+        bio: ''
       };
       
       // 自动登录
@@ -112,7 +119,6 @@ export  function useAuth() {
         isAuthenticated: true,
         isLoading: false
       });
-      
       return { success: true, user };
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
@@ -123,7 +129,7 @@ export  function useAuth() {
   const logout = () => {
     localStorage.removeItem('user');
     setAuthState({
-      user: null,
+      user: safeUser,
       isAuthenticated: false,
       isLoading: false
     });
@@ -133,8 +139,11 @@ export  function useAuth() {
   const guestAccess = () => {
     const guestUser: User = {
       id: 'guest',
-      username: '游客用户',
-      email: 'guest@example.com'
+      account: '游客用户',
+      email: 'guest@example.com',
+      avatar_url: '',
+      phone: '',
+      bio: ''
     };
     
     setAuthState({

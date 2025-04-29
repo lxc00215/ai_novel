@@ -140,9 +140,9 @@ class User(Base):
     total_words = Column(Integer, default=0)  # 创作总字数
     writing_days = Column(Integer, default=0)  # 创作天数
     bio = Column(Text)  # 个人简介
-    is_vip = Column(Boolean, default=False)  # 是否是会员
-    vip_expire_time = Column(DateTime)  # 会员过期时间
-    vip_type = Column(String(20))  # 会员类型：basic/professional
+    # is_vip = Column(Boolean, default=False)  # 是否是会员
+    # vip_expire_time = Column(DateTime)  # 会员过期时间
+    # vip_type = Column(String(20))  # 会员类型：basic/professional
 
     # 确保关系定义完整
     prompts = relationship("Prompt", back_populates="user")

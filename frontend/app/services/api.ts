@@ -155,6 +155,29 @@ const apiService = {
 
   // 认证相关 API
   auth: {
+    // 检查用户名是否可用 
+    checkUsernameAvailability: async (username: string ): Promise<{ success: boolean }> => {
+      const response = await request('/auth/check_username_available', {
+        method: 'POST',
+        body: JSON.stringify({ username }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      return response;
+    },
+
+    // 检查邮箱是否可用
+    checkEmailAvailability: async (email: string): Promise<{ success: boolean }> => {
+      const response = await request('/auth/check_email_available', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      return response;
+    },
+
+
+    
     // 登录
     login: async (data: LoginRequest): Promise<AuthResponse> => {
       console.log(JSON.stringify(data) + ":登录");

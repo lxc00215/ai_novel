@@ -92,16 +92,10 @@ const AuthPage = ({ }) => {
   };
 
   // 用户名可用性检查（模拟）
-  const checkUsernameAvailability = (username: string) => {
-    if (!username) {
-      setUsernameAvailable(null);
-      return;
-    }
-
-    // 这里应该是一个API调用，现在只是模拟
-    setTimeout(() => {
-      setUsernameAvailable(!['admin', 'test', 'user'].includes(username));
-    }, 500);
+  const checkUsernameAvailability = async (username: string) => {
+    // 调用API检查用户名是否可用
+    const response = await apiService.auth.checkUsernameAvailability(username);
+    setUsernameAvailable(response.success);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {

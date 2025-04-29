@@ -25,6 +25,7 @@ async def get_user_info(
 ):
     return current_user
 
+
 @router.post("/upload_avatar", response_model=UserResponse)
 async def upload_avatar(
     avatar_url: UploadFile = File(...),

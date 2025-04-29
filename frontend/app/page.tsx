@@ -24,7 +24,7 @@ import Logo from './components/logo';
 import { useAuth } from './hooks/useAuth';
 import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import LogoutButton from './components/LogoutButton';
+import LogoutButton from '@/app/components/LogoutButton';
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
@@ -86,8 +86,8 @@ export default function HomePage() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt={user.account} className="h-full w-full object-cover" />
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.account} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium">
                           {user?.account?.charAt(0) || 'U'}
@@ -148,8 +148,8 @@ export default function HomePage() {
                 <>
                   <div className="flex items-center gap-2 py-2 px-4">
                     <Avatar className="h-8 w-8">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt={user.account} className="h-full w-full object-cover" />
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.account} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium">
                           {user?.account?.charAt(0) || 'U'}
@@ -206,10 +206,6 @@ export default function HomePage() {
                   专业的AI小说创作平台，助你轻松完成从灵感到成书的全过程
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl px-6 py-2 text-lg" onClick={() => window.location.href = '/auth'}>
-                    开始创作
-                    <ChevronRight className="ml-2 w-5 h-5" />
-                  </Button>
                   <Button variant="outline" className="border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={() => window.location.href = '/auth'}>
                     免费体验
                   </Button>

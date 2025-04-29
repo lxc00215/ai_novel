@@ -225,6 +225,19 @@ CREATE TABLE `inspiration_results`  (
   `user_id` int NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = MyISAM AUTO_INCREMENT = 104 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_unicode_ci ROW_FORMAT = Dynamic;
+DROP PROCEDURE IF EXISTS `reset_daily_usage_counts`;
+delimiter ;;
+CREATE PROCEDURE `reset_daily_usage_counts`()
+BEGIN
+    UPDATE `users` 
+    SET `daily_usage_count` = 0, 
+        `last_usage_reset_date` = CURRENT_DATE()
+    WHERE `last_usage_reset_date` IS NULL OR `last_usage_reset_date` < CURRENT_DATE();
+END
+;;
+delimiter ;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ----------------------------
 -- Table structure for models
