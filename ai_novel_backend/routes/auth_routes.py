@@ -71,7 +71,7 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register")
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     # 验证必填字段
     user.validate_login_field()
@@ -101,4 +101,22 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    return new_user
+
+    
+    query = select(User).where(
+        or_(
+            User.email == new_user.email,
+            User.account == new_user.account
+        )
+    )
+    print(f"query: {new_user.account} {new_user.email}")
+    result = await db.execute(query)
+    print(f"result: {result}")
+    user1 = result.scalar_one_or_none()
+    print(f"user: {user1}")
+
+    access_token = create_access_token(
+        data={"sub": str(user1.id)},
+        expires_delta=timedelta(minutes=30)
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user": user1}
