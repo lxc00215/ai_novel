@@ -783,14 +783,14 @@ const apiService = {
 
   // 用户相关API
   user: {
-    updateVip: async (vipType: string, durationMonths: number) => {
+    updateVip: async (subscriptionType: string, durationMonths: number) => {
       const response = await request('/users/update_vip', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          vip_type: vipType,
+          subscription_type: subscriptionType,
           duration_months: durationMonths
         })
       });

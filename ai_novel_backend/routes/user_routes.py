@@ -16,7 +16,7 @@ if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
 class VipUpdate(BaseModel):
-    vip_type: str
+    subscription_type: str
     duration_months: int
 
 @router.get("/info", response_model=UserResponse)
@@ -119,17 +119,31 @@ async def update_vip_status(
 ):
     try:
         # 计算会员过期时间
-        if current_user.vip_expire_time and current_user.vip_expire_time > datetime.now():
+        if current_user.subscription_end_date and current_user.subscription_end_date > datetime.now():
             # 如果当前是会员，在现有过期时间基础上增加
-            new_expire_time = current_user.vip_expire_time + timedelta(days=30 * vip_update.duration_months)
+            new_end_date = current_user.subscription_end_date + timedelta(days=30 * vip_update.duration_months)
         else:
             # 如果不是会员或已过期，从当前时间开始计算
-            new_expire_time = datetime.now() + timedelta(days=30 * vip_update.duration_months)
+            new_end_date = datetime.now() + timedelta(days=30 * vip_update.duration_months)
         
         # 更新用户会员状态
-        current_user.is_vip = True
-        current_user.vip_expire_time = new_expire_time
-        current_user.vip_type = vip_update.vip_type
+        current_user.subscription_type = vip_update.subscription_type
+        current_user.subscription_start_date = datetime.now()
+        current_user.subscription_end_date = new_end_date
+        
+        # 根据会员类型设置配额
+        if vip_update.subscription_type == 'basic':
+            current_user.remaining_chapters = 50
+            current_user.remaining_books = 3
+            current_user.remaining_outlines = 1
+            current_user.remaining_inspirations = 10
+        elif vip_update.subscription_type == 'professional':
+            current_user.remaining_chapters = 150
+            current_user.remaining_books = 10
+            current_user.remaining_outlines = 3
+            current_user.remaining_inspirations = 30
+        
+        current_user.last_quota_reset_date = datetime.now()
         
         await db.commit()
         await db.refresh(current_user)
@@ -140,5 +154,5 @@ async def update_vip_status(
         await db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to update VIP status: {str(e)}"
+            detail=f"Failed to update subscription status: {str(e)}"
         )
