@@ -28,6 +28,9 @@ interface ErrorResponse {
   status: number;
 }
 
+// 修改请求基地址配置
+const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT || 'http://localhost:8000'; // 确保这里配置正确
+
 // JWT工具函数 - 从token中解析用户ID
 export const getUserIdFromToken = (): string | null => {
   try {
@@ -89,7 +92,7 @@ export const request = async (url: string, options: RequestInit = {}) => {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       }
     };
-    const response = await fetch(process.env.NEXT_PUBLIC_ENDPOINT + url, newOptions);
+    const response = await fetch(`${BASE_URL}${url}`, newOptions);
     // 检查响应状态
     if (!response.ok) {
       // 处理401错误(token无效或过期)
