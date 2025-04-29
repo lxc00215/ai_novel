@@ -93,7 +93,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       if (response) {
         toast.success('内容生成成功');
         if (onContentGenerated) {
-          onContentGenerated(response);
+          onContentGenerated(response.data);
         }
         closeAIPanel();
       } else {
