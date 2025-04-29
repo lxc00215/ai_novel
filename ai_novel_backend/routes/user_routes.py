@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, File, HTTPException, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -6,12 +6,19 @@ from database import get_db, User
 from schemas import UserResponse, UserProfileUpdate
 from auth import get_current_user
 import os
+from typing import Optional
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 UPLOAD_DIR = "static/avatars"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
+
+class VipUpdate(BaseModel):
+    vip_type: str
+    duration_months: int
+
 @router.get("/info", response_model=UserResponse)
 async def get_user_info(
     current_user: User = Depends(get_current_user)
@@ -101,4 +108,36 @@ async def update_profile(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to update profile: {str(e)}"
+        )
+
+@router.post("/update_vip", response_model=UserResponse)
+async def update_vip_status(
+    vip_update: VipUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        # 计算会员过期时间
+        if current_user.vip_expire_time and current_user.vip_expire_time > datetime.now():
+            # 如果当前是会员，在现有过期时间基础上增加
+            new_expire_time = current_user.vip_expire_time + timedelta(days=30 * vip_update.duration_months)
+        else:
+            # 如果不是会员或已过期，从当前时间开始计算
+            new_expire_time = datetime.now() + timedelta(days=30 * vip_update.duration_months)
+        
+        # 更新用户会员状态
+        current_user.is_vip = True
+        current_user.vip_expire_time = new_expire_time
+        current_user.vip_type = vip_update.vip_type
+        
+        await db.commit()
+        await db.refresh(current_user)
+        
+        return current_user
+        
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update VIP status: {str(e)}"
         )

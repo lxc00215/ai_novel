@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import apiService from '../services/api';
 import Logo from '../components/logo';
 import { link } from 'fs';
+import { toast } from 'sonner';
 
 interface PasswordStrength {
   value: number;
@@ -176,24 +177,78 @@ const AuthPage = ({ }) => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await apiService.auth.register({
+      const registerData = {
         account: username,
         email,
         password
+      };
+      console.log('Sending registration data:', registerData);
+
+      const response = await fetch('http://localhost:8000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(registerData)
       });
-      if (response) {
-        router.push('/dashboard');
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Registration successful:', data);
+        
+        // 显示成功提示
+        toast.success('注册成功！');
+        
+        // 保存注册信息到localStorage
+        localStorage.setItem('registeredAccount', username);
+        
+        // 延迟1秒后刷新页面
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
-        setError(response || '注册失败，请检查您的信息');
+        const errorData = await response.json();
+        console.error('Registration failed:', errorData);
+        
+        // 根据错误类型显示不同的错误信息
+        if (errorData.detail) {
+          if (errorData.detail.includes('already registered')) {
+            if (errorData.detail.includes('Username')) {
+              toast.error('用户名已被注册，请更换其他用户名');
+            } else if (errorData.detail.includes('email')) {
+              toast.error('该邮箱已被注册，请使用其他邮箱');
+            } else {
+              toast.error('该账号已被注册，请使用其他账号');
+            }
+          } else if (errorData.detail.includes('password')) {
+            toast.error('密码不符合要求，请确保密码至少8位，包含字母和数字');
+          } else if (errorData.detail.includes('email')) {
+            toast.error('邮箱格式不正确，请检查邮箱地址');
+          } else {
+            toast.error(errorData.detail || '注册失败，请检查您的信息');
+          }
+        } else {
+          toast.error('注册失败，请稍后重试');
+        }
       }
     } catch (error) {
-      setError('注册时发生错误');
+      console.error('Registration error:', error);
+      toast.error('注册时发生错误，请检查网络连接');
     } finally {
       setIsLoading(false);
     }
   };
 
-
+  // 在组件加载时检查是否有注册信息
+  useEffect(() => {
+    const registeredAccount = localStorage.getItem('registeredAccount');
+    
+    if (registeredAccount) {
+      setUsername(registeredAccount);
+      // 清除存储的注册信息
+      localStorage.removeItem('registeredAccount');
+    }
+  }, []);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">

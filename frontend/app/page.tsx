@@ -9,39 +9,46 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { 
-  BookOpen, 
-  Sparkles, 
-  PenTool, 
-  ChevronRight, 
-  Menu, 
-  X 
+import {
+  BookOpen,
+  Sparkles,
+  PenTool,
+  ChevronRight,
+  Menu,
+  X,
+  User,
+  LogOut
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import Logo from './components/logo';
+import { useAuth } from './hooks/useAuth';
+import { Avatar } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import LogoutButton from './components/LogoutButton';
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("novels");
-  
+  const { user, isAuthenticated } = useAuth();
+
   // 监听滚动事件
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
+
   // 切换暗黑模式
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
   };
-  
+
   // 随机故事开头
   const storyStarters = [
     "雾气弥漫的清晨，她发现一封来自未来的信...",
@@ -49,9 +56,9 @@ export default function HomePage() {
     "没有人相信他关于平行宇宙的理论，直到那天...",
     "百年老店的地下室里，藏着一本能预言未来的日记...",
   ];
-  
+
   const [currentStarter, setCurrentStarter] = useState(storyStarters[0]);
-  
+
   const changeStoryStarter = () => {
     const randomIndex = Math.floor(Math.random() * storyStarters.length);
     setCurrentStarter(storyStarters[randomIndex]);
@@ -68,28 +75,54 @@ export default function HomePage() {
       )}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-
             <Logo isCollapsed={false} />
           </div>
-          
+
           {/* 桌面导航 */}
           <nav className="hidden md:flex items-center space-x-6">
-            {/* <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">AI拆书</Link>
-            <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">小说生成</Link>
-            <Link href="#features" className="hover:text-[#7b1fa2] transition-colors">灵感创作</Link>
-            <Link href="#" className="hover:text-[#7b1fa2] transition-colors">个人中心</Link> */}
             <Link href="/pricing" className="hover:text-[#7b1fa2] transition-colors">定价</Link>
-            <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl">
-              开始创作
-            </Button>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.account} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium">
+                          {user?.account?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                    </Avatar>
+                    <span className="text-sm font-medium">{user?.account}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>个人中心</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogoutButton />
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl" onClick={() => window.location.href = '/auth'}>
+                  开始创作
+                </Button>
+                <Link href="/auth" className="hover:text-[#7b1fa2] transition-colors">登录</Link>
+              </>
+            )}
             <ThemeToggle />
-            <Link href="/auth" className="hover:text-[#7b1fa2] transition-colors">登录</Link>
           </nav>
-          
+
           {/* 移动端菜单按钮 */}
-          <div className="md:hidden flex items-center">
+          <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle/>
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-md hover:bg-background"
             >
@@ -97,10 +130,10 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-        
+
         {/* 移动端菜单 */}
         {mobileMenuOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
@@ -111,11 +144,31 @@ export default function HomePage() {
               <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">AI拆书</Link>
               <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">小说生成</Link>
               <Link href="#features" className="py-2 px-4 hover:bg-background rounded-md">灵感创作</Link>
-              <Link href="#" className="py-2 px-4 hover:bg-background rounded-md">个人中心</Link>
-              <Link href="#faq" className="py-2 px-4 hover:bg-background rounded-md">帮助中心</Link>
-              <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white w-full">
-                开始创作
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center gap-2 py-2 px-4">
+                    <Avatar className="h-8 w-8">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.account} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium">
+                          {user?.account?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                    </Avatar>
+                    <span className="text-sm font-medium">{user?.account}</span>
+                  </div>
+                  <Link href="/dashboard" className="py-2 px-4 hover:bg-background rounded-md">个人中心</Link>
+                  <LogoutButton />
+                </>
+              ) : (
+                <>
+                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white w-full" onClick={() => window.location.href = '/auth'}>
+                    开始创作
+                  </Button>
+                  <Link href="/auth" className="py-2 px-4 hover:bg-background rounded-md">登录</Link>
+                </>
+              )}
             </nav>
           </motion.div>
         )}
@@ -129,7 +182,7 @@ export default function HomePage() {
             <div className="grid grid-cols-10 grid-rows-10 w-full h-full">
               {Array(100).fill(0).map((_, i) => (
                 <div key={i} className="flex items-center justify-center">
-                  <div 
+                  <div
                     className={`w-1 h-1 rounded-full bg-background opacity-${Math.random() > 0.7 ? '100' : '0'}`}
                     style={{animation: `pulse ${2 + Math.random() * 3}s infinite`}}
                   ></div>
@@ -137,10 +190,10 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          
+
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col md:flex-row items-center justify-between">
-              <motion.div 
+              <motion.div
                 className="max-w-xl mb-10 md:mb-0"
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -153,17 +206,17 @@ export default function HomePage() {
                   专业的AI小说创作平台，助你轻松完成从灵感到成书的全过程
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl px-6 py-2 text-lg">
+                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white shadow-lg hover:shadow-xl px-6 py-2 text-lg" onClick={() => window.location.href = '/auth'}>
                     开始创作
                     <ChevronRight className="ml-2 w-5 h-5" />
                   </Button>
-                  <Button variant="outline" className="border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10">
+                  <Button variant="outline" className="border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={() => window.location.href = '/auth'}>
                     免费体验
                   </Button>
                 </div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="relative w-full max-w-md"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -180,16 +233,16 @@ export default function HomePage() {
                             <div className="h-2 w-full bg-gray-300 dark:bg-gray-600 rounded mb-3"></div>
                             <div className="h-2 w-5/6 bg-gray-300 dark:bg-gray-600 rounded mb-3"></div>
                             <div className="h-2 w-4/5 bg-gray-300 dark:bg-gray-600 rounded mb-6"></div>
-                            
+
                             <div className="text-sm opacity-90 italic mb-4 min-h-12 border-l-2 border-[#7b1fa2] pl-3">
                               {currentStarter}
                             </div>
-                            
+
                             <div className="h-2 w-5/6 bg-gray-300 dark:bg-gray-600 rounded mb-3"></div>
                             <div className="h-2 w-full bg-gray-300 dark:bg-gray-600 rounded mb-3"></div>
                             <div className="h-2 w-3/4 bg-gray-300 dark:bg-gray-600 rounded mb-3"></div>
                           </div>
-                          <button 
+                          <button
                             onClick={changeStoryStarter}
                             className="text-xs text-foreground hover:underline hover:cursor-pointer self-end flex items-center"
                           >
@@ -199,11 +252,11 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* 粒子效果 */}
                   <div className="absolute inset-0 pointer-events-none">
                     {Array(15).fill(0).map((_, i) => (
-                      <div 
+                      <div
                         key={i}
                         className="absolute w-2 h-2 rounded-full bg-[#ffd700]"
                         style={{
@@ -220,11 +273,11 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* 功能展示区 */}
         <section id="features" className="py-20 relative">
-        
-          
+
+
           <div className="container mx-auto bg-background px-4 relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold font-serif">
@@ -236,7 +289,7 @@ export default function HomePage() {
                 借助先进的人工智能技术，我们为您提供从灵感萌发到成书的全流程解决方案
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
@@ -280,7 +333,7 @@ export default function HomePage() {
                       <p className="opacity-80">{feature.description}</p>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="ghost" className="text-foreground  hover:bg-foreground/10 p-0">
+                      <Button variant="ghost" className="text-foreground  hover:bg-foreground/10 p-0" onClick={() => window.location.href = '/auth'}>
                         了解更多 <ChevronRight className="ml-1 w-4 h-4" />
                       </Button>
                     </CardFooter>
@@ -290,7 +343,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* 创作流程 */}
         <section className="py-20">
           <div className="container mx-auto px-4">
@@ -304,11 +357,11 @@ export default function HomePage() {
                 从创意到成书，我们为您精心打造流畅高效的创作体验
               </p>
             </div>
-            
+
             <div className="relative">
               {/* 连接线 */}
               <div className="absolute left-1/2 top-10 bottom-10 w-0.5 bg-gradient-to-b from-[#1a237e] to-[#7b1fa2] hidden md:block"></div>
-              
+
               <div className="space-y-16  md:space-y-0">
                 {[
                   {
@@ -336,7 +389,7 @@ export default function HomePage() {
                     align: "left"
                   }
                 ].map((step, index) => (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     className="relative flex flex-col md:flex-row items-center md:items-start"
                     initial={{ opacity: 0, y: 30 }}
@@ -345,7 +398,7 @@ export default function HomePage() {
                     viewport={{ once: true, margin: "-100px" }}
                   >
                     <div className={cn(
-                      "w-full md:w-1/2 flex", 
+                      "w-full md:w-1/2 flex",
                       step.align === "right" ? "md:justify-end md:pr-16" : "md:order-last md:justify-start md:pl-16",
                       "mb-6 md:mb-0"
                     )}>
@@ -361,11 +414,11 @@ export default function HomePage() {
                         </CardContent>
                       </Card>
                     </div>
-                    
+
                     <div className="hidden md:flex justify-center items-center">
                       <div className="w-8 h-8 rounded-full bg-[#ffd700] z-10"></div>
                     </div>
-                    
+
                     <div className={cn(
                       "w-full md:w-1/2",
                       step.align === "right" ? "md:order-last" : ""
@@ -378,14 +431,14 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* 用户作品展示 */}
         <section className="py-20 relative overflow-hidden">
           <div className={cn(
             "absolute inset-0 z-0 bg-background",
-          
+
           )}></div>
-          
+
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold font-serif">
@@ -400,8 +453,8 @@ export default function HomePage() {
             {/* 如果选中，加一个下边框为白色 2px 的边框 */}
             <Tabs defaultValue="novels" className="w-full" onValueChange={setActiveTab}>
               <TabsList className="w-full max-w-md mx-auto grid grid-cols-3">
-              <TabsTrigger 
-              value="novels" 
+              <TabsTrigger
+              value="novels"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
                 activeTab === "novels" 
                   ? "bg-secondary shadow-sm  after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4  after:h-0.5 after:bg-emerald-500 after:rounded-full" 
@@ -410,8 +463,8 @@ export default function HomePage() {
             >
               长篇小说
             </TabsTrigger>
-                <TabsTrigger 
-              value="shorts" 
+                <TabsTrigger
+              value="shorts"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
                 activeTab === "shorts" 
                   ? "bg-secondary shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
@@ -419,8 +472,8 @@ export default function HomePage() {
               }`}
             >
               短篇故事</TabsTrigger>
-                <TabsTrigger 
-              value="poetry" 
+                <TabsTrigger
+              value="poetry"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${
                 activeTab === "poetry" 
                   ? "bg-secondary shadow-sm font-medium after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-emerald-500 after:rounded-full" 
@@ -429,7 +482,7 @@ export default function HomePage() {
             >
               诗歌散文</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="novels" className="mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
@@ -462,11 +515,11 @@ export default function HomePage() {
                       whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     >
                       <div className="w-full aspect-[2/3] relative shadow-xl mb-4 overflow-hidden rounded-lg">
-                        <Image 
-                          src={book.cover} 
-                          alt={book.title} 
-                          fill 
-                          className="object-cover" 
+                        <Image
+                          src={book.cover}
+                          alt={book.title}
+                          fill
+                          className="object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
                           <div className="p-4 text-white">
@@ -482,7 +535,7 @@ export default function HomePage() {
                   ))}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="shorts" className="mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* 短篇故事展示内容，结构类似长篇小说 */}
@@ -506,7 +559,7 @@ export default function HomePage() {
                   ))}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="poetry" className="mt-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* 诗歌散文展示内容 */}
@@ -536,11 +589,11 @@ export default function HomePage() {
                 </div>
               </TabsContent>
             </Tabs>
-            
-       
+
+
           </div>
         </section>
-        
+
         {/* 数据统计 */}
         <section className="py-20">
           <div className="container mx-auto px-4">
@@ -551,7 +604,7 @@ export default function HomePage() {
                 { value: "98%", label: "用户满意度" },
                 { value: "24/7", label: "AI创作支持" }
               ].map((stat, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   className="text-center"
                   initial={{ opacity: 0, y: 20 }}
@@ -566,13 +619,13 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* 常见问题 */}
         <section id="faq" className="py-20 relative">
           <div className={cn(
             "absolute inset-0 z-0 bg-background",
           )}></div>
-          
+
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold font-serif">
@@ -584,7 +637,7 @@ export default function HomePage() {
                 对NonReal有疑问？这里为您解答
               </p>
             </div>
-            
+
             <div className="max-w-3xl mx-auto">
               {[
                 {
@@ -608,7 +661,7 @@ export default function HomePage() {
                   answer: "是的，我们支持多种格式导出，包括TXT、DOCX、PDF和EPUB等，方便您在不同设备上阅读或进行后续编辑。"
                 }
               ].map((faq, index) => (
-                <motion.div 
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -632,7 +685,7 @@ export default function HomePage() {
                   </Card>
                 </motion.div>
               ))}
-              
+
               <div className="text-center mt-10">
                 <Button variant="outline" className="border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10">
                   查看更多问题
@@ -641,7 +694,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* 创意启发器 */}
         <section className="py-20">
           <div className="container mx-auto px-4">
@@ -655,7 +708,7 @@ export default function HomePage() {
                   <p className="mb-8 opacity-80">
                     卡住了？没有灵感？尝试我们的创意启发器，随机生成故事元素，激发你的创作火花
                   </p>
-                  
+
                   <Card className={cn(
                     "mb-8 border-0 bg-background",
                   )}>
@@ -676,11 +729,11 @@ export default function HomePage() {
                       </div>
                     </CardContent>
                   </Card>
-                  
-                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white">
+
+                  <Button className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 text-white" onClick={() => window.location.href = '/auth'}>
                     重新生成
                   </Button>
-                  <Button variant="outline" className="ml-4 border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10">
+                  <Button variant="outline" className="ml-4 border-[#7b1fa2] text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={() => window.location.href = '/auth'}>
                     使用这个创意
                   </Button>
                 </div>
@@ -688,13 +741,13 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* 行动召唤 */}
         <section className="py-20  relative overflow-hidden">
           <div className="absolute  inset-0 z-0  opacity-90"></div>
           <div className="absolute inset-0 z-0 opacity-20">
             {Array(50).fill(0).map((_, i) => (
-              <div 
+              <div
                 key={i}
                 className="absolute rounded-full bg-white"
                 style={{
@@ -708,10 +761,10 @@ export default function HomePage() {
               ></div>
             ))}
           </div>
-          
+
           <div className="container  mx-auto px-4 relative z-10">
             <div className="max-w-3xl  mx-auto text-center text-white">
-              <motion.h2 
+              <motion.h2
                 className="text-3xl md:text-4xl lg:text-5xlfont-bold font-serif mb-6"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -720,7 +773,7 @@ export default function HomePage() {
               >
                 开启你的AI创作之旅
               </motion.h2>
-              <motion.p 
+              <motion.p
                 className="text-lg mb-10 opacity-90"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -729,7 +782,7 @@ export default function HomePage() {
               >
                 无论你是畅销作家还是初次创作，NonReal都能成为你的得力助手
               </motion.p>
-              
+
               <motion.div
                 className="flex flex-col sm:flex-row justify-center gap-4"
                 initial={{ opacity: 0, y: 20 }}
@@ -737,10 +790,10 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 viewport={{ once: true }}
               >
-                <Button className="bg-white hover:bg-gray-100 text-[#7b1fa2] text-lg px-8 py-6">
+                <Button className="bg-white hover:bg-gray-100 text-[#7b1fa2] text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
                   立即注册
                 </Button>
-                <Button variant="outline" className="border-white text-white hover:bg-white/20 text-lg px-8 py-6">
+                <Button variant="outline" className="border-white text-white hover:bg-white/20 text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
                   了解更多
                 </Button>
               </motion.div>
@@ -748,7 +801,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      
+
       {/* 底部 */}
       <footer className={cn(
         "py-12 border-t bg-background",
@@ -757,7 +810,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-              
+
                 <Logo isCollapsed={false} />
               </div>
               <p className="opacity-70 mb-4">
@@ -774,7 +827,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            
+
             <div>
               <h3 className="font-bold mb-4">功能</h3>
               {/* <ul className="space-y-2 opacity-70">
@@ -784,7 +837,7 @@ export default function HomePage() {
                 <li><Link href="#" className="hover:underline">写作辅助</Link></li>
               </ul> */}
             </div>
-            
+
             <div>
               <h3 className="font-bold mb-4">资源</h3>
               <ul className="space-y-2 opacity-70">
@@ -794,7 +847,7 @@ export default function HomePage() {
                 <li><Link href="#" className="hover:underline">API接口</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold mb-4">公司</h3>
               <ul className="space-y-2 opacity-70">
@@ -805,13 +858,13 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="pt-8 border-t border-gray-200 dark:border-gray-800 text-center opacity-70 text-sm">
             <p>© {new Date().getFullYear()} NonReal 版权所有</p>
           </div>
         </div>
       </footer>
-      
+
       {/* 全局样式 */}
       <style jsx global>{`
         @keyframes float {

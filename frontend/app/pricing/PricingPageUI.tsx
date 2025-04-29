@@ -85,6 +85,25 @@ export default function PricingPageUI() {
             setIsPolling(false);
             setShowPaymentDialog(false);
             
+            // 更新会员状态
+            try {
+              const vipType = selectedPlan?.name === "基础版" ? "basic" : "professional";
+              const durationMonths = annually ? 12 : 1;
+              await apiService.user.updateVip(vipType, durationMonths);
+              
+              // 更新本地存储的用户信息
+              const userStr = localStorage.getItem('user');
+              if (userStr) {
+                const user = JSON.parse(userStr);
+                user.is_vip = true;
+                user.vip_type = vipType;
+                user.vip_expire_time = new Date(Date.now() + durationMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+                localStorage.setItem('user', JSON.stringify(user));
+              }
+            } catch (error) {
+              console.error("更新会员状态失败:", error);
+            }
+            
             // 显示成功消息
             toast("支付成功",
               {
@@ -122,7 +141,7 @@ export default function PricingPageUI() {
         clearInterval(pollingInterval);
       }
     };
-  }, [isPolling, orderInfo, pollingCount, router]);
+  }, [isPolling, orderInfo, pollingCount, router, selectedPlan, annually]);
 
   // 滚动动画容器
   const container = {

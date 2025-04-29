@@ -757,6 +757,23 @@ const apiService = {
       getCurrentUserId
     };
   },
+
+  // 用户相关API
+  user: {
+    updateVip: async (vipType: string, durationMonths: number) => {
+      const response = await request('/users/update_vip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          vip_type: vipType,
+          duration_months: durationMonths
+        })
+      });
+      return response;
+    }
+  },
 };
 
 export default apiService; 
