@@ -42,6 +42,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenCh
       label: '主题设置', 
       icon: theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />
     },
+    
     // 以后可以在这里添加更多设置选项
   ]
 
@@ -136,8 +137,6 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenCh
             </AnimatePresence>
           </div>
         </div>
-        
-    
       </DialogContent>
     </Dialog>
   )

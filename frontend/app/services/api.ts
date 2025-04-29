@@ -492,7 +492,15 @@ const apiService = {
         }
       }
     },
-
+    generateImageFromSpirate: async (prompt: string,name:string, spirate_id: string): Promise< ImageObject> => {  
+      return request('/ai/generate_image_from_spirate', {
+        method: 'POST',
+        body: JSON.stringify({ prompt, name,spirate_id }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    },
 
     generateImage: async (prompt: string): Promise< ImageObject> => {
       // 导入工具函数获取用户 ID

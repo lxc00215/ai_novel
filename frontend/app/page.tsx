@@ -30,7 +30,7 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("novels");
 
-  const user = localStorage.getItem('user') == undefined ? null : JSON.parse('{}');
+  const user = localStorage.getItem('user') == undefined ? null : JSON.parse(localStorage.getItem('user') || '{}');
   const isAuthenticated = localStorage.getItem('isAuthenticated') == undefined ? false : localStorage.getItem('isAuthenticated') === 'true';
 
   // 监听滚动事件
@@ -38,8 +38,6 @@ export default function HomePage() {
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
-
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -56,6 +54,7 @@ export default function HomePage() {
   const [currentStarter, setCurrentStarter] = useState(storyStarters[0]);
 
   const changeStoryStarter = () => {
+    console.log(localStorage.getItem('user'));
     const randomIndex = Math.floor(Math.random() * storyStarters.length);
     setCurrentStarter(storyStarters[randomIndex]);
   };
@@ -77,7 +76,7 @@ export default function HomePage() {
           {/* 桌面导航 */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/pricing" className="hover:text-[#7b1fa2] transition-colors">定价</Link>
-            <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 hover:cursor-pointer text-white shadow-lg hover:shadow-xl" onClick={() => window.location.href = '/auth'}>
+            <Button size="sm" className="bg-gradient-to-r from-[#1a237e] to-[#7b1fa2] hover:opacity-90 hover:cursor-pointer text-white shadow-lg hover:shadow-xl" onClick={isAuthenticated ? () => window.location.href = '/dashboard' : () => window.location.href = '/auth'}>
                   开始创作
                 </Button>
             <ThemeToggle />
@@ -234,7 +233,7 @@ export default function HomePage() {
                   专业的AI小说创作平台，助你轻松完成从灵感到成书的全过程
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Button variant="outline" className="border-[#7b1fa2] hover:cursor-pointer hover:text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={() => window.location.href = '/auth'}>
+                  <Button variant="outline" className="border-[#7b1fa2] hover:cursor-pointer hover:text-[#7b1fa2] hover:bg-[#7b1fa2]/10" onClick={isAuthenticated ? () => {window.location.href = '/dashboard'} : () => {window.location.href = '/auth'}}>
                     免费体验
                   </Button>
                 </div>
@@ -814,10 +813,10 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 viewport={{ once: true }}
               >
-                <Button className="bg-white hover:bg-gray-100 text-[#7b1fa2] text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
+                <Button className="bg-white hover:bg-gray-100 hover:cursor-pointer text-[#7b1fa2] text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
                   立即注册
                 </Button>
-                <Button variant="outline" className="border-white text-white hover:bg-white/20 text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
+                <Button variant="outline" className="border-white hover:cursor-pointer text-white hover:bg-white/20 text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
                   了解更多
                 </Button>
               </motion.div>

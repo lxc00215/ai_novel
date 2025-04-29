@@ -124,13 +124,10 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
       }, 200);
 
       // 检查任务状态
-      // @ts-ignore - 确保API响应类型与实际返回值匹配
       let status = await apiService.task.status(simpleTask.task_id);
       
-      // @ts-ignore - 确保API响应类型与实际返回值匹配
       while(status && status.status !== 'completed') {
         await new Promise(resolve => setTimeout(resolve, 2000));
-        // @ts-ignore - 确保API响应类型与实际返回值匹配
         status = await apiService.task.status(simpleTask.task_id);
       }
 
@@ -143,9 +140,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
       // 确保状态和结果都存在
       // @ts-ignore - 确保API响应类型与实际返回值匹配
       if (status && status.result_id) {
-        // @ts-ignore - 确保API响应类型与实际返回值匹配
         console.log("准备跳转到:", `/dashboard/inspiration/${status.result_id}?is_new=true`);
-        // @ts-ignore - 确保API响应类型与实际返回值匹配
         router.push(`/dashboard/inspiration/${status.result_id}?is_new=true`);
       } else {
         toast.error('生成结果无效，请重试');

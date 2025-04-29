@@ -18,7 +18,6 @@ async function getInspirationData(id: string) {
         'Content-Type': 'application/json',
       },
     });
-    console.log("response", JSON.stringify(response));
     if (!response) {
       return null;
     }
@@ -35,6 +34,7 @@ export default function SpirateDetail() {
   // 添加新的状态来处理分支点击和加载
   const [isLoadingNextContent, setIsLoadingNextContent] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const [selectedChoiceText, setSelectedChoiceText] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const isNew = searchParams.get('is_new');
@@ -78,19 +78,26 @@ export default function SpirateDetail() {
 
   // 添加新的状态来跟踪是否所有图片都已生成完成
   const [allImagesGenerated, setAllImagesGenerated] = useState(false);
-  const [updatedStoryLines, setUpdatedStoryLines] = useState<string[]>([]);
 
   const router = useRouter();
   // 添加分支打字机效果的状态
   const [currentChoiceIndex, setCurrentChoiceIndex] = useState(0);
   const [currentChoiceText, setCurrentChoiceText] = useState('');
 
+  // 提取所有文本内容（排除图片URL）
+  const [consolidatedStoryText, setConsolidatedStoryText] = useState('');
+  const [storyImages, setStoryImages] = useState<{index: number, url: string}[]>([]);
+
   // 处理分支选择的函数
   const handleChoiceSelect = async (choice: string) => {
     // 设置选中的分支和加载状态
     setSelectedChoice(choice);
+    setSelectedChoiceText(choice);
     setIsLoadingNextContent(true);
-
+    
+    // 将用户选择添加到已显示内容的末尾
+    setDisplayedLines(prev => [...prev, `>> 你选择了: ${choice}`]);
+    
     // 隐藏分支和聊天区域
     setShowChoices(false);
     setShowChat(false);
@@ -99,25 +106,18 @@ export default function SpirateDetail() {
       // 向服务端发送请求，获取下一段内容
       const response = await apiService.spirate.continue(inspiration_id, choice);
 
-      console.log("response", JSON.stringify(response));
       // 获取新内容
       const newContent = response.content || '';
       const newChoices = response.story_direction || [];
-
-      // 首先保存当前已展示的内容
-      const currentDisplayedContent = [...displayedLines];
-
-      // 更新显示的内容，保留之前的内容
-      setDisplayedLines(currentDisplayedContent);
 
       // 开始为新内容执行打字机效果
       if (newContent) {
         // 分割新内容为行
         const newContentLines = newContent.split('\n');
-
+        
         // 获取当前内容的行数，作为起始索引
-        const startIndex = currentDisplayedContent.length;
-
+        const startIndex = displayedLines.length;
+        
         // 使用打字机效果显示新内容
         await typewriterEffectForContinuation(newContentLines, startIndex);
       }
@@ -129,12 +129,11 @@ export default function SpirateDetail() {
       if (response.characters) {
         setCharacters(response.characters as Character[]);
 
-        //  多线程生成图片
+        // 多线程生成图片
         const imagePromises = response.characters.map(async (character: any) => {
-          const data = await apiService.ai.generateImage(character.description);
+          const data = await apiService.ai.generateImageFromSpirate(character.description, character.name, inspiration_id);
           const image_url = data.image;
           character.image_url = image_url;
-
 
           const json_data = {
             id: character.id,
@@ -145,12 +144,8 @@ export default function SpirateDetail() {
             prompt: character.prompt
           };
 
-          console.log("image_url", JSON.stringify(json_data));
-
-
           // 更新角色信息
           const updatedCharacter = await apiService.character.update(character.id, json_data);
-          console.log("updatedCharacter", updatedCharacter);
           if (updatedCharacter) {
             // 更新UI
             setCharacters((prevCharacters) =>
@@ -165,33 +160,28 @@ export default function SpirateDetail() {
           return character;
         });
 
-
-
         await Promise.all(imagePromises);
       }
 
-      // 更新主故事对象
       // 更新主故事对象
       if (inspiration && inspiration.id) {
         setInspiration({
           ...inspiration,
           content: [...displayedLines].join('\n'),
           story_direction: newChoices,
-          id: inspiration.id, // 明确指定 id，确保非 undefined
+          id: inspiration.id,
         });
       } else {
         console.error('Invalid inspiration object:', inspiration);
         toast.error('无法更新故事内容，请重试');
       }
-
     } catch (error) {
       console.error('Error continuing story:', error);
       toast.error('获取后续内容失败，请重试');
     } finally {
       // 重置加载状态
       setIsLoadingNextContent(false);
-      setSelectedChoice(null);
-
+      
       // 重新显示分支和聊天区域
       setShowChoices(true);
       setShowChat(true);
@@ -202,88 +192,81 @@ export default function SpirateDetail() {
   // 为继续内容专门创建的打字机效果函数
   const typewriterEffectForContinuation = async (lines: string[], startIndex: number) => {
     setIsTyping(true);
-
     // 用于存储最终要保存的完整内容
     let finalStoryContent = [...displayedLines];
 
     // 检查是否为图片URL的简单判断函数
-    const isImageUrl = (text: any) => text.startsWith('http') && (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
+    const isImageUrl = (text: any) => text.startsWith('http') && 
+      (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
 
     for (let i = 0; i < lines.length; i++) {
       const lineIndex = startIndex + i;
       setCurrentLineIndex(lineIndex);
       const line = lines[i];
 
+
       // 检查当前行是否是图片URL
       if (isImageUrl(line)) {
-        // 直接添加图片URL，不做打字机效果
-        setDisplayedLines(prev => {
-          const newLines: string[] = [...prev];
-          newLines[lineIndex] = line;
-          return newLines;
-        });
-
-        // 将图片URL添加到最终内容中
-        finalStoryContent[lineIndex] = line;
+        // 直接添加图片URL
+        setDisplayedLines(prev => [...prev, line]);
+        finalStoryContent.push(line);
+        
       } else if (line.includes('【插图】')) {
-        // 插图处理逻辑
-        let currentText = '';
+        // 提取插图前的文本
+        const textBeforeImage = line.replace('【插图】', '');
+        
         // 显示文本内容的打字机效果
-        for (let j = 0; j < line.length; j++) {
-          currentText += line[j];
+        let currentText = '';
+        for (let j = 0; j < textBeforeImage.length; j++) {
+          currentText += textBeforeImage[j];
           setDisplayedLines(prev => {
             const newLines = [...prev];
-            newLines[lineIndex] = currentText.replace('【插图】', '');
+            if (i < newLines.length) {
+              newLines[i] = currentText;
+            } else {
+              newLines.push(currentText);
+            }
             return newLines;
           });
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise(resolve => setTimeout(resolve, 20)); // 提高速度
         }
 
-        // 设置图片加载状态
+        // 设置图片加载状态并生成图片
         setImageStates(prev => ({
           ...prev,
           [lineIndex]: { loading: true }
         }));
 
-        // 启动图片生成，但不阻塞打字机效果
-        const cleanText = line.replace('【插图】', '');
-        finalStoryContent[lineIndex] = cleanText;
-
+        // 异步生成图片
         generateImage(line, lineIndex).then(new_image_url => {
           if (new_image_url) {
-            // 插入新的图片URL到显示内容和最终内容中
-            setDisplayedLines(prev => {
-              const newLines = [...prev];
-              newLines.splice(lineIndex + 1, 0, new_image_url);
-              return newLines;
-            });
-
-            finalStoryContent.splice(lineIndex + 1, 0, new_image_url);
-
-            // 后续索引都需要+1，因为插入了新行
-            if (i < lines.length - 1) {
-              setCurrentLineIndex(prevIndex => prevIndex + 1);
-            }
+            // 添加图片URL到内容中
+            setDisplayedLines(prev => [...prev, new_image_url]);
+            finalStoryContent.push(new_image_url);
           }
-
         });
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
       } else {
-        // 普通文本行的处理
+        // 普通文本行处理
         let currentText = '';
         for (let j = 0; j < line.length; j++) {
           currentText += line[j];
           setDisplayedLines(prev => {
             const newLines = [...prev];
+            if (lineIndex < newLines.length) {
             newLines[lineIndex] = currentText;
+            } else {
+              newLines.push(currentText);
+            }
             return newLines;
           });
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise(resolve => setTimeout(resolve, 20)); // 提高速度
         }
 
-        // 将普通文本添加到最终内容中
-        finalStoryContent[lineIndex] = line;
+        finalStoryContent.push(line);
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     setIsTyping(false);
@@ -293,8 +276,9 @@ export default function SpirateDetail() {
   // 同时进行打字机效果和角色图片生成
   const handleContentAndImages = async (responseData: any) => {
     // 开始打字机效果
-    const typewriterPromise = showContentSequentially(responseData);
+    console.log("handleContentAndImages")
 
+    const typewriterPromise = showContentSequentially(responseData);
 
     // 生成角色图片
     const imagePromises = responseData.characters.map(async (character: any) => {
@@ -387,8 +371,6 @@ export default function SpirateDetail() {
       const data = await apiService.ai.generateImage(prompt.replace('【插图】', ''));
       const imageUrl = data.image;
       console.log("imageUrl1", imageUrl);
-
-
       // 更新图片状态
       setImageStates(prev => ({
         ...prev,
@@ -405,23 +387,7 @@ export default function SpirateDetail() {
       return ''; // 返回空字符串表示生成失败
     }
   };
-  // 添加一个 useEffect 来监听所有图片是否生成完成
-  // useEffect(() => {
-  //   if (allImagesGenerated && updatedStoryLines.length > 0 && typewriterMode) {
-  //     // 所有图片都生成完成，将更新后的内容保存到后端
-  //     const saveContent = async () => {
-  //       try {
-  //         await apiService.spirate.update( {
-  //           id:inspiration?.id,
-  //           content: updatedStoryLines.join('\n')
-  //         });
-  //       } catch (error) {
-  //         console.error('Error saving story content:', error);
-  //       }
-  //     };
-  //     // saveContent();
-  //   }
-  // }, [allImagesGenerated, updatedStoryLines]);
+ 
 
   //解析时间  只保留年月日
   function parseTime(time: string) {
@@ -464,7 +430,6 @@ export default function SpirateDetail() {
     if (contentData.content) {
       setDisplayedLines(contentData.content.split('\n'));
     }
-    console.log("contentData.story_direction", contentData);
     setDisplayedChoices(contentData.story_direction || []);
   };
 
@@ -473,7 +438,7 @@ export default function SpirateDetail() {
     // 显示标题和作者信息
     setShowHeader(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-
+    console.log("showContentSequentially")
     // 显示角色卡片
     setShowCharacters(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -482,13 +447,41 @@ export default function SpirateDetail() {
     setShowStoryContent(true);
     if (contentData.content) {
       setHasStartedTyping(true);
-      await typewriterEffect(contentData.content.split('\n'));
+      await typewriterEffect(contentData.content.split('\n\n'));
     }
-    console.log("contentData.story_direction", contentData);
     setDisplayedChoices(contentData.story_direction || []);
   };
 
-  // 修改打字机效果函数，添加模式判断
+  // 创建一个函数来处理整合的故事内容
+  const processStoryContent = (lines: string[]) => {
+    if (!lines || lines.length === 0) return;
+    
+    const textParts: string[] = [];
+    const images: {index: number, url: string}[] = [];
+    
+    // 检查是否为图片URL的函数
+    const isImageUrl = (text: any) => text && typeof text === 'string' && text.startsWith('http') && 
+      (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
+    
+    lines.forEach((line, index) => {
+      if (isImageUrl(line)) {
+        images.push({index, url: line});
+      } else {
+        textParts.push(line);
+      }
+    });
+    
+    // 保持原始的换行格式
+    setConsolidatedStoryText(textParts.join('\n'));
+    setStoryImages(images);
+  };
+
+  // 添加对displayedLines的监听，更新整合内容
+  useEffect(() => {
+    processStoryContent(displayedLines);
+  }, [displayedLines]);
+
+  // 修改打字机效果函数，正确处理插图和文本显示顺序
   const typewriterEffect = async (lines: string[]) => {
     if (!typewriterMode) {
       // 非打字机模式直接显示所有内容
@@ -501,124 +494,92 @@ export default function SpirateDetail() {
 
     setIsTyping(true);
     setDisplayedLines([]);
-    setUpdatedStoryLines([]);
-
-    // 用于存储最终要保存的完整内容
-    let finalStoryContent = [];
 
     // 检查是否为图片URL的简单判断函数
-    const isImageUrl = (text: any) => text.startsWith('http') && (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
+    const isImageUrl = (text: any) => text && typeof text === 'string' && text.startsWith('http') && 
+      (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
 
+    let currentTextContent = []; // 存储处理后的文本内容
 
     for (let i = 0; i < lines.length; i++) {
-      setCurrentLineIndex(i);
       const line = lines[i];
-      let currentText = '';
 
       if (isImageUrl(line)) {
-
-        setDisplayedLines(prev => {
-          const newLines = [...prev];
-          newLines[i] = line;
-          return newLines;
-        });
-
-        finalStoryContent.push(line);
-
-        setUpdatedStoryLines(prev => {
-          const newLines = [...prev];
-          newLines[i] = line;
-          return newLines;
-        });
-      }
-      else if (line.includes('【插图】')) {
-        // 显示文本内容的打字机效果
-        for (let j = 0; j < line.length; j++) {
-          currentText += line[j];
-          setDisplayedLines(prev => {
-            const newLines = [...prev];
-            newLines[i] = currentText.replace('【插图】', '');
-            return newLines;
-          });
-          await new Promise(resolve => setTimeout(resolve, 50));
+        // 直接显示图片，添加到内容中
+        currentTextContent.push(line);
+        setDisplayedLines([...currentTextContent]);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+      } else if (line.includes('【插图】')) {
+        // 分割文本，找出【插图】前后的部分
+        const parts = line.split('【插图】');
+        const textBeforeImage = parts[0];
+        const textAfterImage = parts.length > 1 ? parts[1] : '';
+        
+        // 先显示【插图】前的文本
+        if (textBeforeImage) {
+          // 逐字显示前半部分文本
+          let displayedText = '';
+          for (let j = 0; j < textBeforeImage.length; j++) {
+            displayedText += textBeforeImage[j];
+            currentTextContent[i] = displayedText;
+            setDisplayedLines([...currentTextContent]);
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
         }
 
         // 设置图片加载状态
+        const imgIndex = currentTextContent.length;
         setImageStates(prev => ({
           ...prev,
-          [i]: { loading: true }
+          [imgIndex]: { loading: true }
         }));
-
-        // 生成图片并获取新的URL
-        generateImage(line, i).then((new_image_url) => {
-          if (new_image_url) {
-
-            // 将文本内容和图片URL添加到最终内容中
-            finalStoryContent.push(line.replace('【插图】', ''));
-            finalStoryContent.push(new_image_url);
-
-            // 更新显示的内容
-            setUpdatedStoryLines(prev => {
-              const newLines = [...prev];
-              if (i < newLines.length - 1) {
-                newLines[i] = line.replace('【插图】', '');
-                newLines.splice(i + 1, 0, new_image_url); // 在文本后插入图片URL
-              }
-              return newLines;
-            });
+        
+        // 异步生成图片
+        const imgPromise = generateImage(textBeforeImage, i);
+        
+        // 在等待图片生成的同时，继续显示后半部分文本
+        if (textAfterImage) {
+          // 为后半部分文本创建新行
+          currentTextContent.push('');
+          let displayedText = '';
+          
+          // 逐字显示后半部分文本
+          for (let j = 0; j < textAfterImage.length; j++) {
+            displayedText += textAfterImage[j];
+            currentTextContent[currentTextContent.length - 1] = displayedText;
+            setDisplayedLines([...currentTextContent]);
+            await new Promise(resolve => setTimeout(resolve, 20));
           }
-        });
-
-
-        await new Promise(resolve => setTimeout(resolve, 200));
-      } else {
-        // 普通文本行的处理
-        let currentText = '';
-        for (let j = 0; j < line.length; j++) {
-          currentText += line[j];
-          setDisplayedLines(prev => {
-            const newLines = [...prev];
-            newLines[i] = currentText;
-            return newLines;
-          });
-          await new Promise(resolve => setTimeout(resolve, 50));
         }
-
-        // 将普通文本添加到最终内容中
-        finalStoryContent.push(line);
-
-        // 更新显示的内容
-        setUpdatedStoryLines(prev => {
-          const newLines = [...prev];
-          newLines[i] = line;
-          return newLines;
-        });
-
-        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // 等待图片生成完成并插入到合适位置
+        const imageUrl = await imgPromise;
+        if (imageUrl) {
+          // 找到正确的插入位置 - 【插图】前的文本之后
+          currentTextContent.splice(imgIndex, 0, imageUrl);
+          setDisplayedLines([...currentTextContent]);
+        }
+        
+      } else {
+        // 普通文本逐字显示
+        let displayedText = '';
+        currentTextContent.push('');
+        const lineIndex = currentTextContent.length - 1;
+        
+        for (let j = 0; j < line.length; j++) {
+          displayedText += line[j];
+          currentTextContent[lineIndex] = displayedText;
+          setDisplayedLines([...currentTextContent]);
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        
+        // 行之间的停顿
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
-
-    // // 所有内容处理完成后，保存到后端
-    // try {
-    //   // 将数组转换为字符串，使用换行符连接
-    //   const completeStoryContent = finalStoryContent.join('\n');
-
-    //   // 调用API保存更新后的内容
-    //   await apiService.spirate.update({
-    //     id: inspiration_id,
-    //     content: completeStoryContent,
-    //     // 其他需要更新的字段...
-    //   });
-
-    //   console.log('Story content updated successfully');
-    // } catch (error) {
-    //   console.error('Failed to update story content:', error);
-    //   toast.error('保存故事内容失败');
-    // }
-
     setIsTyping(false);
-    setAllImagesGenerated(true);
     await showChoicesWithEffect(inspiration?.story_direction || []);
   };
 
@@ -839,7 +800,6 @@ export default function SpirateDetail() {
                     variant="outline"
                     className="h-7 text-xs border-gray-700 text-white"
                     onClick={() => {
-                      // startGeneration();
                       setEditingPrompt(false);
                       //跳转到 inspiration 页面,传一个参数
                       router.push(`/dashboard/inspiration?prompt=${inspiration?.prompt}`);
@@ -897,70 +857,43 @@ export default function SpirateDetail() {
       {/* 故事内容 */}
       {showStoryContent && (
         <div className="w-full space-y-8">
-          {displayedLines.map((line, index) => (
-            <div key={index} className="text-gray-300">
-              {editingLineIndex === index ? (
-                <div className="relative border border-gray-700 rounded-lg p-3">
-                  <textarea
-                    className="bg-black text-gray-300 w-full pr-10 resize-none outline-none"
-                    value={line}
-                    onChange={(e) => {
-                      const newLines = [...displayedLines];
-                      newLines[index] = e.target.value;
-                      setDisplayedLines(newLines);
-                    }}
-                  />
-                  <div className="absolute top-2 right-2 flex space-x-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0"
-                      onClick={() => aiRewriteLine(index)}
-                    >
-                      <Wand2 size={14} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0"
-                      onClick={() => saveEditedLine(index, line)}
-                    >
-                      <Check size={14} />
-                    </Button>
+          <div className="text-gray-300">
+            <div className="relative whitespace-pre-wrap">
+              {displayedLines.map((line, index) => (
+                <div key={index}>
+                  {typeof line === 'string' && line.startsWith('http') && (line.includes('.jpg') || line.includes('.png') || line.includes('.jpeg') || line.includes('.gif')) ? (
+                    // 图片显示
+                    <div className="mt-4 mb-8">
+                      <img 
+                        src={line} 
+                        alt="Story illustration" 
+                        className="w-full h-64 object-cover rounded-lg" 
+                      />
+                    </div>
+                  ) : (
+                    // 文本显示 - 为用户选择添加特殊样式
+                    <p className={`mb-4 ${
+                      line.startsWith('>> 你选择了') ? 'text-yellow-500 font-medium' : ''
+                    } ${index === displayedLines.length - 1 && isTyping ? 'border-l-2 border-blue-500 pl-4' : ''}`}>
+                      {line}
+                    </p>
+                  )}
+                </div>
+              ))}
+              
+              {/* 显示正在加载的图片 */}
+              {Object.entries(imageStates)
+                .filter(([_, state]) => state.loading)
+                .map(([idx, _]) => (
+                  <div key={idx} className="mt-4 mb-8">
+                    <div className="w-full h-64 bg-gray-900 rounded-lg animate-pulse flex items-center justify-center">
+                      <div className="text-gray-500">生成图片中...</div>
+                    </div>
                   </div>
-                </div>
-              ) : typeof line === 'string' && line.includes("https://") ? (
-                <img src={line} alt="Story illustration" className="w-full h-64 object-cover rounded-lg" />
-              ) : (
-                <p
-                  className={`cursor-pointer hover:bg-gray-900 p-2 rounded transition-opacity duration-300 ${index === displayedLines.length - 1 && isTyping ? 'border-l-2 border-blue-500 pl-4' : ''
-                    }`}
-                  onClick={() => editLine(index)}
-                >
-                  {line}
-                </p>
-              )}
-
-              {/* 图片部分 */}
-              {imageStates[index]?.loading && (
-                <div className="mt-4 mb-8">
-                  <div className="w-full h-64 bg-gray-900 rounded-lg animate-pulse flex items-center justify-center">
-                    <div className="text-gray-500">生成图片中...</div>
-                  </div>
-                </div>
-              )}
-
-              {imageStates[index]?.url && (
-                <div className="mt-4 mb-8">
-                  <img
-                    src={imageStates[index].url}
-                    alt="Story illustration"
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                </div>
-              )}
+                ))
+              }
             </div>
-          ))}
+          </div>
         </div>
       )}
 

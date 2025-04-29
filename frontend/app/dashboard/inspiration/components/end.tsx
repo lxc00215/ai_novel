@@ -49,7 +49,6 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
   const [shareUrl, setShareUrl] = useState<string>("");
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
  
- // 处理分享功能
 
 
   // 修改获取数据的函数，添加分页参数

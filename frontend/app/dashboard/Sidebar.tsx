@@ -3,16 +3,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   IoHomeOutline,
-  IoBookOutline,
   IoChatbubbleOutline,
   IoFlaskOutline,
-  IoNewspaperOutline,
-  IoPencilOutline,
   IoLogInOutline,
   IoDownloadOutline,
   IoSettingsOutline,

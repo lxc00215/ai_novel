@@ -13,7 +13,6 @@ export default function NotFound() {
     const timer = setTimeout(() => {
       router.push('/')
     }, 5000) // 5秒后重定向
-
     return () => clearTimeout(timer)
   }, [router])
 

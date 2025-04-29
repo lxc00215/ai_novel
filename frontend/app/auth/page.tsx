@@ -123,16 +123,14 @@ const AuthPage = () => {
         password
       };
       const response = await apiService.auth.login(loginData);
-      // console.log('设置新状态后:', { user: response.user, isAuthenticated: true });
       if (response) {
 
         localStorage.setItem('isAuthenticated', 'true');
-        console.log('设置用户', response.user);
         localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('token', response.token || '');
-
+        localStorage.setItem('token', response.access_token || '');
+        console.log('设置用户', response.access_token);
         // 设置cookie
-        document.cookie = `token=${response.token}; path=/;`;
+        document.cookie = `token=${response.access_token}; path=/;`;
 
         if(!rememberMe){
           // 设置过期时间
@@ -140,7 +138,6 @@ const AuthPage = () => {
           expiresAt.setHours(expiresAt.getHours() + 1);
           localStorage.setItem('expiresAt', expiresAt.toISOString());
         }
-
         router.push("/dashboard");
       } else {
         setError('登录失败，请检查您的用户名和密码');
@@ -161,7 +158,6 @@ const AuthPage = () => {
         email,
         password
       };
-      console.log('Sending registration data:', registerData);
 
       const response = await apiService.auth.register(registerData);
       if (response) {
@@ -171,7 +167,7 @@ const AuthPage = () => {
         // 设置登录状态
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('token', response.token || '');
+        localStorage.setItem('token', response.access_token || '');
 
         if(!rememberMe){
           // 设置过期时间

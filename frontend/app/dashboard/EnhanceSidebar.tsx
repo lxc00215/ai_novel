@@ -136,7 +136,6 @@ export function EnhancedSidebar() {
         <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
-            
             return (
               <TooltipProvider key={item.href} delayDuration={300}>
                 <Tooltip>
@@ -216,11 +215,12 @@ export function EnhancedSidebar() {
                   <span>登录</span>
                 </Link>
                 ):(<Button
-                  onClick={handleLogout}
+                  onClick={()=>handleLogout()}
                   className="flex w-full hover:cursor-pointer items-center justify-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-gray-200 transition-colors"
                 >
-                  <IoLogOutOutline className="h-4 w-4" />
-                  <span >退出登录</span>
+  <IoLogOutOutline className="h-4 w-4" />
+  <span >退出登录</span>
+
                 </Button>)
 }
                 {/* 设置按钮 */}

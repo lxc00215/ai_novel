@@ -67,7 +67,6 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
     print(user.id)
     # 构建返回对象
     
-    
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 

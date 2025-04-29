@@ -366,6 +366,8 @@ class TaskResponseByPage(BaseResultSchema):
 
 
 class GenerateImageRequest(BaseResultSchema):
+    name: Optional[str] = None
+    book_id = Optional[int] = None
     prompt: str
     model: Optional[str] = os.getenv("IMAGE_MODEL")
     batch_size: Optional[int] = 1

@@ -222,11 +222,25 @@ async def analyze_file(
         logger.error(f"文件分析错误: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
+    
+
+@router.post("/generate_image_from_spirate")
+async def generate_image_from_spirate(request: GenerateImageRequest):
+    # 检查数据库中是否存在一个人物
+       
+    async with async_session() as db:
+        query = select(Character).where(Character.name == request.name,Character.book_id==request.book_id)
+        character = await db.execute(query)
+        character = character.scalar_one_or_none()
+        if character:
+            # 如果找到匹配的角色，直接返回其image_url
+            return ImageResponse(image=character.image_url, timings={"cache_hit": 0}, seed=0)
+        else:
+            return await generate_images(request)
 
 @router.post("/generate_images", response_model=ImageResponse)
 async def generate_images(request: GenerateImageRequest):
     # 1. 首先检查数据库中是否已经有与prompt匹配的角色且有image_url
-    existing_image_url = None
     
     # 使用数据库会话查询
     async with async_session() as db:
@@ -248,7 +262,6 @@ async def generate_images(request: GenerateImageRequest):
                 fuzzy_query = select(Character).where(Character.description.like(f"%{request.prompt}%"))
                 fuzzy_result = await db.execute(fuzzy_query)
                 characters = fuzzy_result.scalars().all()
-                
                 # 找到第一个有图片URL的角色
                 for char in characters:
                     if char.image_url:

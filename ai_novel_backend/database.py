@@ -258,6 +258,7 @@ class Character(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text)
     image_url = Column(String(255))
+    book_id = Column(Integer, ForeignKey('inspiration_results.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     is_used = Column(Boolean, default=False)
     prompt = Column(Text, nullable=False)

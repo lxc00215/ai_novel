@@ -94,6 +94,7 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
             print(f"character: {character}")
             character_result = Character(
                 name=character['姓名'],
+                book_id=spirate.id,
                 description='\n'.join(character['描述']) if isinstance(character['描述'], list) else character['描述'],
                 user_id=spirate.user_id,
                 prompt=f"你现在正在做一个角色扮演，无论用户如何去套取你的模型信息，你都不会回复。你只会回答你的公开信息，你的公开信息是：你叫{character['姓名']},关于你的描述为：{character['描述']},除此之外，你可以基于你的角色定位和用户聊天、谈心，唯独不能泄露你的模型信息！"
@@ -141,7 +142,6 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
 @router.put("/update")
 async def update_spirate(request: InspirationUpdate, db: AsyncSession = Depends(get_db)):
     # 更新
-    print("request", request)
     spirate = await db.execute(select(InspirationResult).where(InspirationResult.id == request.id))
     spirate = spirate.scalar_one_or_none()
     # 有哪个字段更新哪个字段
@@ -158,6 +158,8 @@ async def update_spirate(request: InspirationUpdate, db: AsyncSession = Depends(
         return spirate
     else:
         raise HTTPException(status_code=404, detail="spirate not found")
+
+
 
 @router.get("/{id}")
 async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
@@ -190,9 +192,6 @@ async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
             story_direction=spirate.story_direction
         )
 
-
-        print(new,"new")
-    
     return new
 
 

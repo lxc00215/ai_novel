@@ -10,7 +10,8 @@ from database import  BookBreakdownResult, Character, CrazyWalkResult, Inspirati
 from dao.inspirate import InspirationService
 from database import Task
 from models import TaskTypeEnum
-from schemas import SampleTaskResponse, TaskResponse
+from routes.ai_routes import generate_images
+from schemas import GenerateImageRequest, SampleTaskResponse, TaskResponse
 router = APIRouter(prefix="/task", tags=["task"])
 
 @router.post("/new",response_model=SampleTaskResponse)
@@ -231,6 +232,7 @@ async def process_task_inspiration(task_data: dict)->int:
         for character in result['characters']:
             print(f"character: {character}")
             character_result = Character(
+                book_id=result['id'],
                 name=character['姓名'],
                 description='\n'.join(character['描述']) if isinstance(character['描述'], list) else character['描述'],
                 user_id=task_data['user_id'],
@@ -242,7 +244,7 @@ async def process_task_inspiration(task_data: dict)->int:
                 await db.refresh(character_result)
                 character_ids.append(character_result.id)
 
-        # cover_image = await generate_images(GenerateImageRequest(prompt=task_data['prompt'],size='1280x960',user_id=task_data['user_id']))
+        cover_image = await generate_images(GenerateImageRequest(prompt=task_data['prompt'],size='1280x960',user_id=task_data['user_id']))
 
         inspiration_result = InspirationResult(
             title=result['title'],
@@ -251,7 +253,7 @@ async def process_task_inspiration(task_data: dict)->int:
             content=result['content'],
             user_id=task_data['user_id'],
             story_direction=result['story_direction'],
-            cover_image=''
+            cover_image=cover_image
         )
         async with async_session() as db:
             db.add(inspiration_result)
