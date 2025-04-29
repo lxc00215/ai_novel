@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Search, HelpCircle, ChevronDown, Info, Check, Loader2 } from "lucide-react";
+import { X, Search, HelpCircle, ChevronDown, Info, Check, Loader2, Plus, Minus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +38,9 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
   const [autoLinkRecent, setAutoLinkRecent] = useState(true);
   const [recentChaptersCount, setRecentChaptersCount] = useState(2000);
   const [isLoading, setIsLoading] = useState(false);
+  const [textLength, setTextLength] = useState(200);
+  const [extractKeywords, setExtractKeywords] = useState(true);
+  const [generateChapter, setGenerateChapter] = useState(true);
 
   const [selectedStylePreset, setSelectedStylePreset] = useState("【西瓜出品】黄金文风1.3，开启新人入神时代！香茄起点爆款!");
   const [selectedRequirementsPreset, setSelectedRequirementsPreset] = useState("");
@@ -87,8 +90,21 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       const requirements = requirementsMode === 'preset'
         ? selectedRequirementsPreset
         : customRequirements;
+      
+      // 添加新的参数
+      const params = {
+        textLength,
+        extractKeywords,
+        generateChapter
+      };
+      
       console.log("标记1")
-      const response = await apiService.ai.generateContent(storyBackground, writingStyle, requirements);
+      const response = await apiService.ai.generateContent(
+        storyBackground, 
+        writingStyle, 
+        requirements, 
+        params
+      );
       console.log("AI生成内容:", response);
       if (response) {
         toast.success('内容生成成功');
@@ -437,6 +453,78 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             </div>
           </div>
         )}
+
+        {/* 文本长度控制 */}
+        <div className="space-y-2">
+          <Label htmlFor="text-length" className="flex items-center justify-between">
+            <span>文本长度控制</span>
+            <div className="flex items-center">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-6 w-6 rounded-full"
+                onClick={() => setTextLength(Math.max(100, textLength - 100))}
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="mx-2 text-sm">{textLength}</span>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-6 w-6 rounded-full"
+                onClick={() => setTextLength(Math.min(3000, textLength + 100))}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+          </Label>
+          <div className="flex items-center">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-500 h-2 rounded-full" 
+                style={{ width: `${(textLength / 3000) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* 关键词提取 */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="extract-keywords" className="flex items-center gap-1">
+              关键词提取
+              <Info className="h-4 w-4 text-gray-400" />
+            </Label>
+            <Switch
+              id="extract-keywords"
+              checked={extractKeywords}
+              onCheckedChange={setExtractKeywords}
+              className={extractKeywords ? "bg-green-500" : ""}
+            />
+          </div>
+          <div className="text-sm text-gray-500">
+            自动从文本中提取关键词，提高生成质量
+          </div>
+        </div>
+
+        {/* 章节生成 */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="generate-chapter" className="flex items-center gap-1">
+              章节生成
+              <Info className="h-4 w-4 text-gray-400" />
+            </Label>
+            <Switch
+              id="generate-chapter"
+              checked={generateChapter}
+              onCheckedChange={setGenerateChapter}
+              className={generateChapter ? "bg-green-500" : ""}
+            />
+          </div>
+          <div className="text-sm text-gray-500">
+            自动生成完整章节，关闭则只生成内容片段
+          </div>
+        </div>
 
         <div className="text-xs text-gray-500 text-center mt-4">
           内容由AI生成，仅供参考，请遵循《AI写作工具使用协议》
