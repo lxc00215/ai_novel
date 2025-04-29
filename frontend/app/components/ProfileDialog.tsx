@@ -110,14 +110,16 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean, onOpenCha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">个人信息</DialogTitle>
-          <DialogDescription>
-            查看和更新您的个人资料信息
-          </DialogDescription>
-        </DialogHeader>
-
+      <DialogContent className="sm:max-w-[500px] backdrop-blur-sm bg-background/80 border-border/20">
+        <div className="backdrop-blur-sm rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">个人信息</DialogTitle>
+            <DialogDescription>
+              查看和更新您的个人资料信息
+            </DialogDescription>
+          </DialogHeader>
+          </div>
+      
         
         {loading ? (
           <div className="flex items-center justify-center py-8">
