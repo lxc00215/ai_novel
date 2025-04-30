@@ -1,0 +1,30 @@
+node_modules/
+/static/uploads/
+*.pyc
+.git_disabled/*
+.next/*
+logs/
+*.log
+.env
+*.tlog
+*.out
+*.err
+# IDE files
+.vscode/
+.idea/
+*.iml
+# OS generated files
+.DS_Store
+Thumbs.db
+frontend/.env.local
+frontend/package-lock.json
+frontend/package.json
+frontend/next.config.js
+frontend/next-env.d.ts
+frontend/.vercel
+frontend/.node_modules
+frontend/.next
+
+
+*.zip
+

@@ -1,0 +1,198 @@
+@import "tailwindcss";
+/* @import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *)); */
+
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 主背景和前景色 */
+    --background: 30 30% 97%;
+    --foreground: 222 47% 11%;
+    
+    /* 卡片背景和前景色 */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    /* 弹出元素背景和前景色 */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* 主色调 - 蓝色 */
+    --primary: 222 89% 55%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* 次要色调 - 淡蓝色 */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    
+    /* 柔和色调 - 用于非重点内容 */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+    
+    /* 强调色 - 紫色 */
+    --accent: 270 76% 60%;
+    --accent-foreground: 210 40% 98%;
+    
+    /* 警告/错误色 */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* 边框、输入框和环绕效果 */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222 89% 55%;
+
+    /* 悬浮 */
+    --hover: 210 40% 96.1%;
+    
+    /* 文本颜色变量 - 新增 */
+    --text-primary: 222 47% 11%;
+    --text-secondary: 215 16% 47%;
+    --text-tertiary: 215 16% 65%;
+    --text-brand: 222 89% 55%;
+    --text-accent: 270 76% 60%;
+    --text-success: 142 69% 58%;
+    --text-warning: 38 92% 50%;
+    --text-error: 0 84% 60%;
+    
+    /* 圆角 */
+    --radius: 0.5rem;
+  }
+  
+  .dark {
+    /* 主背景和前景色 */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    
+    /* 卡片背景和前景色 */
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    /* 悬浮 */
+    --hover: 210 40% 96.1%;
+    
+    /* 弹出元素背景和前景色 */
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* 主色调 - 蓝色 */
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* 次要色调 - 深蓝色 */
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+    
+    /* 柔和色调 - 用于非重点内容 */
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20% 65%;
+    
+    /* 强调色 - 鲜紫色 */
+    --accent: 272 76% 66%;
+    --accent-foreground: 210 40% 98%;
+    
+    /* 警告/错误色 */
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* 边框、输入框和环绕效果 */
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 224 76% 48%;
+    
+    /* 文本颜色变量 - 新增 */
+    --text-primary: 210 40% 98%;
+    --text-secondary: 215 20% 70%;
+    --text-tertiary: 215 16% 55%;
+    --text-brand: 217 91% 65%;
+    --text-accent: 272 76% 68%;
+    --text-success: 142 69% 58%;
+    --text-warning: 38 92% 60%;
+    --text-error: 0 84% 65%;
+  }
+}
+
+/* * {
+  @apply border-border;
+} */
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* 文本样式工具类 */
+@layer utilities {
+  .text-primary-color {
+    color: hsl(var(--text-primary));
+  }
+  
+  .text-secondary-color {
+    color: hsl(var(--text-secondary));
+  }
+  
+  .text-tertiary-color {
+    color: hsl(var(--text-tertiary));
+  }
+  
+  .text-brand-color {
+    color: hsl(var(--text-brand));
+  }
+  
+  .text-accent-color {
+    color: hsl(var(--text-accent));
+  }
+  
+  .text-success-color {
+    color: hsl(var(--text-success));
+  }
+  
+  .text-warning-color {
+    color: hsl(var(--text-warning));
+  }
+  
+  .text-error-color {
+    color: hsl(var(--text-error));
+  }
+}
+
+.slider-thumb {
+  @apply h-4 w-4 rounded-full bg-[#155dfc];
+}
+
+/* Gradient border effect for textarea */
+.input-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.5rem;
+  padding: 1px;
+  background: linear-gradient(to right, #e7000b, #155dfc);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(55, 65, 81, 0.5);
+  border-radius: 20px;
+}
+
+
+
+
