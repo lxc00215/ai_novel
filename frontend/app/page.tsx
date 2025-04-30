@@ -69,7 +69,6 @@ export default function HomePage() {
   const [currentStarter, setCurrentStarter] = useState(storyStarters[0]);
 
   const changeStoryStarter = () => {
-    console.log(localStorage.getItem('user'));
     const randomIndex = Math.floor(Math.random() * storyStarters.length);
     setCurrentStarter(storyStarters[randomIndex]);
   };
@@ -95,7 +94,7 @@ export default function HomePage() {
                   开始创作
                 </Button>
             <ThemeToggle />
-            {localStorage.getItem('isAuthenticated') ? (
+            {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
