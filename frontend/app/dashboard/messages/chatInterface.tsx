@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SendHorizontal, Info, Smile, Loader2, BookOpen, RefreshCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { Message,Character, Session, User } from '@/app/services/types';
+import { Message, Character, Session, User } from '@/app/services/types';
 import apiService from '@/app/services/api';
 import { useRouter } from 'next/navigation';
 
@@ -23,20 +23,20 @@ const ChatInterface = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [CurrentSessionID, setCurrentSessionID] = useState<number | null>(null);
-  
+
   const [sessionsResponse, setSessionsResponse] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   // 获取与特定角色的聊天历史
 
-  
+
   const handleRefresh = async () => {
 
-    console.log("CurrentSessionID",CurrentSessionID);
+    console.log("CurrentSessionID", CurrentSessionID);
     // 清空对话记录
     setMessages([]);
     const res = await apiService.chat.clearSession(Number(CurrentSessionID));
 
-    if(res.message ){
+    if (res.message) {
       alert("清空对话记录成功");
     }
   }
@@ -46,17 +46,17 @@ const ChatInterface = () => {
     const initializeChat = async () => {
       try {
         // 1. 获取所有角色列表
-        console.log("user"+localStorage.getItem('token'))
+        console.log("user" + localStorage.getItem('token'))
 
         const auser = JSON.parse(localStorage.getItem('user') || '{}');
-        
+
         const charactersResponse = await apiService.character.getCharacters(Number(auser!.id));
         setCharacters(charactersResponse);
 
         // 2. 获取最近的会话列表
         const sessionsResponse = await apiService.chat.getRecentSessions(Number(auser!.id));
         setSessionsResponse(sessionsResponse);
-        console.log("sessionsResponse",JSON.stringify(sessionsResponse));
+        console.log("sessionsResponse", JSON.stringify(sessionsResponse));
         // 3. 如果 URL 中有指定角色 ID
         if (characterIdFromUrl) {
           // 在角色列表中找到对应角色
@@ -66,13 +66,13 @@ const ChatInterface = () => {
           if (targetCharacter) {
             // 检查是否已有与该角色的会话
             const existingSession = sessionsResponse.find(
-              (session:any) => session.character_id == characterIdFromUrl
+              (session: any) => session.character_id == characterIdFromUrl
             );
 
-            console.log("sessionsResponse",characterIdFromUrl);
-            console.log("sessionsResponse",JSON.stringify(sessionsResponse));
-            console.log("existingSession",JSON.stringify(existingSession));
-           
+            console.log("sessionsResponse", characterIdFromUrl);
+            console.log("sessionsResponse", JSON.stringify(sessionsResponse));
+            console.log("existingSession", JSON.stringify(existingSession));
+
             if (existingSession) {
               setCurrentSessionID(Number(existingSession?.id));
               setMessages(existingSession.messages);
@@ -81,15 +81,15 @@ const ChatInterface = () => {
               // 如果没有现有会话，创建新会话
               console.log("创建新会话");
               const auser = JSON.parse(localStorage.getItem('user') || '{}');
-        
-              const newSession = await apiService.chat.getOrCreateSession(Number(auser!.id),Number(characterIdFromUrl));
-              console.log("newSession",JSON.stringify(newSession));
-              console.log("newSession",newSession['id']);
+
+              const newSession = await apiService.chat.getOrCreateSession(Number(auser!.id), Number(characterIdFromUrl));
+              console.log("newSession", JSON.stringify(newSession));
+              console.log("newSession", newSession['id']);
               setCurrentSessionID(newSession['id']);
-              console.log("newSession",CurrentSessionID);
+              console.log("newSession", CurrentSessionID);
               // 设置初始消息
               setMessages([{
-                session_id:newSession.id,
+                session_id: newSession.id,
                 id: '1',
                 sender: targetCharacter.name,
                 sender_type: 'character',
@@ -108,17 +108,17 @@ const ChatInterface = () => {
             const character = charactersResponse.find(
               char => char.id == lastSession.character_id
             );
-            console.log("character",character);
+            console.log("character", character);
             if (character) {
               setCurrentCharacter(character);
-            //   const historyResponse = await apiService.chat.getChatHistory(lastSession.id);
-            let newMessages:Message[] = [];
-            sessionsResponse[0].messages.map((msg:Message)=>{
-              newMessages.push(msg as Message)
-            })
-                setMessages(newMessages);
-                console.log("newMessages",newMessages);
-              }
+              //   const historyResponse = await apiService.chat.getChatHistory(lastSession.id);
+              let newMessages: Message[] = [];
+              sessionsResponse[0].messages.map((msg: Message) => {
+                newMessages.push(msg as Message)
+              })
+              setMessages(newMessages);
+              console.log("newMessages", newMessages);
+            }
           }
         }
       } catch (error) {
@@ -131,29 +131,29 @@ const ChatInterface = () => {
   }, [characterIdFromUrl]); // 依赖项添加 characterIdFromUrl
 
 
-  const switchCharacter = async (character: Character,characterID:string) => {
+  const switchCharacter = async (character: Character, characterID: string) => {
     setCurrentCharacter(character);
     const existingSession = sessionsResponse.find(
-        (session:any) => session.character_id == characterID
-      );
-      console.log(JSON.stringify(existingSession)+"existingSession");
-      if(existingSession?.messages.length == 0){
-            // 设置初始消息
-            setMessages([{
-            session_id:Number(existingSession?.id),
-            id: '1',
-            sender: character.name,
-            sender_type: 'character',
-            content: `你好，我是 ${character.name}。`,
-            created_at: new Date().toISOString()
-          }]);
-      }
-      console.log(JSON.stringify(existingSession)+"existingSession");
+      (session: any) => session.character_id == characterID
+    );
+    console.log(JSON.stringify(existingSession) + "existingSession");
+    if (existingSession?.messages.length == 0) {
+      // 设置初始消息
+      setMessages([{
+        session_id: Number(existingSession?.id),
+        id: '1',
+        sender: character.name,
+        sender_type: 'character',
+        content: `你好，我是 ${character.name}。`,
+        created_at: new Date().toISOString()
+      }]);
+    }
+    console.log(JSON.stringify(existingSession) + "existingSession");
 
-      if(existingSession){
-        setCurrentSessionID(Number(existingSession.id));
-        setMessages(existingSession.messages);
-      }
+    if (existingSession) {
+      setCurrentSessionID(Number(existingSession.id));
+      setMessages(existingSession.messages);
+    }
     setCurrentSessionID(Number(existingSession?.id));
   };
 
@@ -171,10 +171,10 @@ const ChatInterface = () => {
     return (
       <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
         {avatar ? (
-          <img src={avatar??''} alt={name} className="h-full w-full object-cover rounded-full" />
+          <img src={avatar ?? ''} alt={name} className="h-full w-full object-cover rounded-full" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
-            {name??'L'.charAt(0)}
+            {name ?? 'L'.charAt(0)}
           </div>
         )}
       </Avatar>
@@ -184,16 +184,16 @@ const ChatInterface = () => {
 
 
   // Format message content to handle action text (italics)
-//   const formatMessageContent = (message: Message) => {
-//     if (!message.action) return <p className="text-base">{message.content}</p>;
-    
-//     return (
-//       <div>
-//         {message.action && <p className="text-gray-400 italic mb-1 text-sm">*{message.action}*</p>}
-//         <p className="text-base">{message.content}</p>
-//       </div>
-//     );
-//   };
+  //   const formatMessageContent = (message: Message) => {
+  //     if (!message.action) return <p className="text-base">{message.content}</p>;
+
+  //     return (
+  //       <div>
+  //         {message.action && <p className="text-gray-400 italic mb-1 text-sm">*{message.action}*</p>}
+  //         <p className="text-base">{message.content}</p>
+  //       </div>
+  //     );
+  //   };
 
   const handleSendMessage = async () => {
     if (message.trim()) {
@@ -203,7 +203,7 @@ const ChatInterface = () => {
         sender_type: 'user',
         content: message,
         created_at: new Date().toISOString(),
-        session_id:CurrentSessionID || 0
+        session_id: CurrentSessionID || 0
       };
 
       setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -214,7 +214,7 @@ const ChatInterface = () => {
       setStreamingMessage('');
 
       const stream = await apiService.chat.sendMessage(Number(CurrentSessionID), message);
-      
+
       let content = "";
       for await (const chunk of stream.getMessages()) {
         setStreamingMessage(prev => prev + chunk);
@@ -222,30 +222,30 @@ const ChatInterface = () => {
         content += chunk;
       }
 
-      const aiMessage:Message = {
+      const aiMessage: Message = {
         id: `msg-${Date.now()}`,
-        content: content, 
+        content: content,
         sender: 'character',
         sender_type: 'character',
         created_at: new Date().toISOString(),
-        session_id:CurrentSessionID || 0
+        session_id: CurrentSessionID || 0
       }
-      console.log(JSON.stringify(aiMessage)+"aiMessage");
+      console.log(JSON.stringify(aiMessage) + "aiMessage");
       setMessages(prev => [...prev, aiMessage]);
       setIsLoading(false);
       setStreamingMessage('');
-  };
-}
-//   const handleQuickResponse = (text: string) => {
-//     setMessage(text);
-//     // Optional: automatically send the message after selecting a quick response
-//     setTimeout(() => handleSendMessage(), 100);
-//   };
+    };
+  }
+  //   const handleQuickResponse = (text: string) => {
+  //     setMessage(text);
+  //     // Optional: automatically send the message after selecting a quick response
+  //     setTimeout(() => handleSendMessage(), 100);
+  //   };
 
-//   const switchCharacter = (character: Character) => {
-//     setCurrentCharacter(character);
-//     // In a real app, you would fetch the conversation history with this character
-//   };
+  //   const switchCharacter = (character: Character) => {
+  //     setCurrentCharacter(character);
+  //     // In a real app, you would fetch the conversation history with this character
+  //   };
   return sessionsResponse.length > 0 ? (
     <div className="flex h-screen bg-black">
       {/* Left Sidebar */}
@@ -258,27 +258,26 @@ const ChatInterface = () => {
           <h2 className="text-lg font-semibold mb-4">历史</h2>
           <div className="space-y-4">
             {characters.map(character => (
-              <div 
-                key={character.id} 
-                className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-800 p-2 rounded-lg transition-all duration-200 ${
-                  currentCharacter?.id === character.id ? 'bg-gray-800' : ''
-                }`}
-                onClick={() => switchCharacter(character,character.id)}
+              <div
+                key={character.id}
+                className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-800 p-2 rounded-lg transition-all duration-200 ${currentCharacter?.id === character.id ? 'bg-gray-800' : ''
+                  }`}
+                onClick={() => switchCharacter(character, character.id)}
               >
                 {renderAvatar(character.name, character.image_url)}
                 <div>
                   <p className="font-medium">{character.name}</p>
-                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find((session:any) => session.character_id == character.id)?.last_message??""}</p>
+                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find((session: any) => session.character_id == character.id)?.last_message ?? ""}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        
+
         {/* History */}
-   
+
       </div>
-      
+
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">
         {/* Chat Header */}
@@ -292,9 +291,9 @@ const ChatInterface = () => {
           </div>
           <div className="relative">
 
-          <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="rounded-full hover:bg-gray-800"
               onClick={() => handleRefresh()}
             >
@@ -303,9 +302,9 @@ const ChatInterface = () => {
             {/* Info button with hover/click functionality */}
 
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="rounded-full hover:bg-gray-800"
               onMouseEnter={() => document.getElementById('character-info-card')?.classList.remove('hidden')}
               onMouseLeave={() => setTimeout(() => {
@@ -316,10 +315,10 @@ const ChatInterface = () => {
             >
               <Info className="h-5 w-5" />
             </Button>
-            
+
             {/* Character info card */}
-            <div 
-              id="character-info-card" 
+            <div
+              id="character-info-card"
               className="hidden absolute right-0 top-full mt-2 w-96 rounded-lg shadow-xl z-50 overflow-hidden"
               style={{ transform: "translateY(10px)" }}
               onMouseEnter={() => document.getElementById('character-info-card')?.classList.remove('hidden')}
@@ -329,7 +328,7 @@ const ChatInterface = () => {
                 <div className="relative h-[500px]">
                   {/* 背景图片 */}
                   {currentCharacter.image_url ? (
-                    <div 
+                    <div
                       className="absolute inset-0 w-full h-full"
                       style={{
                         backgroundImage: `url(${currentCharacter.image_url})`,
@@ -342,14 +341,14 @@ const ChatInterface = () => {
                       <span className="text-6xl font-bold">{currentCharacter.name.charAt(0)}</span>
                     </div>
                   )}
-                  
+
                   {/* 文字信息覆盖在底部 */}
                   <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-6">
                     <h3 className="font-bold text-2xl text-white mb-3">{currentCharacter.name}</h3>
                     <p className="text-sm text-gray-200 line-clamp-2 mb-3">{currentCharacter.description}</p>
                     <div className="text-xs text-gray-400 border-t border-gray-700/50 pt-3 flex justify-between">
                       <p>ID: {currentCharacter.id}</p>
-                      <p>Session: {sessionsResponse.find((session:any) => session.character_id == currentCharacter.id)?.id??""}</p>
+                      <p>Session: {sessionsResponse.find((session: any) => session.character_id == currentCharacter.id)?.id ?? ""}</p>
                     </div>
                   </div>
                 </div>
@@ -357,63 +356,62 @@ const ChatInterface = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-  
 
- {/* Messages Area */}
- <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-8 max-w-4xl mx-auto">
-            {messages && messages.map(msg => (
-              <div key={msg.id} className={`flex ${msg.sender_type == 'user' ? 'justify-end' : 'items-start'} gap-3`}>
-                {msg.sender_type !== 'user' && renderAvatar(msg.sender, currentCharacter?.image_url)}
-                <div className={`max-w-[70%] rounded-2xl p-4 shadow-md ${
-                  msg.sender_type === 'user' 
-                    ? 'bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700' 
-                    : 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800'
-                }`}>
-                  {msg.content}
-                </div>
-                {msg.sender_type == 'user' && renderAvatar("Lxc", "")}
-              </div>
-            ))}
 
-            {/* Streaming Message */}
-            {isLoading && streamingMessage.length > 0 ? (
-              <div className={`flex items-start gap-3`}>
-                {renderAvatar("Character", currentCharacter?.image_url)}
-                <div className="max-w-[70%] rounded-2xl p-4 shadow-md bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800">
-                  {streamingMessage}
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-8 max-w-4xl mx-auto">
+              {messages && messages.map(msg => (
+                <div key={msg.id} className={`flex ${msg.sender_type == 'user' ? 'justify-end' : 'items-start'} gap-3`}>
+                  {msg.sender_type !== 'user' && renderAvatar(msg.sender, currentCharacter?.image_url)}
+                  <div className={`max-w-[70%] rounded-2xl p-4 shadow-md ${msg.sender_type === 'user'
+                      ? 'bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700'
+                      : 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800'
+                    }`}>
+                    {msg.content}
+                  </div>
+                  {msg.sender_type == 'user' && renderAvatar("Lxc", "")}
                 </div>
-              </div>
-            ) : (
-              isLoading && (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin" />
+              ))}
+
+              {/* Streaming Message */}
+              {isLoading && streamingMessage.length > 0 ? (
+                <div className={`flex items-start gap-3`}>
+                  {renderAvatar("Character", currentCharacter?.image_url)}
+                  <div className="max-w-[70%] rounded-2xl p-4 shadow-md bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800">
+                    {streamingMessage}
+                  </div>
                 </div>
-              )
-            )}
-            
-            <div ref={messagesEndRef} />
+              ) : (
+                isLoading && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                )
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
           </div>
-        </div>
 
         </div>
 
-       
-        
+
+
         {/* Message Input */}
         <div className="p-6 border-t border-gray-800 bg-black">
           <div className="relative max-w-4xl mx-auto">
             <div className="flex items-center border border-gray-700 rounded-2xl overflow-hidden bg-gray-900 focus-within:ring-2 focus-within:ring-gray-600 hover:border-gray-600 transition-all duration-300 shadow-lg">
-              <Button 
+              <Button
                 className="ml-2 bg-transparent hover:bg-transparent text-gray-400 hover:text-gray-300"
                 variant="ghost"
                 size="icon"
               >
                 <Smile className="h-5 w-5" />
               </Button>
-              
+
               <input
                 type="text"
                 className="w-full bg-transparent py-4 px-4 focus:outline-none text-gray-100 placeholder-gray-500"
@@ -422,8 +420,8 @@ const ChatInterface = () => {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               />
-              
-              <Button 
+
+              <Button
                 className="mr-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl p-2 transition-all duration-200"
                 size="icon"
                 onClick={handleSendMessage}
@@ -441,7 +439,7 @@ const ChatInterface = () => {
       <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">
         <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-black bg-opacity-60 backdrop-blur-sm">
           <h1 className="text-xl font-bold">当前没有角色，您可以前往灵感页面创建</h1>
-          <Button 
+          <Button
             className="ml-2 bg-transparent hover:bg-transparent text-gray-400 hover:text-gray-300"
             variant="ghost"
             size="icon"

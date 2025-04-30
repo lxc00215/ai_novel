@@ -111,7 +111,6 @@ class CrazyWalkService:
                 novel_title = outline_data.get("title", "未命名小说")
                 chapters_data = outline_data.get("chapters", [])
                 background = outline_data.get("background","啥也没有")
-                print("创建一本小说")
                 # 创建一本小说
                 res_id = 0
                 async with async_session() as db:
@@ -131,7 +130,6 @@ class CrazyWalkService:
                 previous_chapter_content = ""
                 chapter_ids = []
                 for index, chapter in enumerate(chapters_data):
-                    print("开始生成第{index+1}章")
                     chapter_title = chapter.get("title", f"第{index+1}章")
                     chapter_summary = chapter.get("summary", "")
                     
@@ -177,37 +175,39 @@ class CrazyWalkService:
                         """
 
                     
-                        # 生成章节内容
-                        chapter_content = openai_bridge.chat([
-                            {"role": "system", "content": f"你是一位专业的{task_data['type']}向{task_data['category']}小说作家，擅长创作引人入胜的情节和塑造生动的人物。"},
-                            {"role": "user", "content": chapter_prompt}
-                        ], {"model": "gemini-2.0-flash-lite-preview-02-05", "temperature": 0.7, "max_tokens": 3000})
-                        # 创建章节
-                        chapter = GeneratedChapter(
-                            book_id=res_id,
-                            order=index+1,
-                            title=chapter_title,
-                            content=chapter_content,
-                            created_at=datetime.now(),
-                            updated_at=datetime.now(),
-                            book_type=TaskTypeEnum.CRAZY_WALK
-                        )
+                    # 生成章节内容
+                    chapter_content = openai_bridge.chat([
+                        {"role": "system", "content": f"你是一位专业的{task_data['type']}向{task_data['category']}小说作家，擅长创作引人入胜的情节和塑造生动的人物。"},
+                        {"role": "user", "content": chapter_prompt}
+                    ], {"model": "gemini-2.0-flash-lite-preview-02-05", "temperature": 0.7, "max_tokens": 3000})
+                    # 创建章节
+                    chapter = GeneratedChapter(
+                        book_id=res_id,
+                        order=index+1,
+                        title=chapter_title,
+                        content=chapter_content,
+                        created_at=datetime.now(),
+                        updated_at=datetime.now(),
+                        book_type=TaskTypeEnum.CRAZY_WALK
+                    )
 
-                        async with async_session() as db:
-                            db.add(chapter)
-                            await db.commit()
-                            await db.refresh(chapter)
-                            chapter_ids.append(chapter.id)
+                    async with async_session() as db:
+                        db.add(chapter)
+                        await db.commit()
+                        await db.refresh(chapter)
+                        chapter_ids.append(chapter.id)
 
-                        # 更新任务进度
-                        await update_progress(task_id,10 + int(90 * (index + 1) / len(chapters_data)))
+                    # 更新任务进度
+                    await update_progress(task_id,10 + int(90 * (index + 1) / len(chapters_data)))
 
-                        # 更新上一章内容（用于下一章生成）
-                        previous_chapter_content = previous_chapter_content+chapter_content
-                        
-                        
-                        # 暂停一下，避免API限流
-                        await asyncio.sleep(1)
+                    # 更新上一章内容（用于下一章生成）
+                    previous_chapter_content = previous_chapter_content+chapter_content
+                    
+                    # 更新任务进度
+                    await update_progress(task_id,10 + int(90 * (index + 1) / len(chapters_data)))
+                    
+                    # 暂停一下，避免API限流
+                    await asyncio.sleep(1)
                 print("res_id",res_id)
                 # 更新任务
                 async with async_session() as db:

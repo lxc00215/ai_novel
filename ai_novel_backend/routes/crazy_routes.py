@@ -4,6 +4,7 @@
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
+from dao.CrazyWalk import CrazyWalkService
 from database import CrazyWalkResult, GeneratedChapter, Task,async_session
 from models import TaskTypeEnum
 
@@ -11,13 +12,13 @@ from models import TaskTypeEnum
 router = APIRouter(prefix="/crazy",tags=["crazy"])
 
 # 获取crazy_walk 任务
-@router.get("/task/{task_id}")
-async def get(task_id: int):
-    print(task_id,"好好好")
+@router.get("/{id}")
+async def get_crazy_walk_by_user(id: int):
+    print(id)
     # 这里传来的应该为task的id
     
     async with async_session() as db:
-        query = select(Task).where(Task.id == task_id)
+        query = select(Task).where(Task.id == id)
         result = await db.execute(query)
         task = result.scalar_one_or_none()
 
