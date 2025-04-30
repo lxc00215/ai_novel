@@ -118,6 +118,8 @@ EXCLUDE_PATHS = [
     "http://127.0.0.1:8000/spirate/update",
     "http://127.0.0.1:8000/utils/upload-image",
     "http://127.0.0.1:8000/utils/upload-file",
+    f"http://127.0.0.1:8002/spirate/continue/\d+"
+    
     # 使用正则表达式匹配任意数字
 ]
 
@@ -143,7 +145,8 @@ def is_excluded_path(path: str) -> bool:
         elif str(path) == pattern:
             print(f"Exact match exclude pattern: {pattern}")
             return True
-    return False
+        # 放行任何请求
+    return True
 
 
 class SensitiveWordMiddleware(BaseHTTPMiddleware):

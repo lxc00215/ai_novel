@@ -115,6 +115,7 @@ export interface Inspiration {
   prompt: string;
   characters: number[];
   user_id: string;
+  content:string;
   story_direction: string[];
   created_at: string;
   updated_at: string;

@@ -102,8 +102,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       const response = await apiService.ai.generateContent(
         storyBackground, 
         writingStyle, 
-        requirements, 
-        params
+        requirements
       );
       console.log("AI生成内容:", response);
       if (response) {

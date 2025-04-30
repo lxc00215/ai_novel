@@ -240,7 +240,6 @@ async def generate_image_from_spirate(request: GenerateImageRequest):
 
 @router.post("/generate_images", response_model=ImageResponse)
 async def generate_images(request: GenerateImageRequest):
-    # 1. 首先检查数据库中是否已经有与prompt匹配的角色且有image_url
     
     # 使用数据库会话查询
     async with async_session() as db:
@@ -287,6 +286,7 @@ async def generate_images(request: GenerateImageRequest):
     # 3. 转存图片并更新数据库
     res = await transfer_image(result['images'][0]['url'], request.prompt)
 
+    print(res,"resss")
     return ImageResponse(image=res['image_url'], timings=result['timings'], seed=result['seed'])
 
 async def download_image(url: str, save_path: str) -> bool:
@@ -366,62 +366,80 @@ async def upload_image(file_path: str) -> Optional[str]:
             
         # 记录文件信息
         logger.info(f"Uploading file: {file_path}")
-        logger.info(f"File size: {os.path.getsize(file_path)} bytes")
+        file_size = os.path.getsize(file_path)
+        logger.info(f"File size: {file_size} bytes")
         
-        async with aiofiles.open(file_path, 'rb') as f:
-            file_content = await f.read()
-            logger.info(f"File content length: {len(file_content)} bytes")
+        if file_size == 0:
+            logger.error("File is empty")
+            return None
+        
+        # 检测文件类型
+        import imghdr
+        file_type = imghdr.what(file_path)
+        if not file_type:
+            logger.error("Not a valid image file")
+            return None
             
-        files = {
-            'file': (
-                os.path.basename(file_path),
-                file_content,
-                'multipart/form-data'
-            )
-        }
+        # 使用二进制模式读取文件
+        with open(file_path, 'rb') as f:
+            file_content = f.read()
+            
+        # 根据文件类型设置正确的content-type
+        content_type = f"image/{file_type}"
+        logger.info(f"Detected image type: {content_type}")
         
-        headers = {
-            'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-            'Accept': '*/*',
-            'Host': 'img.leebay.cyou',
-            'Connection': 'keep-alive'
-        }
+        # 使用正确的文件名和内容类型
+        file_name = os.path.basename(file_path)
         
-        logger.info("Sending request to upload server...")
-        async with httpx.AsyncClient() as client:
+        # 构建multipart表单数据
+        from aiohttp import FormData
+        form = FormData()
+        form.add_field('file', 
+                      file_content, 
+                      filename=file_name,
+                      content_type=content_type)
+        
+        # 使用aiohttp客户端
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
             try:
-                response = await client.post(
-                    upload_url,
-                    files=files,
-                    headers=headers,
-                    timeout=30.0
-                )
+                headers = {
+                    'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+                    'Accept': '*/*',
+                    'Host': 'img.leebay.cyou',
+                    'Connection': 'keep-alive'
+                }
                 
-                # 记录响应信息
-                logger.info(f"Response status code: {response.status_code}")
-                logger.info(f"Response headers: {response.headers}")
-                logger.info(f"Response content: {response.text}")
-                
-                response.raise_for_status()
-                result = response.json()
-                
-                if isinstance(result, list) and result:
-                    return result[0].get('src')
-                else:
-                    logger.error(f"Unexpected response format: {result}")
-                    return None
+                logger.info("Sending request to upload server...")
+                async with session.post(upload_url, data=form, headers=headers, timeout=60) as response:
+                    # 检查状态码
+                    if response.status != 200:
+                        error_text = await response.text()
+                        logger.error(f"HTTP error: {response.status} - {error_text}")
+                        return None
                     
-            except httpx.HTTPStatusError as e:
-                logger.error(f"HTTP error: {e.response.status_code} - {e.response.text}")
-                return None
-            except httpx.RequestError as e:
+                    # 解析响应
+                    try:
+                        result = await response.json()
+                        logger.info(f"Response: {result}")
+                        
+                        if isinstance(result, list) and result:
+                            src = result[0].get('src')
+                            if src:
+                                return src
+                        elif isinstance(result, dict):
+                            return result.get('src') or result.get('url')
+                            
+                        logger.error(f"Unexpected response format: {result}")
+                        return None
+                    except Exception as e:
+                        logger.error(f"Error parsing response: {str(e)}")
+                        response_text = await response.text()
+                        logger.error(f"Raw response: {response_text}")
+                        return None
+            except Exception as e:
                 logger.error(f"Request error: {str(e)}")
                 return None
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {str(e)}")
-                logger.error(f"Raw response: {response.text}")
-                return None
-            
     except Exception as e:
         logger.error(f"Upload error: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
@@ -433,111 +451,99 @@ async def upload_image(file_path: str) -> Optional[str]:
 async def transfer_image(image_url: str, prompt: Optional[str] = None):
     """转存图片：下载并重新上传"""
     print("开始处理图片转存")
+    logger.info(f"Processing image URL: {image_url}")
+    
+    # 创建临时目录
+    temp_dir = "static/temp_images"
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    temp_filename = f"{uuid.uuid4()}.jpg"
+    temp_path = os.path.join(os.path.abspath(temp_dir), temp_filename)
+    logger.info(f"Temporary file path: {temp_path}")
+    
     try:
-        logger.info(f"Processing image URL: {image_url}")
+        # 下载图片
+        logger.info("Downloading image...")
+        import requests
         
-        # 使用固定目录而不是临时目录
-        temp_dir = "static/temp_images"
-        # 确保目录存在
-        os.makedirs(temp_dir, exist_ok=True)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        }
         
-        temp_filename = f"{uuid.uuid4()}.jpg"
-        temp_path = os.path.join(os.path.abspath(temp_dir), temp_filename)
-        logger.info(f"Temporary file path: {temp_path}")
+        response = requests.get(image_url, headers=headers, timeout=30.0, stream=True)
         
-        try:
-            # 下载图片 - 使用同步方式处理
-            logger.info("Downloading image...")
-            # 同步下载图片
-            import requests
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-            }
-            response = requests.get(image_url, headers=headers, timeout=30.0, stream=True)
-            response.raise_for_status()
-            
-            # 检查内容类型
-            content_type = response.headers.get('content-type', '').lower()
-            if not (content_type.startswith('image/') or 'image' in content_type):
-                logger.error(f"Invalid content type: {content_type}")
-                raise HTTPException(status_code=400, detail="Invalid content type")
-                
-            # 保存图片到本地
-            with open(temp_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-            
-            # 验证下载的文件
-            if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
-                logger.error("Downloaded file is empty or doesn't exist")
-                raise HTTPException(status_code=400, detail="File download failed")
-                
-            file_size = os.path.getsize(temp_path)
-            logger.info(f"Downloaded file size: {file_size} bytes")
-            
-            # 上传图片 - 使用await调用异步函数
-            logger.info("Uploading image...")
-            new_url = await upload_image(temp_path)
-            logger.info(f"Upload result URL: {new_url}")
-            
-            if not new_url:
-                logger.error("Failed to upload image")
-                raise HTTPException(status_code=400, detail="Failed to upload image")
-            
-            full_url = f"https://img.leebay.cyou{new_url}"
-            logger.info(f"Final URL: {full_url}")
-
-
-            # 如果提供了prompt，查找对应的Character并更新
-            if prompt:
+        # 检查下载状态
+        if response.status_code != 200:
+            logger.error(f"Download failed with status code: {response.status_code}")
+            return {"success": False, "message": f"Download failed with status code: {response.status_code}"}
+        
+        # 检查内容类型
+        content_type = response.headers.get('content-type', '').lower()
+        if not (content_type.startswith('image/') or 'image' in content_type):
+            logger.error(f"Invalid content type: {content_type}")
+            return {"success": False, "message": f"Not an image (content-type: {content_type})"}
+        
+        # 保存图片到本地
+        with open(temp_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        
+        # 验证下载的文件
+        if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+            logger.error("Downloaded file is empty or doesn't exist")
+            return {"success": False, "message": "Download resulted in empty file"}
+        
+        # 上传图片
+        logger.info("Uploading image...")
+        new_url = await upload_image(temp_path)
+        
+        if not new_url:
+            logger.error("Failed to upload image")
+            return {"success": False, "message": "Image upload failed"}
+        
+        full_url = f"https://img.leebay.cyou{new_url}" if not new_url.startswith('http') else new_url
+        logger.info(f"Final URL: {full_url}")
+        
+        # 更新Character（如果需要）
+        if prompt:
+            try:
                 from sqlalchemy import select, update
                 from database import Character, async_session
-
-                # 使用新的数据库会话
-                async with async_session() as db:
-                    try:
-                        # 通过description字段查询对应的Character
-                        query = select(Character).where(Character.description == prompt)
-                        result = await db.execute(query)
-                        character = result.scalar_one_or_none()
-
-                        if character:
-                            # 更新角色的image_url
-                            logger.info(f"Updating character {character.id} image_url to {full_url}")
-                            update_query = update(Character).where(Character.id == character.id).values(
-                                image_url=full_url)
-                            await db.execute(update_query)
-                            await db.commit()
-                            logger.info(f"Character {character.id} image_url updated successfully")
-                        else:
-                            logger.warning(f"No character found with description matching prompt: {prompt}")
-                    except Exception as e:
-                        await db.rollback()
-                        logger.error(f"Error updating character image_url: {str(e)}")
-                        logger.error(f"Traceback: {traceback.format_exc()}")
-
-
-            return {"image_url": full_url}
-        except Exception as e:
-            logger.error(f"Error in transfer process: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            raise
-        finally:
-            # 清理临时文件
-            if os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                    logger.info("Temporary file cleaned up")
-                except Exception as e:
-                    logger.error(f"Failed to clean up temporary file: {str(e)}")
                 
+                async with async_session() as db:
+                    query = select(Character).where(Character.description == prompt)
+                    result = await db.execute(query)
+                    character = result.scalar_one_or_none()
+                    
+                    if character:
+                        logger.info(f"Updating character {character.id} image_url")
+                        update_query = update(Character).where(Character.id == character.id).values(
+                            image_url=full_url)
+                        await db.execute(update_query)
+                        await db.commit()
+                    else:
+                        logger.warning(f"No character found with description: {prompt}")
+            except Exception as e:
+                logger.error(f"Error updating character: {str(e)}")
+                # 不阻止返回URL
+        
+        return {"success": True, "image_url": full_url}
+    
     except Exception as e:
         logger.error(f"Transfer image error: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"success": False, "message": str(e)}
     
+    finally:
+        # 清理临时文件
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+                logger.info("Temporary file cleaned up")
+            except Exception as e:
+                logger.error(f"Failed to clean up temporary file: {str(e)}")
 
 
 @router.post("/expand")

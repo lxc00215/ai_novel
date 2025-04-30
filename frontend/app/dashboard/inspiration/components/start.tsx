@@ -126,7 +126,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
       // 检查任务状态
       let status = await apiService.task.status(simpleTask.task_id);
       
-      while(status && status.status !== 'completed') {
+      while(status && status.status !== 'completed' && status.status!== 'failed' ) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         status = await apiService.task.status(simpleTask.task_id);
       }
@@ -138,7 +138,6 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
       setLoadingProgress(100);
 
       // 确保状态和结果都存在
-      // @ts-ignore - 确保API响应类型与实际返回值匹配
       if (status && status.result_id) {
         console.log("准备跳转到:", `/dashboard/inspiration/${status.result_id}?is_new=true`);
         router.push(`/dashboard/inspiration/${status.result_id}?is_new=true`);

@@ -340,11 +340,12 @@ class SampleTaskRequest(BaseResultSchema):
 
 class CharacterRequest(BaseResultSchema):
     name: str
+    book_id: Optional[int] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
     prompt: Optional[str] = None
     is_used: bool = False
-    user_id: int
+    user_id: Optional[int] = None
 
 class InspirationUpdate(BaseModel):
     id: int
@@ -367,7 +368,7 @@ class TaskResponseByPage(BaseResultSchema):
 
 class GenerateImageRequest(BaseResultSchema):
     name: Optional[str] = None
-    book_id = Optional[int] = None
+    book_id :Optional[str] = ""
     prompt: str
     model: Optional[str] = os.getenv("IMAGE_MODEL")
     batch_size: Optional[int] = 1

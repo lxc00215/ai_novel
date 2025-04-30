@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  User,
   LogOut
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -25,14 +24,30 @@ import { Avatar } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import LogoutButton from '@/app/components/LogoutButton';
 
+import { User } from '@/app/services/types';
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("novels");
 
-  const user = localStorage.getItem('user') == undefined ? null : JSON.parse(localStorage.getItem('user') || '{}');
-  const isAuthenticated = localStorage.getItem('isAuthenticated') == undefined ? false : localStorage.getItem('isAuthenticated') === 'true';
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
 
+  // 客户端渲染后再访问localStorage
+  useEffect(() => {
+    // 这里的代码只会在浏览器端执行
+    const storedUser = localStorage.getItem('user');
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
   // 监听滚动事件
   useEffect(() => {
     const handleScroll = () => {

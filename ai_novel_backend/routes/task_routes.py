@@ -1,5 +1,5 @@
 from typing import Callable
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from sqlalchemy import  select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
@@ -15,7 +15,7 @@ from schemas import GenerateImageRequest, SampleTaskResponse, TaskResponse
 router = APIRouter(prefix="/task", tags=["task"])
 
 @router.post("/new",response_model=SampleTaskResponse)
-async def create_task(task_data: dict):
+async def create_task(task_data: dict,background_tasks:BackgroundTasks):
     """创建新任务并异步处理"""
     print(f"task_data: {task_data}")
     
@@ -36,7 +36,7 @@ async def create_task(task_data: dict):
             await session.refresh(task)
         
         # 启动异步任务处理，传入task_data
-        asyncio.create_task(process_task(task.id, task_data))
+        asyncio.create_task(process_task(task.id, task_data,background_tasks))
         
         return {"task_id": task.id, "message": "任务已创建"}
         
@@ -44,12 +44,12 @@ async def create_task(task_data: dict):
         print(f"Task creation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def process_task(task_id: int, task_data: dict):
+async def process_task(task_id: int, task_data: dict,background_tasks:BackgroundTasks):
     """异步处理任务并更新进度和结果"""
     try:
         result_id = None
         if task_data['task_type'] == "INSPIRATION":
-            result_id = await process_task_inspiration(task_data)
+            result_id = await process_task_inspiration(task_data,background_tasks)
         elif task_data['task_type'] == "CRAZY_WALK":
             result_id = await process_task_crazy_walk(task_id,task_data)
         # API调用完成后，更新完成状态和结果
@@ -213,8 +213,43 @@ async def process_task_crazy_walk(task_id: int,task_data: dict)->int:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# 1. 定义图片生成后的回调函数
+async def update_inspiration_with_image(inspiration_id: int, image_url: str):
+    """异步更新灵感记录的封面图片"""
+    try:
+        async with async_session() as db:
+            # 使用 SQLAlchemy 更新语句
+            stmt = update(InspirationResult).where(
+                InspirationResult.id == inspiration_id
+            ).values(
+                cover_image=image_url,
+                updated_at=datetime.now()
+            )
+            await db.execute(stmt)
+            await db.commit()
+            print(f"Cover image updated for inspiration ID {inspiration_id}: {image_url}")
+    except Exception as e:
+        print(f"Failed to update cover image: {e}")
 
-async def process_task_inspiration(task_data: dict)->int:
+# 2. 异步生成图片的函数
+async def generate_image_async(prompt: str, size: str, user_id: int, inspiration_id: int):
+    """在后台异步生成图片并更新数据库"""
+    try:
+        # 生成图片
+        image_url = await generate_images(
+            GenerateImageRequest(
+                prompt=prompt,
+                size=size,
+                user_id=user_id
+            )
+        )
+        # 更新数据库
+        await update_inspiration_with_image(inspiration_id, image_url)
+    except Exception as e:
+        print(f"Background image generation failed: {e}")
+
+# 3. 修改处理任务的函数
+async def process_task_inspiration(task_data: dict, background_tasks: BackgroundTasks) -> int:
     """处理灵感任务"""
     service = InspirationService()
     try:
@@ -225,14 +260,15 @@ async def process_task_inspiration(task_data: dict)->int:
         else:
             result = await service.generate_complete_story(task_data['prompt'])
 
+        print("直行道")
+        print(result)
         # 保存到灵感表
-        
         character_ids = []
         # 创建Character 对象
         for character in result['characters']:
             print(f"character: {character}")
             character_result = Character(
-                book_id=result['id'],
+                book_id=None,
                 name=character['姓名'],
                 description='\n'.join(character['描述']) if isinstance(character['描述'], list) else character['描述'],
                 user_id=task_data['user_id'],
@@ -243,9 +279,8 @@ async def process_task_inspiration(task_data: dict)->int:
                 await db.commit()
                 await db.refresh(character_result)
                 character_ids.append(character_result.id)
-
-        cover_image = await generate_images(GenerateImageRequest(prompt=task_data['prompt'],size='1280x960',user_id=task_data['user_id']))
-
+        print("执行到这里了")
+        # 先创建没有封面图片的灵感记录
         inspiration_result = InspirationResult(
             title=result['title'],
             characters=character_ids,
@@ -253,12 +288,28 @@ async def process_task_inspiration(task_data: dict)->int:
             content=result['content'],
             user_id=task_data['user_id'],
             story_direction=result['story_direction'],
-            cover_image=cover_image
+            cover_image=None  # 初始为空
         )
+
+        # 更新Character 的book_id字段
+        for character_id in character_ids:
+            character = await db.get(Character, character_id)
+            character.book_id = inspiration_result.id
+            await db.commit()
+        
         async with async_session() as db:
             db.add(inspiration_result)
             await db.commit()
             await db.refresh(inspiration_result)
+            # 添加后台任务生成图片
+            background_tasks.add_task(
+                generate_image_async,
+                prompt=task_data['prompt'],
+                size='1280x960',
+                user_id=task_data['user_id'],
+                inspiration_id=inspiration_result.id
+            )
+
             return inspiration_result.id
 
     except Exception as e:

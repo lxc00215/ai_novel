@@ -1,15 +1,15 @@
 "use client";
-import { useState, useEffect, useContext, use } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { FaBook, FaLock, FaUser, FaEnvelope } from 'react-icons/fa';
+import { FaLock, FaUser, FaEnvelope } from 'react-icons/fa';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import apiService from '../services/api';
 import Logo from '../components/logo';
@@ -30,7 +30,6 @@ interface LoginRequest {
 }
 const AuthPage = () => {
   // 获取参数
-  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");

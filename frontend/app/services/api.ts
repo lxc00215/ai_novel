@@ -358,7 +358,7 @@ const apiService = {
       })
     },
     // 生成小说内容
-    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<string> => {
+    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<any> => {
       return request('/ai/generate', {
         method: 'POST',
         body: JSON.stringify({
@@ -495,10 +495,10 @@ const apiService = {
         }
       }
     },
-    generateImageFromSpirate: async (prompt: string,name:string, spirate_id: string): Promise< ImageObject> => {  
+    generateImageFromSpirate: async (prompt: string,name:string, spirate_id: string,user_id:string): Promise< ImageObject> => {  
       return request('/ai/generate_image_from_spirate', {
         method: 'POST',
-        body: JSON.stringify({ prompt, name,spirate_id }),
+        body: JSON.stringify({ prompt, name,spirate_id ,user_id}),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -720,7 +720,7 @@ const apiService = {
   },
 
   character: {
-    update: async (id: number, data: Partial<Character>): Promise<Character> => {
+    update: async (id: string, data: Partial<Character>): Promise<Character> => {
       console.log("update", JSON.stringify(data));
       return request(`/character/${id}`, {
         method: 'PUT',

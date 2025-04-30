@@ -50,7 +50,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
 
   const [shareUrl, setShareUrl] = useState<string>("");
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
- 
+  const router = useRouter();
 
 
   // 修改获取数据的函数，添加分页参数
@@ -133,6 +133,10 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
     );
   }
 
+  const handleClick = (id: string): void =>{
+      router.push(`/dashboard/inspiration/${id}`);
+  }
+
   return (
     <div className="relative">
       <div className="min-h-screen overflow-y-auto p-6 flex-1 bg-black text-white pr-20 pl-30 pt-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
@@ -150,7 +154,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                 id={`card-${story.id}`} 
                 key={story.id} 
                 className="bg-[#0c0a09] rounded-none border-none overflow-hidden pt-0 h-40 pb-0 mr-10 border-zinc-800 hover:bg-[#1a1a1a] transition-all duration-200 ease-in-out cursor-pointer" 
-                // onClick={()=>handleClick(story.id)} 
+                onClick={()=>handleClick(story.id)} 
                 onMouseEnter={()=>handleMouseEnter(story.id)} 
                 onMouseLeave={()=>handleMouseLeave(story.id)}>
                 <div className="flex flex-row h-full">
@@ -180,6 +184,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                     {/* 底部按钮区域 - 响应式按钮大小和间距 */}
                     <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
                       <Button 
+                        onClick={() => handleClick(story.id)}
                         className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
                       >
                         继续
