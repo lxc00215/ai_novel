@@ -618,10 +618,11 @@ const apiService = {
   },
 
   crazy: {
-    get: async (id: string) => {
-      return request(`/crazy/${id}`, {
+    get: async (task_id: string) => {
+      const response = await request(`/task/crazy/${task_id}`, {
         method: 'GET'
       })
+      return response;
     }
   },
 

@@ -13,3 +13,7 @@ python_jose==3.3.0
 Requests==2.32.3
 SQLAlchemy==2.0.35
 starlette==0.46.2
+pydantic-settings==2.7.0
+aiomysql
+python-multipart
+greenlet

@@ -247,7 +247,7 @@ class GeneratedChapter(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
     summary = Column(Text, nullable=False)
-    # book_type = Column(Enum(TaskTypeEnum), nullable=False)
+    book_type = Column(Enum(TaskTypeEnum), nullable=False)
 
     book = relationship("Novels", back_populates="chapters")
 

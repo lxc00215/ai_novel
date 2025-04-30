@@ -1,0 +1,7 @@
+[user]
+	name = SYL
+	email = 1050406348@qq.com
+[credential]
+	helper = store
+[core]
+	editor = vim

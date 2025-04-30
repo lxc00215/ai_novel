@@ -22,9 +22,6 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(project.title);

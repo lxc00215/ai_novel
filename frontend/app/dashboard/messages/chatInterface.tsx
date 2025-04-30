@@ -1,12 +1,12 @@
 // components/ChatInterface.tsx
 'use client'
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SendHorizontal, Info, Smile, Loader2, BookOpen, RefreshCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { Message,Character, Session } from '@/app/services/types';
+import { Message,Character, Session, User } from '@/app/services/types';
 import apiService from '@/app/services/api';
 import { useRouter } from 'next/navigation';
 
@@ -28,7 +28,7 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   // 获取与特定角色的聊天历史
 
-
+  
   const handleRefresh = async () => {
 
     console.log("CurrentSessionID",CurrentSessionID);
@@ -46,11 +46,15 @@ const ChatInterface = () => {
     const initializeChat = async () => {
       try {
         // 1. 获取所有角色列表
-        const charactersResponse = await apiService.character.getCharacters(4);
+        console.log("user"+localStorage.getItem('token'))
+
+        const auser = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const charactersResponse = await apiService.character.getCharacters(Number(auser!.id));
         setCharacters(charactersResponse);
 
         // 2. 获取最近的会话列表
-        const sessionsResponse = await apiService.chat.getRecentSessions(4);
+        const sessionsResponse = await apiService.chat.getRecentSessions(Number(auser!.id));
         setSessionsResponse(sessionsResponse);
         console.log("sessionsResponse",JSON.stringify(sessionsResponse));
         // 3. 如果 URL 中有指定角色 ID
@@ -62,7 +66,7 @@ const ChatInterface = () => {
           if (targetCharacter) {
             // 检查是否已有与该角色的会话
             const existingSession = sessionsResponse.find(
-              (session:any) => session.character.id == characterIdFromUrl
+              (session:any) => session.character_id == characterIdFromUrl
             );
 
             console.log("sessionsResponse",characterIdFromUrl);
@@ -75,8 +79,14 @@ const ChatInterface = () => {
             } else {
               console.log("没有现有会话，创建新会话");
               // 如果没有现有会话，创建新会话
-              const newSession = await apiService.chat.getOrCreateSession(4,Number(characterIdFromUrl));
-              setCurrentSessionID(newSession.id);
+              console.log("创建新会话");
+              const auser = JSON.parse(localStorage.getItem('user') || '{}');
+        
+              const newSession = await apiService.chat.getOrCreateSession(Number(auser!.id),Number(characterIdFromUrl));
+              console.log("newSession",JSON.stringify(newSession));
+              console.log("newSession",newSession['id']);
+              setCurrentSessionID(newSession['id']);
+              console.log("newSession",CurrentSessionID);
               // 设置初始消息
               setMessages([{
                 session_id:newSession.id,
@@ -96,7 +106,7 @@ const ChatInterface = () => {
             const lastSession = sessionsResponse[0];
             setCurrentSessionID(Number(lastSession.id));
             const character = charactersResponse.find(
-              char => char.id == lastSession.character.id
+              char => char.id == lastSession.character_id
             );
             console.log("character",character);
             if (character) {
@@ -124,7 +134,7 @@ const ChatInterface = () => {
   const switchCharacter = async (character: Character,characterID:string) => {
     setCurrentCharacter(character);
     const existingSession = sessionsResponse.find(
-        (session:any) => session.character.id == characterID
+        (session:any) => session.character_id == characterID
       );
       console.log(JSON.stringify(existingSession)+"existingSession");
       if(existingSession?.messages.length == 0){
@@ -258,7 +268,7 @@ const ChatInterface = () => {
                 {renderAvatar(character.name, character.image_url)}
                 <div>
                   <p className="font-medium">{character.name}</p>
-                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find((session:any) => session.character.id == character.id)?.last_message??""}</p>
+                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find((session:any) => session.character_id == character.id)?.last_message??""}</p>
                 </div>
               </div>
             ))}
@@ -339,7 +349,7 @@ const ChatInterface = () => {
                     <p className="text-sm text-gray-200 line-clamp-2 mb-3">{currentCharacter.description}</p>
                     <div className="text-xs text-gray-400 border-t border-gray-700/50 pt-3 flex justify-between">
                       <p>ID: {currentCharacter.id}</p>
-                      <p>Session: {sessionsResponse.find((session:any) => session.character.id == currentCharacter.id)?.id??""}</p>
+                      <p>Session: {sessionsResponse.find((session:any) => session.character_id == currentCharacter.id)?.id??""}</p>
                     </div>
                   </div>
                 </div>
