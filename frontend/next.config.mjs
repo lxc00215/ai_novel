@@ -2,6 +2,16 @@
 const nextConfig = {
   /* config options here */
   reactStrictMode: true,
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
+    config.parallelism = 1;
+    return config;
+  },
+  
   images: {
     remotePatterns: [
       {
