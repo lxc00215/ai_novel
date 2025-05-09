@@ -162,7 +162,7 @@ const apiService = {
   // 认证相关 API
   auth: {
     // 检查用户名是否可用 
-    checkUsernameAvailability: async (username: string ): Promise<{ success: boolean }> => {
+    checkUsernameAvailability: async (username: string): Promise<{ success: boolean }> => {
       const response = await request(`/auth/check_username_available/${username}`, {
         method: 'POST',
         headers: {
@@ -184,7 +184,7 @@ const apiService = {
     },
 
 
-    
+
     // 登录
     login: async (data: LoginRequest): Promise<AuthResponse> => {
       const response = await request('/auth/login', {
@@ -272,17 +272,17 @@ const apiService = {
       return response.image_url;
     },
 
-    uploadImage: async (file: File): Promise<{success: boolean, data: {url: string}}> => {
+    uploadImage: async (file: File): Promise<{ success: boolean, data: { url: string } }> => {
       // 创建FormData对象，用于文件上传
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await request(`/utils/upload-image`, {
         method: 'POST',
         body: formData,
         // 不要手动设置Content-Type，让浏览器自动设置，包含boundary信息
       });
-      
+
       if (response.success) {
         return response.data.url;
       } else {
@@ -305,8 +305,8 @@ const apiService = {
     get: async (id: string) => {
       console.log('Calling API with ID:', id); // 添加日志
       try {
-        const response = await request(`/spirate/getOne/${id}`,{
-          headers:{
+        const response = await request(`/spirate/getOne/${id}`, {
+          headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
           }
         });
@@ -349,25 +349,25 @@ const apiService = {
   //     })
   //   },
   // },
-  
-  analysis:{
-      // 拆书相关api
 
-      // 获取该角色的全部拆书历史
-      get_history: async () => {
-        return request(`/analysis/get-analysis-history`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-          }
-        })
-      },
-      get_detail: async (breakdown_id: number) => {
-        return request(`/analysis/`+breakdown_id, {
-          method: 'GET'
-        })
-      },
+  analysis: {
+    // 拆书相关api
+
+    // 获取该角色的全部拆书历史
+    get_history: async () => {
+      return request(`/analysis/get-analysis-history`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+      })
+    },
+    get_detail: async (breakdown_id: number) => {
+      return request(`/analysis/` + breakdown_id, {
+        method: 'GET'
+      })
+    },
   },
   // AI 生成相关 API
   ai: {
@@ -438,13 +438,13 @@ const apiService = {
 
               const chunk = decoder.decode(value);
               console.log(chunk);
-         
+
               const messages = chunk
                 .split('\n\n')
                 .map(line => line.startsWith('data: ') ? line.slice(6) : line);
-                
-                
-                // 移除 'data: ' 前缀
+
+
+              // 移除 'data: ' 前缀
 
               for (const message of messages) {
                 if (message.trim()) {
@@ -484,9 +484,9 @@ const apiService = {
 
             const chunk = decoder.decode(value);
             const messages = chunk
-            .split('\n\n')
-            .map(line => line.startsWith('data: ') ? line.slice(6) : line);
-            
+              .split('\n\n')
+              .map(line => line.startsWith('data: ') ? line.slice(6) : line);
+
             for (const message of messages) {
               if (message.trim()) {
                 yield message;
@@ -522,9 +522,9 @@ const apiService = {
 
             const chunk = decoder.decode(value);
             const messages = chunk
-            .split('\n\n')
-            .map(line => line.startsWith('data: ') ? line.slice(6) : line);
-            
+              .split('\n\n')
+              .map(line => line.startsWith('data: ') ? line.slice(6) : line);
+
             for (const message of messages) {
               if (message.trim()) {
                 yield message;
@@ -534,19 +534,19 @@ const apiService = {
         }
       }
     },
-    generateImageFromSpirate: async (prompt: string,name:string, spirate_id: string,user_id:string): Promise< ImageObject> => {  
+    generateImageFromSpirate: async (prompt: string, name: string, book_id: string, user_id: string): Promise<ImageObject> => {
       return request('/ai/generate_image_from_spirate', {
         method: 'POST',
-        body: JSON.stringify({ prompt, name,spirate_id ,user_id}),
+        body: JSON.stringify({ prompt, name, book_id, user_id }),
         headers: {
           'Content-Type': 'application/json'
         }
       });
     },
 
-    generateImage: async (prompt: string): Promise< ImageObject> => {
+    generateImage: async (prompt: string): Promise<ImageObject> => {
       // 导入工具函数获取用户 ID
-      
+
       const user = localStorage.getItem('user')
       const userId = JSON.parse(user || '{}').id;
 
@@ -703,7 +703,7 @@ const apiService = {
       })
     },
 
-    
+
 
     delete: async (id: string) => {
       return request(`/novels/${id}/delete`, {
@@ -752,7 +752,7 @@ const apiService = {
       })
     },
     getNovel: async (): Promise<Novel[]> => {
-      return request(`/novels/`, {
+      return request(`/novels/getMy`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -816,7 +816,7 @@ const apiService = {
         const response = await request(`/task/get-by-type?task_type=${taskType}&user_id=${userId}`, {
           method: 'GET'
         });
-      
+
         return response;
       } catch (error) {
         console.error('获取任务列表失败:', error);

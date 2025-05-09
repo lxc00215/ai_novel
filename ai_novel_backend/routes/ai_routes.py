@@ -583,8 +583,8 @@ async def ai_polish(request: AIExpandRequest):
     feature_config = get_feature_by_name("AI润色")
     if request.is_stream:
         messages = [
-            {"role": "system", "content": feature_config["prompt"]},
-            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文润色内容，不要超过1000字"}
+            {"role": "system", "content": "(所生成的文字，应当进行分段，在每个分段处加上两个换行符\n\n,这两个换行符应当是直接以文本形式添加在文章中的)"+feature_config["prompt"]},
+            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文润色内容，不要超过1000字(每处分段处加上两个换行符)"}
         ]
         return StreamingResponse(generate_response(messages, feature_config["model"]), media_type="text/event-stream",headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})
     else:
