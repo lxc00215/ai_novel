@@ -16,7 +16,7 @@ async def get_characters(
     db: AsyncSession = Depends(get_db)
 ):
     # 查询该用户创建的所有角色 is_used=True
-    query = select(Character).where(Character.user_id == current_user.id, Character.is_used == True)
+    query = select(Character).where(Character.user_id == current_user.id, Character.is_used == False)
     result = await db.execute(query)
     characters = result.scalars().all()
     # 将User_id 与 character_id 对应的 session_id 插入到 characters 中
@@ -25,6 +25,48 @@ async def get_characters(
         result = await db.execute(query)
         session = result.scalar_one_or_none()
     return characters
+
+
+# 更新角色
+@router.put("/{id}")
+async def update_character(
+        character_request: CharacterRequest,
+        # current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+):
+    print(character_request)
+    query = select(Character).where(Character.id == character_request.id)
+    result = await db.execute(query)
+    existing_character = result.scalar_one_or_none()
+
+    if not existing_character:
+        raise HTTPException(status_code=404, detail="角色不存在")
+    if character_request.prompt:
+        existing_character.prompt = character_request.prompt
+    if character_request.name:
+        existing_character.name = character_request.name
+    if character_request.description:
+        existing_character.description = character_request.description
+    if character_request.image_url:
+        existing_character.image_url = character_request.image_url
+    if character_request.is_used:
+        existing_character.is_used = character_request.is_used
+
+    query = update(Character).where(Character.id == character_request.id).values(
+        name=existing_character.name,
+        description=existing_character.description,
+        image_url=existing_character.image_url,
+        is_used=existing_character.is_used,
+        prompt=existing_character.prompt
+    )
+    try:
+        await db.execute(query)
+        await db.commit()
+        return existing_character
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # 更新角色
 @router.put("/updateMy")

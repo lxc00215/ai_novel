@@ -17,8 +17,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'sc-maas.oss-cn-shanghai.aliyuncs.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '249595.xyz',
       }
+
     ],
+    domains: ['249595.xyz'], // 允许的域名
   },
 };
 

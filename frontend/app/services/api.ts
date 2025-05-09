@@ -599,14 +599,29 @@ const apiService = {
     },
 
     // 创建或获取会话
+    // getOrCreateSession: async (userId: number, characterId: number) => {
+    //   return await request('/chat/session', {
+    //     method: 'POST',
+    //     body: JSON.stringify({ user_id: userId, character_id: characterId }),
+    //     headers: {
+    //       'Content-Type': 'application/json'
+    //     }
+    //   });
+    // },
+
     getOrCreateSession: async (userId: number, characterId: number) => {
-      return await request('/chat/session', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: userId, character_id: characterId }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      try {
+        return await request('/chat/session', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: userId, character_id: characterId }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error('Error in getOrCreateSession:', error);
+        throw error;
+      }
     },
 
     // 发送消息

@@ -102,6 +102,62 @@ async def clear_session(sessionId: int,db: AsyncSession = Depends(get_db)):
     return {"message": "Session messages cleared successfully"}
 
 
+# @router.post("/session")
+# async def get_or_create_session(
+#     request: ChatSessionRequest,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     """创建或获取会话"""
+#     # 查询现有会话
+#     query = select(ChatSession).where(
+#         ChatSession.user_id == request.user_id,
+#         ChatSession.character_id == request.character_id
+#     )
+#     result = await db.execute(query)
+#     existing_session = result.scalar_one_or_none()
+
+#     # 查询角色
+#     character_query = select(Character).where(Character.id == request.character_id)
+#     character = await db.execute(character_query)
+#     character = character.scalar_one_or_none()
+
+#     # 如果角色不存在，则创建角色
+#     if not character:
+#         raise HTTPException(status_code=404, detail="Character not found")
+#     # 查询用户
+#     user_query = select(User).where(User.id == request.user_id)
+#     user = await db.execute(user_query)
+#     user = user.scalar_one_or_none()
+
+#     # 如果用户不存在，则创建用户
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+    
+#     # 如果会话不存在，创建新会话
+#     if not existing_session:
+#         new_session = ChatSession(
+#             user_id=request.user_id,
+#             character_id=request.character_id,
+#             created_at=datetime.now(),
+#             updated_at=datetime.now()
+#         )
+#         db.add(new_session)
+#         await db.commit()
+#         await db.refresh(new_session)
+#         return new_session
+#     # 构建返回对象
+
+#     data = {
+#         "id": existing_session.id,
+#         "created_at": existing_session.created_at,
+#         "updated_at": existing_session.updated_at,
+#         "character": character,
+#         "user": user,
+#         "last_message": existing_session.last_message
+#     }
+#     return data
+
+
 @router.post("/session")
 async def get_or_create_session(
     request: ChatSessionRequest,
@@ -145,17 +201,30 @@ async def get_or_create_session(
         await db.commit()
         await db.refresh(new_session)
         return new_session
-    # 构建返回对象
-
+    
+    # 获取会话的历史消息
+    messages_query = select(ChatMessage).where(
+        ChatMessage.session_id == existing_session.id
+    ).order_by(
+        ChatMessage.created_at.asc()
+    ).limit(50)
+    
+    messages_result = await db.execute(messages_query)
+    messages = messages_result.scalars().all()
+    
+    # 构建返回对象，包含历史消息
     data = {
         "id": existing_session.id,
         "created_at": existing_session.created_at,
         "updated_at": existing_session.updated_at,
         "character": character,
         "user": user,
-        "last_message": existing_session.last_message
+        "last_message": existing_session.last_message,
+        "messages": messages  # 添加历史消息
     }
     return data
+
+
 
 from fastapi import Depends, HTTPException
 from fastapi.responses import StreamingResponse

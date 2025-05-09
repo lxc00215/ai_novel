@@ -1,4 +1,5 @@
 // pages/chat.tsx
+'use client'
 import React from 'react';
 import Head from 'next/head';
 import ChatInterface from './chatInterface';
