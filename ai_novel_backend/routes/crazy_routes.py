@@ -1,13 +1,9 @@
 
-
-
-
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from dao.CrazyWalk import CrazyWalkService
 from database import CrazyWalkResult, GeneratedChapter, Task,async_session
 from models import TaskTypeEnum
-
 
 router = APIRouter(prefix="/crazy",tags=["crazy"])
 

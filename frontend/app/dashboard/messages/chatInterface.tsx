@@ -30,10 +30,10 @@ const ChatInterface = () => {
   // 获取与特定角色的聊天历史
 
   // 添加图片懒加载状态
-  const [loadedImages, setLoadedImages] = useState<{[key: string]: boolean}>({});
+  const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>({});
   // 处理图片加载完成事件
   const handleImageLoaded = (imageId: string) => {
-    setLoadedImages(prev => ({...prev, [imageId]: true}));
+    setLoadedImages(prev => ({ ...prev, [imageId]: true }));
   };
 
 
@@ -55,25 +55,32 @@ const ChatInterface = () => {
   useEffect(() => {
     const initializeChat = async () => {
       try {
+        console.log("初始化聊天界面，URL参数：", characterIdFromUrl);
 
+        // 1. 获取所有角色列表
         const charactersResponse = await apiService.character.getCharacters();
         setCharacters(charactersResponse);
+        console.log("获取到角色列表：", charactersResponse.length);
 
         // 2. 获取最近的会话列表
         const sessionsResponse = await apiService.chat.getRecentSessions();
         setSessionsResponse(sessionsResponse);
-        console.log("sessionsResponse", JSON.stringify(sessionsResponse));
+        console.log("获取到会话列表：", JSON.stringify(sessionsResponse));
+
         // 3. 如果 URL 中有指定角色 ID
         if (characterIdFromUrl) {
           // 在角色列表中找到对应角色
           const targetCharacter = charactersResponse.find(
             char => char.id == characterIdFromUrl
           );
+          console.log("找到目标角色:", targetCharacter?.name);
+
           if (targetCharacter) {
             // 检查是否已有与该角色的会话
             const existingSession = sessionsResponse.find(
               (session: any) => session.character_id == characterIdFromUrl
             );
+            console.log("是否存在会话:", existingSession ? "是" : "否");
 
 
             if (existingSession) {
@@ -134,32 +141,141 @@ const ChatInterface = () => {
   }, [characterIdFromUrl]); // 依赖项添加 characterIdFromUrl
 
 
+  // const switchCharacter = async (character: Character, characterID: string) => {
+  //   console.log("switchCharacter", JSON.stringify(sessionsResponse));
+  //   setCurrentCharacter(character);
+  //   const existingSession = sessionsResponse.find(
+  //     (session: any) => session.character_id == characterID
+  //   );
+  //   console.log(JSON.stringify(existingSession) + "existingSession");
+  //   if (existingSession?.messages.length == 0) {
+  //     // 设置初始消息
+  //     setMessages([{
+  //       session_id: Number(existingSession?.id),
+  //       id: '1',
+  //       sender: character.name,
+  //       sender_type: 'character',
+  //       content: `你好，我是 ${character.name}。`,
+  //       created_at: new Date().toISOString()
+  //     }]);
+  //   }
+  //   console.log(JSON.stringify(existingSession) + "existingSession");
+
+  //   if (existingSession) {
+  //     setCurrentSessionID(Number(existingSession.id));
+  //     setMessages(existingSession.messages);
+  //   }
+  //   setCurrentSessionID(Number(existingSession?.id));
+  // };
+
+
+  // const switchCharacter = async (character: Character, characterID: string) => {
+  //   console.log("switchCharacter", JSON.stringify(sessionsResponse));
+  //   setCurrentCharacter(character);
+    
+  //   // 查找是否已有与该角色的会话
+  //   const existingSession = sessionsResponse.find(
+  //     (session: any) => session.character_id == characterID
+  //   );
+    
+  //   if (existingSession) {
+  //     // 如果存在会话，设置会话ID和消息
+  //     setCurrentSessionID(Number(existingSession.id));
+      
+  //     if (existingSession.messages && existingSession.messages.length > 0) {
+  //       setMessages(existingSession.messages);
+  //     } else {
+  //       // 如果没有消息，设置初始消息
+  //       setMessages([{
+  //         session_id: Number(existingSession.id),
+  //         id: '1',
+  //         sender: character.name,
+  //         sender_type: 'character',
+  //         content: `你好，我是 ${character.name}。`,
+  //         created_at: new Date().toISOString()
+  //       }]);
+  //     }
+  //   } else {
+  //     // 如果不存在会话，创建新会话
+  //     const auser = JSON.parse(localStorage.getItem('user') || '{}');
+  //     try {
+  //       const newSession = await apiService.chat.getOrCreateSession(Number(auser!.id), Number(characterID));
+  //       console.log("characterID:"+characterID)
+  //       setCurrentSessionID(Number(newSession.id));
+        
+  //       // 设置初始消息
+  //       setMessages([{
+  //         session_id: Number(newSession.id),
+  //         id: '1',
+  //         sender: character.name,
+  //         sender_type: 'character',
+  //         content: `你好，我是 ${character.name}。`,
+  //         created_at: new Date().toISOString()
+  //       }]);
+  //     } catch (error) {
+  //       console.error("创建会话失败:", error);
+  //       alert("创建会话失败，请重试");
+  //     }
+  //   }
+  // };
+
+
+
   const switchCharacter = async (character: Character, characterID: string) => {
     console.log("switchCharacter", JSON.stringify(sessionsResponse));
     setCurrentCharacter(character);
+    
+    // 查找是否已有与该角色的会话
     const existingSession = sessionsResponse.find(
       (session: any) => session.character_id == characterID
     );
-    console.log(JSON.stringify(existingSession) + "existingSession");
-    if (existingSession?.messages.length == 0) {
-      // 设置初始消息
-      setMessages([{
-        session_id: Number(existingSession?.id),
-        id: '1',
-        sender: character.name,
-        sender_type: 'character',
-        content: `你好，我是 ${character.name}。`,
-        created_at: new Date().toISOString()
-      }]);
-    }
-    console.log(JSON.stringify(existingSession) + "existingSession");
-
+    
     if (existingSession) {
+      // 如果存在会话，设置会话ID和消息
       setCurrentSessionID(Number(existingSession.id));
-      setMessages(existingSession.messages);
+      
+      if (existingSession.messages && existingSession.messages.length > 0) {
+        setMessages(existingSession.messages);
+      } else {
+        // 如果没有消息，设置初始消息
+        setMessages([{
+          session_id: Number(existingSession.id),
+          id: '1',
+          sender: character.name,
+          sender_type: 'character',
+          content: `你好，我是 ${character.name}。`,
+          created_at: new Date().toISOString()
+        }]);
+      }
+    } else {
+      // 如果不存在会话，创建新会话
+      const auser = JSON.parse(localStorage.getItem('user') || '{}');
+      try {
+        const newSession = await apiService.chat.getOrCreateSession(Number(auser!.id), Number(characterID));
+        console.log("characterID:"+characterID);
+        setCurrentSessionID(Number(newSession.id));
+        
+        // 检查返回的会话是否包含历史消息
+        if (newSession.messages && newSession.messages.length > 0) {
+          setMessages(newSession.messages);
+        } else {
+          // 如果没有历史消息，则设置初始消息
+          setMessages([{
+            session_id: Number(newSession.id),
+            id: '1',
+            sender: character.name,
+            sender_type: 'character',
+            content: `你好，我是 ${character.name}。`,
+            created_at: new Date().toISOString()
+          }]);
+        }
+      } catch (error) {
+        console.error("创建会话失败:", error);
+        alert("创建会话失败，请重试");
+      }
     }
-    setCurrentSessionID(Number(existingSession?.id));
   };
+
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -171,37 +287,37 @@ const ChatInterface = () => {
   };
 
   // Function to render avatar or fallback with first letter of name
-// 渲染用户头像
-const renderAvatar = (name: string, avatar?: string) => {
-  const imageId = `${name}-${avatar}`;
-  
-  return (
-    <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
-      {avatar ? (
-        <div className={styles.avatarContainer}>
-          {!loadedImages[imageId] && (
-            <div className={styles.avatarPlaceholder}>
-              {name?.charAt(0) || 'U'}
-            </div>
-          )}
-          <Image 
-            src={avatar} 
-            alt={name} 
-            width={40} 
-            height={40}
-            className={`${styles.avatarImage} ${loadedImages[imageId] ? styles.loaded : ''}`}
-            onLoad={() => handleImageLoaded(imageId)}
-            loading="lazy"
-          />
-        </div>
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
-          {name?.charAt(0) || 'U'}
-        </div>
-      )}
-    </Avatar>
-  );
-};
+  // 渲染用户头像
+  const renderAvatar = (name: string, avatar?: string) => {
+    const imageId = `${name}-${avatar}`;
+
+    return (
+      <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
+        {avatar ? (
+          <div className={styles.avatarContainer}>
+            {!loadedImages[imageId] && (
+              <div className={styles.avatarPlaceholder}>
+                {name?.charAt(0) || 'U'}
+              </div>
+            )}
+            <Image
+              src={avatar}
+              alt={name}
+              width={40}
+              height={40}
+              className={`${styles.avatarImage} ${loadedImages[imageId] ? styles.loaded : ''}`}
+              onLoad={() => handleImageLoaded(imageId)}
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
+            {name?.charAt(0) || 'U'}
+          </div>
+        )}
+      </Avatar>
+    );
+  };
 
 
 
@@ -218,44 +334,51 @@ const renderAvatar = (name: string, avatar?: string) => {
   //   };
 
   const handleSendMessage = async () => {
-    if (message.trim()) {
+    if (message.trim() && CurrentSessionID && !isNaN(Number(CurrentSessionID))) {
       const newMessage: Message = {
         id: `msg-${Date.now()}`,
         sender: 'User',
         sender_type: 'user',
         content: message,
         created_at: new Date().toISOString(),
-        session_id: CurrentSessionID || 0
+        session_id: CurrentSessionID
       };
-
+  
       setMessages(prevMessages => [...prevMessages, newMessage]);
       setMessage('');
       setIsLoading(true);
-
-      // 创建一个空的 assistant 消息用于流式显示
       setStreamingMessage('');
-
-      const stream = await apiService.chat.sendMessage(Number(CurrentSessionID), message);
-
-      let content = "";
-      for await (const chunk of stream.getMessages()) {
-        setStreamingMessage(prev => prev + chunk);
-        content += chunk;
+  
+      try {
+        const stream = await apiService.chat.sendMessage(CurrentSessionID, message);
+  
+        let content = "";
+        for await (const chunk of stream.getMessages()) {
+          setStreamingMessage(prev => prev + chunk);
+          content += chunk;
+        }
+  
+        const aiMessage: Message = {
+          id: `msg-${Date.now()}`,
+          content: content,
+          sender: currentCharacter?.name || 'character',
+          sender_type: 'character',
+          created_at: new Date().toISOString(),
+          session_id: CurrentSessionID
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+      } catch (error) {
+        console.error("发送消息失败:", error);
+        alert("发送消息失败，请重试");
+      } finally {
+        setIsLoading(false);
+        setStreamingMessage('');
       }
-
-      const aiMessage: Message = {
-        id: `msg-${Date.now()}`,
-        content: content,
-        sender: 'character',
-        sender_type: 'character',
-        created_at: new Date().toISOString(),
-        session_id: CurrentSessionID || 0
-      }
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
-      setStreamingMessage('');
-    };
-  }
+    } else if (!CurrentSessionID || isNaN(Number(CurrentSessionID))) {
+      alert("请先选择一个角色开始聊天");
+    }
+  };
   //   const handleQuickResponse = (text: string) => {
   //     setMessage(text);
   //     // Optional: automatically send the message after selecting a quick response
@@ -266,7 +389,8 @@ const renderAvatar = (name: string, avatar?: string) => {
   //     setCurrentCharacter(character);
   //     // In a real app, you would fetch the conversation history with this character
   //   };
-  return sessionsResponse.length > 0 ? (
+  // 即使没有会话也显示界面，不再依赖sessionsResponse.length
+  return (
     <div className="flex h-screen bg-black">
       {/* Left Sidebar */}
       <div className="w-[350px] border-r border-gray-800 flex flex-col bg-black overflow-hidden">
@@ -382,8 +506,8 @@ const renderAvatar = (name: string, avatar?: string) => {
                 <div key={msg.id} className={`flex ${msg.sender_type == 'user' ? 'justify-end' : 'items-start'} gap-3`}>
                   {msg.sender_type !== 'user' && renderAvatar(msg.sender, currentCharacter?.image_url)}
                   <div className={`max-w-[70%] rounded-2xl p-4 shadow-md ${msg.sender_type === 'user'
-                      ? 'bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700'
-                      : 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800'
+                    ? 'bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700'
+                    : 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800'
                     }`}>
                     {msg.content}
                   </div>
@@ -405,7 +529,8 @@ const renderAvatar = (name: string, avatar?: string) => {
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
                 )
-              )}
+              )
+              }
               <div ref={messagesEndRef} />
             </div>
           </div>
@@ -445,7 +570,7 @@ const renderAvatar = (name: string, avatar?: string) => {
         </div>
       </div>
     </div>
-  ) : (
+  ); (
     // 中间加一个按钮，点击按钮跳转到灵感页面
     <div className="flex h-screen bg-black">
       <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">
@@ -464,6 +589,7 @@ const renderAvatar = (name: string, avatar?: string) => {
     </div>
   );
 };
+
 
 
 export default ChatInterface;
