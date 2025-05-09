@@ -752,7 +752,7 @@ const apiService = {
       })
     },
     getNovel: async (): Promise<Novel[]> => {
-      return request(`/novels/`, {
+      return request(`/novels/getMy`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

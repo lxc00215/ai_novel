@@ -6,27 +6,22 @@ from sqlalchemy import select, func, update
 
 from database import Novels, User,async_session
 from sqlalchemy.ext.asyncio import AsyncSession
-# from config.prompt import WRITER_PROMPT
 from database import get_db, User, Novels, GeneratedChapter
 from schemas import BookGenerationCreate, ChapterCreate, ChapterResponse, ChapterUpdate, NovelResponse, NovelUpdate
-# from schemas import CrazyNovelCreate, NovelCreate, NovelUpdate, NovelResponse, PaginatedResponse
 from auth import get_current_user  # 导入获取当前用户的函数
-# from datetime import datetime
-# from dao.crazy1novel import write_novel_free
-# import asyncio
-# from fastapi import WebSocketDisconnect
-# from fastapi.concurrency import run_in_threadpool
+
 
 router = APIRouter(prefix="/novels", tags=["novels"])
-
-
 
 # 创建小说
 @router.post("/create", response_model=None)
 async def create_novel(
     request: BookGenerationCreate,
-    # current_user: User = Depends(get_current_user),  # 获取当前登录用户
+    current_user: User = Depends(get_current_user),  # 获取当前登录用户
 ):
+   
+   if current_user.id == None:
+       raise HTTPException(status_code=401, detail="请先登录")
    async with async_session() as db:
 
     # 创建一本什么都没的空小说
@@ -59,7 +54,10 @@ async def create_novel(
    
 # 获取某一本小说
 @router.get("/getMy/{novel_id}", response_model=None)
-async def get_novel(novel_id:int):
+async def get_novel(novel_id:int,current_user: User = Depends(get_current_user)):
+
+    if current_user.id == None:
+        raise HTTPException(status_code=401, detail="请先登录")
     async with async_session() as db:
         query = select(Novels).where(
             Novels.id == novel_id
@@ -83,11 +81,7 @@ async def get_all_novel(current_user: User = Depends(get_current_user)):
 
         if not novels:
             raise HTTPException(status_code=404, detail=f"未找到该用户的小说")
-       
         return novels
-
-
-
 
 # 更新小说
 @router.put("/{novel_id}/updateNovel", response_model=None)

@@ -325,7 +325,7 @@ export default function HomePage() {
               <p className="mt-4 text-lg opacity-80 max-w-2xl mx-auto">
                 借助先进的人工智能技术，我们为您提供从灵感萌发到成书的全流程解决方案
               </p>
-            </div>
+            </div>                         
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
