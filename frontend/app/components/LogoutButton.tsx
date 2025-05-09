@@ -21,6 +21,7 @@ const handleLogout = () => {
     // 清除localStorage中的token和用户信息
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
 
     // 清除cookie中的token
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';

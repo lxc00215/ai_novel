@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from database import get_db, User
 from schemas import UserCreate, UserLogin, Token, UserResponse
-from auth import verify_password, create_access_token
+from auth import get_current_user, verify_password, create_access_token
 from datetime import timedelta
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -70,6 +70,11 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
+# @router.get("/logout")
+# async def logoutt(current_user: User = Depends(get_current_user)):
+#     current_user.logout()
+#     return {"message": "Logout successful"}
+
 @router.post("/register")
 async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     # 验证必填字段
@@ -96,7 +101,6 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         email=user.email,
         password_hash=hashed_password
     )
-    
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)

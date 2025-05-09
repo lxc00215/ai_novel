@@ -5,17 +5,18 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from database import BookBreakdown, File as FileModel, get_db, AsyncSession
+from auth import get_current_user
+from database import BookBreakdown, File as FileModel, User, get_db, AsyncSession
 from schemas import BookBreakdownResponse
 
 
 
 
-router = APIRouter(prefix="/bookGeneration", tags=["bookGeneration"])
+router = APIRouter(prefix="/analysis", tags=["analysis"])
 
 @router.get("/get-analysis-history", response_model=List[BookBreakdownResponse])
 async def get_user_book_breakdowns(
-    user_id: Optional[int] = None,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -30,8 +31,8 @@ async def get_user_book_breakdowns(
         query = select(BookBreakdown).options(selectinload(BookBreakdown.file))
         
         # 如果提供了用户ID，则筛选该用户的拆书记录
-        if user_id:
-            query = query.join(FileModel).where(FileModel.user_id == user_id)
+        if current_user.id:
+            query = query.join(FileModel).where(FileModel.user_id == current_user.id)
             
         # 执行查询，使用 await
         result = await db.execute(query)
@@ -63,7 +64,7 @@ async def get_user_book_breakdowns(
 
 
 # 获取拆书详情
-@router.get("/book-breakdowns/{breakdown_id}", response_model=BookBreakdownResponse)
+@router.get("/{breakdown_id}", response_model=BookBreakdownResponse)
 async def get_book_breakdown(
     breakdown_id: int,
     db: AsyncSession = Depends(get_db)
@@ -75,6 +76,7 @@ async def get_book_breakdown(
         breakdown_id: 拆书记录ID
         db: 数据库会话
     """
+
     try:
         # 使用 selectinload 预加载文件信息
         query = select(BookBreakdown).options(

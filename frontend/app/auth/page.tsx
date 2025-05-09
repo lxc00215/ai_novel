@@ -164,7 +164,6 @@ const AuthPage = () => {
 
       const response = await apiService.auth.register(registerData);
       if (response) {
-
         // 显示成功提示
         toast.success('注册成功！');
         // 设置登录状态
@@ -172,12 +171,8 @@ const AuthPage = () => {
         localStorage.setItem('user', JSON.stringify(response.user));
         localStorage.setItem('token', response.access_token || '');
 
-        if (!rememberMe) {
-          // 设置过期时间
-          const expiresAt = new Date();
-          expiresAt.setHours(expiresAt.getHours() + 1);
-          localStorage.setItem('expiresAt', expiresAt.toISOString());
-        }
+        document.cookie = `token=${response.access_token}; path=/;`;
+
         // 跳转
         router.push("/dashboard");
       } else {

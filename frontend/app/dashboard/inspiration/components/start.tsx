@@ -35,7 +35,6 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
   const cardRef = useRef(null);
   const inputRef = useRef(null);
 
-  const [isSecondaryPageVisible, setIsSecondaryPageVisible] = useState(false);
   const { checkText, isReady } = useSensitiveFilter({
     showToast: true
   });
@@ -49,19 +48,17 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
 
    // 在组件顶部添加状态控制抽屉显示
    const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
-   const [historyData, setHistoryData] = useState<any[]>([]);
-   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  //  const [historyData, setHistoryData] = useState<any[]>([]);
+  //  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
    
   //  // 获取历史记录数据
   const getStories = async (page: number, pageSize: number) => {
-    setIsHistoryLoading(true);
     try {
       const user = localStorage.getItem('user')
       const userId = JSON.parse(user || '{}').id;
       
       // 调用 API 获取故事列表，传入分页参数
-      const response = await apiService.spirate.getStories(userId || 4, page, pageSize);
-      setHistoryData(response.data);
+      const response = await apiService.spirate.getStories(page, pageSize);
       return response;
     } catch (err) {
       return {
@@ -71,7 +68,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
         total_pages: 1
       };
     }finally{
-      setIsHistoryLoading(false);
+      // setIsHistoryLoading(false);
     }
   };
    

@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from requests import session
 from sqlalchemy import delete, select
+from auth import get_current_user
 from database import  Character, ChatMessage, ChatSession, User, get_db
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from routes.feature_routes import get_feature_by_name
 from schemas import ChatMessageRequest, ChatSessionRequest
@@ -43,10 +44,9 @@ async def get_chat_sessions(db: AsyncSession, sessions: list):
     
     return sessions_with_messages
 
-
-@router.get("/sessions/{user_id}/recent")
+@router.get("/sessions/recent")
 async def get_user_sessions(
-    user_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     # 首先获取会话列表
@@ -54,23 +54,21 @@ async def get_user_sessions(
         selectinload(ChatSession.messages),
         joinedload(ChatSession.character),
         joinedload(ChatSession.user)
-    ).where(ChatSession.user_id == user_id).order_by(ChatSession.updated_at.desc()).limit(1)
+    ).where(ChatSession.user_id == current_user.id).order_by(ChatSession.updated_at.desc()).limit(1)
     result = await db.execute(sessions_query)
     sessions = result.scalars().all()
-    
-    # # 然后获取每个会话的消息
-    # sessions_with_messages = await get_chat_sessions(db, sessions)
     
     return sessions
 
 # 在路由处理函数中使用
-@router.get("/sessions/{user_id}")
+@router.get("/sessions")
 async def get_user_sessions(
-    user_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    # 只查最近7天的会话
     # 首先获取会话列表
-    sessions_query = select(ChatSession).where(ChatSession.user_id == user_id)
+    sessions_query = select(ChatSession).where(ChatSession.user_id == current_user.id).where(ChatSession.updated_at >= datetime.now() - timedelta(days=1))
     result = await db.execute(sessions_query)
     sessions = result.scalars().all()
     

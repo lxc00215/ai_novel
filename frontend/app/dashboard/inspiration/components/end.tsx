@@ -24,10 +24,10 @@ import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from "@/components/
 // 修改获取故事列表函数，添加分页参数
 const getStories = async (page: number, pageSize: number) => {
   try {
-    const { getCurrentUserId } = await import('@/app/utils/jwt')
-    const userId = getCurrentUserId();
+    // const { getCurrentUserId } = await import('@/app/utils/jwt')
+    // const userId = getCurrentUserId();
     // 调用 API 获取故事列表，传入分页参数
-    const response = await apiService.spirate.getStories(userId, page, pageSize);
+    const response = await apiService.spirate.getStories( page, pageSize);
     console.log("response", response);
     return response;
   } catch (err) {

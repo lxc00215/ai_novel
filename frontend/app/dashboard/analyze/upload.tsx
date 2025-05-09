@@ -87,6 +87,8 @@ export default function Upload({ onUploadComplete }: UploadProps) {
       
       // 打开连接并发送请求
     xhr.open('POST', 'http://127.0.0.1:8000/ai/upload-file', true);
+    // xhr.setRequestHeader('Content-Type', 'multipart/form-data');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('token'))
 
     //  if(response.file_id){
     

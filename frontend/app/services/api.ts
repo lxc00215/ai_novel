@@ -134,7 +134,8 @@ const apiService = {
       const response = await request('/alipay/create', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
         },
         body: JSON.stringify({
           amount: amount,
@@ -147,7 +148,8 @@ const apiService = {
       const response = await request('/alipay/check', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify({
           order_info: orderInfo
@@ -224,6 +226,10 @@ const apiService = {
       // 调用后端登出接口（如果需要）
       const response = await request('/auth/logout', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
       });
 
       // 无论成功与否，清除本地存储
@@ -255,7 +261,8 @@ const apiService = {
       const response = await request(`/utils/download_image_and_upload?image_url=${image_url}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
 
@@ -290,26 +297,32 @@ const apiService = {
         method: 'POST',
         body: JSON.stringify({ choice }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
     },
     get: async (id: string) => {
       console.log('Calling API with ID:', id); // 添加日志
       try {
-        const response = await request(`/spirate/${id}`);
+        const response = await request(`/spirate/getOne/${id}`,{
+          headers:{
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
         return response;
       } catch (error) {
         console.error('API error:', error);
         return { success: false, data: null };
       }
     },
-    getStories: async (id: number, page: number, pageSize: number) => {
+    getStories: async (page: number, pageSize: number) => {
       console.log("getStories1");
-      const response = await request(`/spirate/user/${id}?page=${page}&pageSize=${pageSize}`, {
+      const response = await request(`/spirate/getMy?page=${page}&pageSize=${pageSize}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
       return response;
@@ -319,20 +332,42 @@ const apiService = {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
     }
   },
-  bookGeneration: {
-    getAnalysisHistory: async () => {
-      return request(`/bookGeneration/get-analysis-history`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-    },
+  // bookGeneration: {
+  //   getAnalysisHistory: async () => {
+  //     return request(`/bookGeneration/get-analysis-history`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer ' + localStorage.getItem('token')
+  //       }
+  //     })
+  //   },
+  // },
+  
+  analysis:{
+      // 拆书相关api
+
+      // 获取该角色的全部拆书历史
+      get_history: async () => {
+        return request(`/analysis/get-analysis-history`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        })
+      },
+      get_detail: async (breakdown_id: number) => {
+        return request(`/analysis/`+breakdown_id, {
+          method: 'GET'
+        })
+      },
   },
   // AI 生成相关 API
   ai: {
@@ -342,7 +377,8 @@ const apiService = {
         method: 'POST',
         body: JSON.stringify({ file_id }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       })
     },
@@ -353,7 +389,8 @@ const apiService = {
         method: 'POST',
         body: JSON.stringify({ file_id }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       })
     },
@@ -367,7 +404,8 @@ const apiService = {
           requirements
         }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
     },
@@ -399,10 +437,14 @@ const apiService = {
               if (done) break;
 
               const chunk = decoder.decode(value);
+              console.log(chunk);
+         
               const messages = chunk
-                .split('\n')
-                .filter(line => line.startsWith('data: '))
-                .map(line => line.slice(6)); // 移除 'data: ' 前缀
+                .split('\n\n')
+                .map(line => line.startsWith('data: ') ? line.slice(6) : line);
+                
+                
+                // 移除 'data: ' 前缀
 
               for (const message of messages) {
                 if (message.trim()) {
@@ -442,10 +484,9 @@ const apiService = {
 
             const chunk = decoder.decode(value);
             const messages = chunk
-              .split('\n')
-              .filter(line => line.startsWith('data: '))
-              .map(line => line.slice(6)); // 移除 'data: ' 前缀
-
+            .split('\n\n')
+            .map(line => line.startsWith('data: ') ? line.slice(6) : line);
+            
             for (const message of messages) {
               if (message.trim()) {
                 yield message;
@@ -481,16 +522,14 @@ const apiService = {
 
             const chunk = decoder.decode(value);
             const messages = chunk
-              .split('\n')
-              .filter(line => line.startsWith('data: '))
-              .map(line => line.slice(6)); // 移除 'data: ' 前缀
-
+            .split('\n\n')
+            .map(line => line.startsWith('data: ') ? line.slice(6) : line);
+            
             for (const message of messages) {
               if (message.trim()) {
                 yield message;
               }
             }
-
           }
         }
       }
@@ -515,7 +554,8 @@ const apiService = {
         method: 'POST',
         body: JSON.stringify({ prompt, user_id: userId, size: "1280x960" }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
 
@@ -532,11 +572,12 @@ const apiService = {
 
   chat: {
     // 获取用户最近的会话列表
-    getRecentSessions: async (userId: number) => {
-      return await request(`/chat/sessions/${userId}`, {
+    getRecentSessions: async () => {
+      return await request(`/chat/sessions`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
     },
@@ -619,7 +660,7 @@ const apiService = {
 
   crazy: {
     get: async (task_id: string) => {
-      const response = await request(`/task/crazy/${task_id}`, {
+      const response = await request(`/crazy/${task_id}`, {
         method: 'GET'
       })
       return response;
@@ -710,11 +751,12 @@ const apiService = {
         }
       })
     },
-    getNovel: async (id: string): Promise<Novel[]> => {
-      return request(`/novels/${id}/novel`, {
+    getNovel: async (): Promise<Novel[]> => {
+      return request(`/novels/`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token') || ''
         }
       })
     }
@@ -731,11 +773,12 @@ const apiService = {
         }
       })
     },
-    getCharacters: async (user_id: number): Promise<Character[]> => {
-      return request(`/character/${user_id}`, {
+    getCharacters: async (): Promise<Character[]> => {
+      return request(`/character/getMy`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token') || ''
         }
       })
     }

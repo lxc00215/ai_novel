@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useRef, use } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { SendHorizontal, Info, Smile, Loader2, BookOpen, RefreshCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Message, Character, Session, User } from '@/app/services/types';
 import apiService from '@/app/services/api';
 import { useRouter } from 'next/navigation';
-
+import Image from 'next/image';
+import styles from './chatInterface.module.css';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ChatInterface = () => {
 
@@ -28,6 +29,15 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   // 获取与特定角色的聊天历史
 
+  // 添加图片懒加载状态
+  const [loadedImages, setLoadedImages] = useState<{[key: string]: boolean}>({});
+  // 处理图片加载完成事件
+  const handleImageLoaded = (imageId: string) => {
+    setLoadedImages(prev => ({...prev, [imageId]: true}));
+  };
+
+
+
 
   const handleRefresh = async () => {
 
@@ -45,16 +55,12 @@ const ChatInterface = () => {
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        // 1. 获取所有角色列表
-        console.log("user" + localStorage.getItem('token'))
 
-        const auser = JSON.parse(localStorage.getItem('user') || '{}');
-
-        const charactersResponse = await apiService.character.getCharacters(Number(auser!.id));
+        const charactersResponse = await apiService.character.getCharacters();
         setCharacters(charactersResponse);
 
         // 2. 获取最近的会话列表
-        const sessionsResponse = await apiService.chat.getRecentSessions(Number(auser!.id));
+        const sessionsResponse = await apiService.chat.getRecentSessions();
         setSessionsResponse(sessionsResponse);
         console.log("sessionsResponse", JSON.stringify(sessionsResponse));
         // 3. 如果 URL 中有指定角色 ID
@@ -69,9 +75,6 @@ const ChatInterface = () => {
               (session: any) => session.character_id == characterIdFromUrl
             );
 
-            console.log("sessionsResponse", characterIdFromUrl);
-            console.log("sessionsResponse", JSON.stringify(sessionsResponse));
-            console.log("existingSession", JSON.stringify(existingSession));
 
             if (existingSession) {
               setCurrentSessionID(Number(existingSession?.id));
@@ -132,6 +135,7 @@ const ChatInterface = () => {
 
 
   const switchCharacter = async (character: Character, characterID: string) => {
+    console.log("switchCharacter", JSON.stringify(sessionsResponse));
     setCurrentCharacter(character);
     const existingSession = sessionsResponse.find(
       (session: any) => session.character_id == characterID
@@ -167,19 +171,37 @@ const ChatInterface = () => {
   };
 
   // Function to render avatar or fallback with first letter of name
-  const renderAvatar = (name: string, avatar?: string) => {
-    return (
-      <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
-        {avatar ? (
-          <img src={avatar ?? ''} alt={name} className="h-full w-full object-cover rounded-full" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
-            {name ?? 'L'.charAt(0)}
-          </div>
-        )}
-      </Avatar>
-    );
-  };
+// 渲染用户头像
+const renderAvatar = (name: string, avatar?: string) => {
+  const imageId = `${name}-${avatar}`;
+  
+  return (
+    <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
+      {avatar ? (
+        <div className={styles.avatarContainer}>
+          {!loadedImages[imageId] && (
+            <div className={styles.avatarPlaceholder}>
+              {name?.charAt(0) || 'U'}
+            </div>
+          )}
+          <Image 
+            src={avatar} 
+            alt={name} 
+            width={40} 
+            height={40}
+            className={`${styles.avatarImage} ${loadedImages[imageId] ? styles.loaded : ''}`}
+            onLoad={() => handleImageLoaded(imageId)}
+            loading="lazy"
+          />
+        </div>
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
+          {name?.charAt(0) || 'U'}
+        </div>
+      )}
+    </Avatar>
+  );
+};
 
 
 
@@ -218,7 +240,6 @@ const ChatInterface = () => {
       let content = "";
       for await (const chunk of stream.getMessages()) {
         setStreamingMessage(prev => prev + chunk);
-
         content += chunk;
       }
 
@@ -230,7 +251,6 @@ const ChatInterface = () => {
         created_at: new Date().toISOString(),
         session_id: CurrentSessionID || 0
       }
-      console.log(JSON.stringify(aiMessage) + "aiMessage");
       setMessages(prev => [...prev, aiMessage]);
       setIsLoading(false);
       setStreamingMessage('');
@@ -254,14 +274,13 @@ const ChatInterface = () => {
           <h1 className="text-xl font-bold">聊天</h1>
         </div>
         {/* Recommended Characters */}
-        <div className="p-4 border-b border-gray-800">
+        <ScrollArea className="flex-1 p-4 border-b border-gray-800 h-full">
           <h2 className="text-lg font-semibold mb-4">历史</h2>
           <div className="space-y-4">
             {characters.map(character => (
               <div
                 key={character.id}
-                className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-800 p-2 rounded-lg transition-all duration-200 ${currentCharacter?.id === character.id ? 'bg-gray-800' : ''
-                  }`}
+                className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-800 p-2 rounded-lg transition-all duration-200 ${currentCharacter?.id === character.id ? 'bg-gray-800' : ''}`}
                 onClick={() => switchCharacter(character, character.id)}
               >
                 {renderAvatar(character.name, character.image_url)}
@@ -272,7 +291,7 @@ const ChatInterface = () => {
               </div>
             ))}
           </div>
-        </div>
+        </ScrollArea>
 
         {/* History */}
 
@@ -299,8 +318,6 @@ const ChatInterface = () => {
             >
               <RefreshCcw className="h-5 w-5" />
             </Button>
-            {/* Info button with hover/click functionality */}
-
 
             <Button
               variant="ghost"
@@ -358,8 +375,6 @@ const ChatInterface = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-
-
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="space-y-8 max-w-4xl mx-auto">
@@ -391,14 +406,11 @@ const ChatInterface = () => {
                   </div>
                 )
               )}
-
               <div ref={messagesEndRef} />
             </div>
           </div>
 
         </div>
-
-
 
         {/* Message Input */}
         <div className="p-6 border-t border-gray-800 bg-black">

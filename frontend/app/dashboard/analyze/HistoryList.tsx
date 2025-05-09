@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-// import { CalendarIcon } from "@/components/icons/CalendarIcon";
+import { useRouter } from 'next/navigation';
 
 // 模拟历史数据 - 实际应用中应从API获取
 interface HistoryListProps{
@@ -18,6 +18,8 @@ export default function HistoryList({historyItems}:HistoryListProps) {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   
+  const router = useRouter()
+
   // 检查是否有历史记录
   const hasHistory = historyItems.length > 0;
 
@@ -28,6 +30,8 @@ export default function HistoryList({historyItems}:HistoryListProps) {
       setCanScrollRight(scrollWidth > clientWidth);
     }
   }, []);
+
+
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
@@ -78,7 +82,14 @@ export default function HistoryList({historyItems}:HistoryListProps) {
 
   // 如果没有历史记录，返回空组件
   if (!hasHistory) {
-    return null;
+    // 还没有历史记录
+    return (
+      <Card className="w-full">
+        <CardContent className="p-5">
+          <h3 className="font-medium truncate text-lg mb-1">还没有历史记录</h3>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -118,7 +129,11 @@ export default function HistoryList({historyItems}:HistoryListProps) {
           {historyItems.map((item) => (
             <Card 
               key={item.id} 
-              className="w-[240px] flex-shrink-0 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md border border-border/60 group"
+              
+              onClick={
+                ()=>router.push(`/dashboard/analyze/${item.id}`)
+              }
+              className="w-[240px] hover:cursor-pointer flex-shrink-0 transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md border border-border/60 group"
             >
               <CardContent className="p-5">
                 <h3 className="font-medium truncate text-lg mb-1 group-hover:text-primary transition-colors">{item.title}</h3>

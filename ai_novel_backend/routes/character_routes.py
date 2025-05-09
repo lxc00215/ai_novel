@@ -10,27 +10,27 @@ import os
 
 router = APIRouter(prefix="/character", tags=["character"])
 
-@router.get("/{user_id}")
+@router.get("/getMy")
 async def get_characters(
-    user_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     # 查询该用户创建的所有角色 is_used=True
-    query = select(Character).where(Character.user_id == user_id, Character.is_used == True)
+    query = select(Character).where(Character.user_id == current_user.id, Character.is_used == True)
     result = await db.execute(query)
     characters = result.scalars().all()
     # 将User_id 与 character_id 对应的 session_id 插入到 characters 中
     for character in characters:
-        query = select(ChatSession).where(ChatSession.user_id == user_id, ChatSession.character_id == character.id)
+        query = select(ChatSession).where(ChatSession.user_id == current_user.id, ChatSession.character_id == character.id)
         result = await db.execute(query)
         session = result.scalar_one_or_none()
     return characters
 
 # 更新角色
-@router.put("/{id}")
+@router.put("/updateMy")
 async def update_character(
     character_request: CharacterRequest,
-    # current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     print(character_request)

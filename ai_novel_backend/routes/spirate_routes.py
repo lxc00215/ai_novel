@@ -4,6 +4,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, update
+from auth import get_current_user
 from database import Character, InspirationResult, User, get_db, async_session
 from routes.feature_routes import get_feature_by_name
 from schemas import   ContinueSpirateRequest, InspirationUpdate, SpirateResponse
@@ -161,7 +162,7 @@ async def update_spirate(request: InspirationUpdate, db: AsyncSession = Depends(
 
 
 
-@router.get("/{id}")
+@router.get("/getOne/{id}")
 async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
     spirate = await db.execute(select(InspirationResult).where(InspirationResult.id == id))
     spirate = spirate.scalar_one_or_none()
@@ -195,24 +196,21 @@ async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
     return new
 
 
-
-
-
-
 # 根据用户id获取spirate
-@router.get("/user/{user_id}")
-async def get_spirate_by_user_id(user_id: int,
+@router.get("/getMy")
+async def get_spirate_by_user_id(
+    current_user: User = Depends(get_current_user),
     page: int = Query(1, ge=1),
     pageSize: int = Query(5, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
     print(pageSize,"pageSize")
     print(page,"page")
-    spirate = await db.execute(select(InspirationResult).where(InspirationResult.user_id == user_id).order_by(InspirationResult.created_at.desc()).offset((page - 1) * pageSize).limit(pageSize))
+    spirate = await db.execute(select(InspirationResult).where(InspirationResult.user_id == current_user.id).order_by(InspirationResult.created_at.desc()).offset((page - 1) * pageSize).limit(pageSize))
     spirate = spirate.scalars().all()
 
 
-    total = await db.execute(select(func.count()).where(InspirationResult.user_id == user_id))
+    total = await db.execute(select(func.count()).where(InspirationResult.user_id == current_user.id))
     total = total.scalar_one_or_none()
     current_page = page
     total_pages = math.ceil(total / pageSize)

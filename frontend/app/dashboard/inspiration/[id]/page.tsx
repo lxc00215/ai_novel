@@ -10,26 +10,6 @@ import { Character, InspirationDetail } from '@/app/services/types';
 import { toast } from 'sonner';
 
 
-async function getInspirationData(id: string) {
-  try {
-    const response = await request(`/spirate/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    console.log("response",JSON.stringify(response));
-    if (!response) {
-      return null;
-    }
-
-    return response;
-  } catch (error) {
-    console.error('Error fetching inspiration:', error);
-    return null;
-  }
-}
-
 export default function SpirateDetail() {
 
   // 添加新的状态来处理分支点击和加载
@@ -84,6 +64,8 @@ const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [currentChoiceText, setCurrentChoiceText] = useState('');
 
 // 处理分支选择的函数
+// 处理分支选择的函数
+// 处理分支选择的函数
 const handleChoiceSelect = async (choice: string) => {
   // 设置选中的分支和加载状态
   setSelectedChoice(choice);
@@ -94,10 +76,19 @@ const handleChoiceSelect = async (choice: string) => {
   setShowChat(false);
   
   try {
+    // 创建用户选择提示，作为普通文本添加，这样就会被保存到数据库
+    const choiceNotification = `您已选择了：${choice}`;
+    
+    // 添加到显示数组，添加特殊标记以便于渲染时识别
+    setDisplayedLines(prev => [
+      ...prev,
+      `__CHOICE__${choiceNotification}`
+    ]);
+    
     // 向服务端发送请求，获取下一段内容
-    const response = await apiService.spirate.continue(inspiration_id,choice);
+    const response = await apiService.spirate.continue(inspiration_id, choice);
    
-    console.log("response",JSON.stringify(response));
+    console.log("response", JSON.stringify(response));
     // 获取新内容
     const newContent = response.content || '';
     const newChoices = response.story_direction || [];
@@ -105,29 +96,26 @@ const handleChoiceSelect = async (choice: string) => {
     // 首先保存当前已展示的内容
     const currentDisplayedContent = [...displayedLines];
     
-     // 更新显示的内容，保留之前的内容
-     setDisplayedLines(currentDisplayedContent);
+    // 开始为新内容执行打字机效果
+    if (newContent) {
+      // 分割新内容为行
+      const newContentLines = newContent.split('\n\n');
+      
+      // 获取当前内容的行数，作为起始索引
+      const startIndex = currentDisplayedContent.length;
+      
+      // 使用打字机效果显示新内容
+      await typewriterEffectForContinuation(newContentLines, startIndex);
+    }
     
-     // 开始为新内容执行打字机效果
-     if (newContent) {
-       // 分割新内容为行
-       const newContentLines = newContent.split('\n\n');
-       
-       // 获取当前内容的行数，作为起始索引
-       const startIndex = currentDisplayedContent.length;
-       
-       // 使用打字机效果显示新内容
-       await typewriterEffectForContinuation(newContentLines, startIndex);
-     }
-     
-     // 更新选项列表
-     setDisplayedChoices(newChoices);
-     
-     // 更新角色列表（如果响应中包含）
-     if (response.characters) {
-       setCharacters(response.characters as Character[]);
-
-      //  多线程生成图片
+    // 更新选项列表
+    setDisplayedChoices(newChoices);
+    
+    // 更新角色列表（如果响应中包含）
+    if (response.characters) {
+      setCharacters(response.characters as Character[]);
+      
+      // 多线程生成图片 - 使用Promise.all但不等待它完成
       const imagePromises = response.characters.map(async (character:any) => {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         console.log("开始")
@@ -144,9 +132,6 @@ const handleChoiceSelect = async (choice: string) => {
           is_used: false,
           prompt: character.prompt
         };
-    
-        // console.log("image_url",JSON.stringify(json_data));
-    
     
         // 更新角色信息
         const updatedCharacter = await apiService.character.update(character.id, json_data);
@@ -165,39 +150,48 @@ const handleChoiceSelect = async (choice: string) => {
         return character;
       });
 
-
-
-      await Promise.all(imagePromises);
-     }
+      // 不再等待图片生成
+      Promise.all(imagePromises).catch(err => {
+        console.error("Error generating character images:", err);
+      });
+    }
      
-     // 更新主故事对象
-    // 更新主故事对象
-if (inspiration && inspiration.id) {
-  setInspiration({
-    ...inspiration,
-    content: [...displayedLines].join('\n\n'),
-    story_direction: newChoices,
-    id: inspiration.id, // 明确指定 id，确保非 undefined
-  });
-} else {
-  console.error('Invalid inspiration object:', inspiration);
-  toast.error('无法更新故事内容，请重试');
-}
+    // 更新主故事对象 - 确保用户选择内容也被保存到数据库
+    if (inspiration && inspiration.id) {
+      // 包含用户选择记录在内容中保存
+      const contentWithChoices = [...displayedLines].join('\n\n');
+      
+      // 立即调用API保存更新后的内容
+      await apiService.spirate.update({
+        id: inspiration.id,
+        content: contentWithChoices,
+        story_direction: newChoices
+      });
+      
+      setInspiration({
+        ...inspiration,
+        content: contentWithChoices,
+        story_direction: newChoices,
+        id: inspiration.id,
+      });
+    } else {
+      console.error('Invalid inspiration object:', inspiration);
+      toast.error('无法更新故事内容，请重试');
+    }
      
-   } catch (error) {
-     console.error('Error continuing story:', error);
-     toast.error('获取后续内容失败，请重试');
-   } finally {
-     // 重置加载状态
-     setIsLoadingNextContent(false);
-     setSelectedChoice(null);
+  } catch (error) {
+    console.error('Error continuing story:', error);
+    toast.error('获取后续内容失败，请重试');
+  } finally {
+    // 重置加载状态
+    setIsLoadingNextContent(false);
+    setSelectedChoice(null);
 
-  // 重新显示分支和聊天区域
-  setShowChoices(true);
-  setShowChat(true);
-}
+    // 重新显示分支和聊天区域
+    setShowChoices(true);
+    setShowChat(true);
+  }
 };
-
 
 // 为继续内容专门创建的打字机效果函数
 const typewriterEffectForContinuation = async (lines: string[], startIndex: number) => {
@@ -266,7 +260,6 @@ const typewriterEffectForContinuation = async (lines: string[], startIndex: numb
             setCurrentLineIndex(prevIndex => prevIndex + 1);
           }
         }
-
       });
     } else {
       // 普通文本行的处理
@@ -287,8 +280,104 @@ const typewriterEffectForContinuation = async (lines: string[], startIndex: numb
     await new Promise(resolve => setTimeout(resolve, 200));
   }
   
+  // 打字机效果结束后立即显示分支和聊天区域，不再等待图片生成
+  setShowChoices(true);
+  setShowChat(true);
+  
   setIsTyping(false);
 };
+
+
+// // 为继续内容专门创建的打字机效果函数
+// const typewriterEffectForContinuation = async (lines: string[], startIndex: number) => {
+//   setIsTyping(true);
+  
+//   // 用于存储最终要保存的完整内容
+//   let finalStoryContent = [...displayedLines];
+  
+//   // 检查是否为图片URL的简单判断函数
+//   const isImageUrl = (text:any) => text.startsWith('http') && (text.includes('.jpg') || text.includes('.png') || text.includes('.jpeg') || text.includes('.gif'));
+  
+//   for (let i = 0; i < lines.length; i++) {
+//     const lineIndex = startIndex + i;
+//     setCurrentLineIndex(lineIndex);
+//     const line = lines[i];
+    
+//     // 检查当前行是否是图片URL
+//     if (isImageUrl(line)) {
+//       // 直接添加图片URL，不做打字机效果
+//       setDisplayedLines(prev => {
+//         const newLines:string[] = [...prev];
+//         newLines[lineIndex] = line;
+//         return newLines;
+//       });
+      
+//       // 将图片URL添加到最终内容中
+//       finalStoryContent[lineIndex] = line;
+//     } else if (line.includes('【插图】')) {
+//       console.log("到这里了")
+//       // 插图处理逻辑
+//       let currentText = '';
+//        // 显示文本内容的打字机效果
+//        for (let j = 0; j < line.length; j++) {
+//         currentText += line[j];
+//         setDisplayedLines(prev => {
+//           const newLines = [...prev];
+//           newLines[lineIndex] = currentText.replace('【插图】', '');
+//           return newLines;
+//         });
+//         await new Promise(resolve => setTimeout(resolve, 50));
+//       }
+      
+//       // 设置图片加载状态
+//       setImageStates(prev => ({
+//         ...prev,
+//         [lineIndex]: { loading: true }
+//       }));
+      
+//       // 启动图片生成，但不阻塞打字机效果
+//       const cleanText = line.replace('【插图】', '');
+//       finalStoryContent[lineIndex] = cleanText;
+      
+//       generateImage(line, lineIndex).then(new_image_url => {
+//         if (new_image_url) {
+//           // 插入新的图片URL到显示内容和最终内容中
+//           setDisplayedLines(prev => {
+//             const newLines = [...prev];
+//             newLines.splice(lineIndex + 1, 0, new_image_url);
+//             return newLines;
+//           });
+          
+//           finalStoryContent.splice(lineIndex + 1, 0, new_image_url);
+          
+//           // 后续索引都需要+1，因为插入了新行
+//           if (i < lines.length - 1) {
+//             setCurrentLineIndex(prevIndex => prevIndex + 1);
+//           }
+//         }
+
+//       });
+//     } else {
+//       // 普通文本行的处理
+//       let currentText = '';
+//       for (let j = 0; j < line.length; j++) {
+//         currentText += line[j];
+//         setDisplayedLines(prev => {
+//           const newLines = [...prev];
+//           newLines[lineIndex] = currentText;
+//           return newLines;
+//         });
+//         await new Promise(resolve => setTimeout(resolve, 50));
+//       }
+      
+//       // 将普通文本添加到最终内容中
+//       finalStoryContent[lineIndex] = line;
+//     }
+//     await new Promise(resolve => setTimeout(resolve, 200));
+//   }
+  
+//   setIsTyping(false);
+// };
 
 
 // 同时进行打字机效果和角色图片生成
@@ -350,7 +439,7 @@ const handleContentAndImages = async (responseData:any) => {
         if (!inspiration_id || inspiration_id === 'undefined' || inspiration_id === 'null') {
           throw new Error('Invalid ID');
         }
-        const responseData = await getInspirationData(inspiration_id);
+        const responseData = await apiService.spirate.get(inspiration_id);
         
         if (!responseData) {
           throw new Error('No data found');
@@ -535,7 +624,6 @@ const handleContentAndImages = async (responseData:any) => {
       }
       else if (line.includes('【插图】')) {
         console.log("生成图片中,.,,");
-        // 显示文本内容的打字机效果
         for (let j = 0; j < line.length; j++) {
           currentText += line[j];
           setDisplayedLines(prev => {
@@ -550,7 +638,6 @@ const handleContentAndImages = async (responseData:any) => {
           ...prev,
           [i]: { loading: true }
         }));
-        console.log("生成图片中,.,,");
         // 生成图片并获取新的URL
         generateImage(line, i).then((new_image_url) => {
           if(new_image_url){
@@ -570,8 +657,6 @@ const handleContentAndImages = async (responseData:any) => {
         });
       }
     });
-
-
         await new Promise(resolve => setTimeout(resolve, 200));
       } else {
         // 普通文本行的处理
@@ -599,9 +684,7 @@ const handleContentAndImages = async (responseData:any) => {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
-  
-
-    // 所有内容处理完成后，保存到后端
+      // 所有内容处理完成后，保存到后端
     try {
       // 将数组转换为字符串，使用换行符连接
       const completeStoryContent = finalStoryContent.join('\n\n');
@@ -610,9 +693,7 @@ const handleContentAndImages = async (responseData:any) => {
       await apiService.spirate.update({
         id: inspiration_id,
         content: completeStoryContent,
-        // 其他需要更新的字段...
       });
-
       console.log('Story content updated successfully');
     } catch (error) {
       console.error('Failed to update story content:', error);
@@ -897,76 +978,82 @@ const renderChatSection = () => (
         </div>
       )}
 
-      {/* 故事内容 */}
-      {showStoryContent && (
-        <div className="w-full space-y-8">
-          { displayedLines.map((line, index) => (
-            <div key={index} className="text-gray-300">
-              {editingLineIndex === index ? (
-                <div className="relative border border-gray-700 rounded-lg p-3">
-                  <textarea 
-                    className="bg-black text-gray-300 w-full pr-10 resize-none outline-none"
-                    value={line}
-                    onChange={(e) => {
-                      const newLines = [...displayedLines];
-                      newLines[index] = e.target.value;
-                      setDisplayedLines(newLines);
-                    }}
-                  />
-                  <div className="absolute top-2 right-2 flex space-x-1">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => aiRewriteLine(index)}
-                    >
-                      <Wand2 size={14} />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => saveEditedLine(index, line)}
-                    >
-                      <Check size={14} />
-                    </Button>
-                  </div>
-                </div>
-              ) : typeof line === 'string' && line.includes("https://") ? (
-                <img src={line} alt="Story illustration" className="w-full h-64 object-cover rounded-lg" />
-              ) : (
-              <p 
-                className={`cursor-pointer hover:bg-gray-900 p-2 rounded transition-opacity duration-300 ${
-                  index === displayedLines.length - 1 && isTyping ? 'border-l-2 border-blue-500 pl-4' : ''
-                }`}
-                onClick={() => editLine(index)}
+{/* 故事内容 */}
+{showStoryContent && (
+  <div className="w-full space-y-8">
+    {displayedLines.map((line, index) => (
+      <div key={index} className="text-gray-300">
+        {editingLineIndex === index ? (
+          <div className="relative border border-gray-700 rounded-lg p-3">
+            <textarea 
+              className="bg-black text-gray-300 w-full pr-10 resize-none outline-none"
+              value={line}
+              onChange={(e) => {
+                const newLines = [...displayedLines];
+                newLines[index] = e.target.value;
+                setDisplayedLines(newLines);
+              }}
+            />
+            <div className="absolute top-2 right-2 flex space-x-1">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-6 w-6 p-0"
+                onClick={() => aiRewriteLine(index)}
               >
-                {line}
-              </p>
-              )}
-
-              {/* 图片部分 */}
-              {imageStates[index]?.loading && (
-                <div className="mt-4 mb-8">
-                  <div className="w-full h-64 bg-gray-900 rounded-lg animate-pulse flex items-center justify-center">
-                    <div className="text-gray-500">生成图片中...</div>
-                  </div>
-                </div>
-              )}
-
-              {imageStates[index]?.url && (
-                <div className="mt-4 mb-8">
-                  <img 
-                    src={imageStates[index].url} 
-                    alt="Story illustration" 
-                    className="w-full h-64 object-cover rounded-lg" 
-                  />
-                </div>
-              )}
+                <Wand2 size={14} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-6 w-6 p-0"
+                onClick={() => saveEditedLine(index, line)}
+              >
+                <Check size={14} />
+              </Button>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ) : typeof line === 'string' && line.startsWith('<div class="text-yellow-400') ? (
+          // 渲染用户选择提示，使用dangerouslySetInnerHTML
+          <div 
+            dangerouslySetInnerHTML={{ __html: line }}
+            className="border-l-4 border-yellow-500 pl-3 py-2 my-2"
+          />
+        ) : typeof line === 'string' && line.includes("https://") ? (
+          <img src={line} alt="Story illustration" className="w-full h-64 object-cover rounded-lg" />
+        ) : (
+          <p 
+            className={`cursor-pointer hover:bg-gray-900 p-2 rounded transition-opacity duration-300 ${
+              index === displayedLines.length - 1 && isTyping ? 'border-l-2 border-blue-500 pl-4' : ''
+            }`}
+            onClick={() => editLine(index)}
+          >
+            {line}
+          </p>
+        )}
+
+        {/* 图片部分 */}
+        {imageStates[index]?.loading && (
+          <div className="mt-4 mb-8">
+            <div className="w-full h-64 bg-gray-900 rounded-lg animate-pulse flex items-center justify-center">
+              <div className="text-gray-500">生成图片中...</div>
+            </div>
+          </div>
+        )}
+
+        {imageStates[index]?.url && (
+          <div className="mt-4 mb-8">
+            <img 
+              src={imageStates[index].url} 
+              alt="Story illustration" 
+              className="w-full h-64 object-cover rounded-lg" 
+            />
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
 
       {/* 如果正在加载，则显示加载动画 */}
       {isLoadingNextContent && (

@@ -30,7 +30,6 @@ async def upload_file(
     try:
         # 生成唯一文件ID
         file_id = str(uuid.uuid4())
-        
         # 获取文件扩展名
         _, file_ext = os.path.splitext(file.filename)
         

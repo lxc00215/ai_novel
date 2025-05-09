@@ -61,9 +61,9 @@ export default function WorksContainer() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const { getCurrentUserId } = await import('@/app/utils/jwt')
-      const userId = getCurrentUserId();
-      const response = await apiService.novels.getNovel(`${userId}`);
+      // const { getCurrentUserId } = await import('@/app/utils/jwt')
+      // const userId = getCurrentUserId();
+      const response = await apiService.novels.getNovel();
       if (response) {
         const normalWorks: Novel[] = [];
         const archivedWorks: Novel[] = [];

@@ -17,7 +17,6 @@ router = APIRouter(prefix="/task", tags=["task"])
 @router.post("/new",response_model=SampleTaskResponse)
 async def create_task(task_data: dict,background_tasks:BackgroundTasks):
     """创建新任务并异步处理"""
-    print(f"task_data: {task_data}")
     
     try:
         # 创建任务记录
@@ -37,7 +36,7 @@ async def create_task(task_data: dict,background_tasks:BackgroundTasks):
         
         # 启动异步任务处理，传入task_data
         asyncio.create_task(process_task(task.id, task_data,background_tasks))
-        
+        print("任务生成任务创建成功")
         return {"task_id": task.id, "message": "任务已创建"}
         
     except Exception as e:
@@ -106,7 +105,7 @@ async def get_task_by_type(task_type: TaskTypeEnum,user_id: int):
     if task_type == TaskTypeEnum.CRAZY_WALK:
         async with async_session() as db:
             # 获取所有crazy_walk_results
-            query = select(Task).where(Task.task_type == TaskTypeEnum.CRAZY_WALK)
+            query = select(Task).where(Task.task_type == TaskTypeEnum.CRAZY_WALK,Task.result_id!=None)
             result = await db.execute(query)
             tasks = result.scalars().all()
             for task in tasks:
@@ -133,7 +132,6 @@ async def get_task_status(task_id: int, db: AsyncSession = Depends(get_db)):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    print(f"task: {task}")
     response = TaskResponse(
         id=task.id,
         status=task.status,

@@ -1,15 +1,11 @@
 import { Button } from "@/components/ui/button";
 import Upload from "./upload";
 import HistoryList from "@/app/dashboard/analyze/HistoryList";
-import { BookAIcon, BookImageIcon, BookOpen, History } from "lucide-react";
+import { BookOpen,  } from "lucide-react";
 import { useEffect, useState } from "react";
 import apiService from "@/app/services/api";
 
-interface StartProps {
-  onToggleView: () => void;
-}
-
-export default function Home({ onToggleView }: StartProps) {
+export default function Home() {
   // 模拟检查是否有历史记录 - 实际应用中应从API获取
   const hasHistory = true; // 从后端获取历史数据的状态
 
@@ -34,7 +30,7 @@ export default function Home({ onToggleView }: StartProps) {
   useEffect(()=> {
     // 获取历史记录
     const getHistory = async ()=>{
-      const response = await apiService.bookGeneration.getAnalysisHistory()
+      const response = await apiService.analysis.get_history()
       console.log(response+"历史记录")
       setHistoryItems(response)
     }
@@ -54,21 +50,6 @@ export default function Home({ onToggleView }: StartProps) {
   
   return (
     <main className=" bg-background p-6 relative">
-      <div className="flex items-center p">
-       
-       <h1 className="mx-auto">
-       </h1>
-       
-         <Button 
-           variant="ghost" 
-           size="icon" 
-           className="text-foreground"
-             onClick={onToggleView}
-         >
-           <BookOpen size={20} />
-         </Button>
-      
-     </div>
       
       <div className="max-w-4xl mx-auto space-y-12 pt-10">
         {/* 上传文件组件 */}

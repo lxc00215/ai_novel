@@ -58,6 +58,7 @@ export function EnhancedSidebar() {
     // 清除localStorage中的token和用户信息
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
 
     // 清除cookie中的token
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -123,7 +124,8 @@ export function EnhancedSidebar() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 rounded-full hover:bg-zinc-800"
+            className="h-8 w-8 rounded-full hover:bg-zinc-800 hover:cursor-pointer"
+            
             onClick={toggleCollapse}
           >
             {isCollapsed ? 

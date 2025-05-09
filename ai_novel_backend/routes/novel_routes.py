@@ -58,7 +58,7 @@ async def create_novel(
         return novel
    
 # 获取某一本小说
-@router.get("/{novel_id}", response_model=None)
+@router.get("/getMy/{novel_id}", response_model=None)
 async def get_novel(novel_id:int):
     async with async_session() as db:
         query = select(Novels).where(
@@ -71,11 +71,12 @@ async def get_novel(novel_id:int):
         return novel
     
 # 获取该用户的全部小说
-@router.get("/{user_id}/novel", response_model=None)
-async def get_all_novel(user_id:int):
+@router.get("/getMy", response_model=None)
+async def get_all_novel(current_user: User = Depends(get_current_user)):
+
     async with async_session() as db:
         query = select(Novels).where(
-            Novels.user_id == user_id
+            Novels.user_id == current_user.id
         )
         result = await db.execute(query)
         novels = result.scalars().all()

@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
-import apiService, { request } from '@/app/services/api'
+import apiService from '@/app/services/api'
 
 // 类型定义
 type Chapter = {
@@ -57,14 +57,7 @@ export default function BookDetailPage() {
     async function fetchBookData() {
       try {
         setLoading(true)
-        const response:any = await request(`/crazy/task/${bookId}`,{
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        
-        })
-        console.log(JSON.stringify(response)+"ccc")
+        const response:any = await apiService.crazy.get(bookId)
         if (!response) {
           throw new Error('Failed to fetch book data')
         }
