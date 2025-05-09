@@ -353,97 +353,170 @@ import traceback
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# async def upload_image(file_path: str) -> Optional[str]:
+#     """上传图片到服务器"""
+#     try:
+#         upload_url = "https://img.leebay.cyou/upload?authCode=root"
+#
+#         # 检查文件是否存在
+#         if not os.path.exists(file_path):
+#             logger.error(f"File not found: {file_path}")
+#             return None
+#
+#         # 记录文件信息
+#         logger.info(f"Uploading file: {file_path}")
+#         file_size = os.path.getsize(file_path)
+#         logger.info(f"File size: {file_size} bytes")
+#
+#         if file_size == 0:
+#             logger.error("File is empty")
+#             return None
+#
+#         # 检测文件类型
+#         import imghdr
+#         file_type = imghdr.what(file_path)
+#         if not file_type:
+#             logger.error("Not a valid image file")
+#             return None
+#
+#         # 使用二进制模式读取文件
+#         with open(file_path, 'rb') as f:
+#             file_content = f.read()
+#
+#         # 根据文件类型设置正确的content-type
+#         content_type = f"image/{file_type}"
+#         logger.info(f"Detected image type: {content_type}")
+#
+#         # 使用正确的文件名和内容类型
+#         file_name = os.path.basename(file_path)
+#
+#         # 构建multipart表单数据
+#         from aiohttp import FormData
+#         form = FormData()
+#         form.add_field('file',
+#                       file_content,
+#                       filename=file_name,
+#                       content_type=content_type)
+#
+#         # 使用aiohttp客户端
+#         import aiohttp
+#         async with aiohttp.ClientSession() as session:
+#             try:
+#                 headers = {
+#                     'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+#                     'Accept': '*/*',
+#                     'Host': 'img.leebay.cyou',
+#                     'Connection': 'keep-alive'
+#                 }
+#
+#                 logger.info("Sending request to upload server...")
+#                 async with session.post(upload_url, data=form, headers=headers, timeout=60) as response:
+#                     # 检查状态码
+#                     if response.status != 200:
+#                         error_text = await response.text()
+#                         logger.error(f"HTTP error: {response.status} - {error_text}")
+#                         return None
+#
+#                     # 解析响应
+#                     try:
+#                         result = await response.json()
+#                         logger.info(f"Response: {result}")
+#
+#                         if isinstance(result, list) and result:
+#                             src = result[0].get('src')
+#                             if src:
+#                                 return src
+#                         elif isinstance(result, dict):
+#                             return result.get('src') or result.get('url')
+#
+#                         logger.error(f"Unexpected response format: {result}")
+#                         return None
+#                     except Exception as e:
+#                         logger.error(f"Error parsing response: {str(e)}")
+#                         response_text = await response.text()
+#                         logger.error(f"Raw response: {response_text}")
+#                         return None
+#             except Exception as e:
+#                 logger.error(f"Request error: {str(e)}")
+#                 return None
+#     except Exception as e:
+#         logger.error(f"Upload error: {str(e)}")
+#         logger.error(f"Traceback: {traceback.format_exc()}")
+#         return None
+
+
 async def upload_image(file_path: str) -> Optional[str]:
     """上传图片到服务器"""
     try:
-        upload_url = "https://img.leebay.cyou/upload?authCode=root&&uploadChannel=cfr2"
-        
+        upload_url = "https://img.leebay.cyou/upload?authCode=root"
+
         # 检查文件是否存在
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             return None
-            
+
         # 记录文件信息
         logger.info(f"Uploading file: {file_path}")
-        file_size = os.path.getsize(file_path)
-        logger.info(f"File size: {file_size} bytes")
-        
-        if file_size == 0:
-            logger.error("File is empty")
-            return None
-        
-        # 检测文件类型
-        import imghdr
-        file_type = imghdr.what(file_path)
-        if not file_type:
-            logger.error("Not a valid image file")
-            return None
-            
-        # 使用二进制模式读取文件
-        with open(file_path, 'rb') as f:
-            file_content = f.read()
-            
-        # 根据文件类型设置正确的content-type
-        content_type = f"image/{file_type}"
-        logger.info(f"Detected image type: {content_type}")
-        
-        # 使用正确的文件名和内容类型
-        file_name = os.path.basename(file_path)
-        
-        # 构建multipart表单数据
-        from aiohttp import FormData
-        form = FormData()
-        form.add_field('file', 
-                      file_content, 
-                      filename=file_name,
-                      content_type=content_type)
-        
-        # 使用aiohttp客户端
-        import aiohttp
-        async with aiohttp.ClientSession() as session:
+        logger.info(f"File size: {os.path.getsize(file_path)} bytes")
+
+        async with aiofiles.open(file_path, 'rb') as f:
+            file_content = await f.read()
+            logger.info(f"File content length: {len(file_content)} bytes")
+
+        files = {
+            'file': (
+                os.path.basename(file_path),
+                file_content,
+                'multipart/form-data'
+            )
+        }
+
+        headers = {
+            'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+            'Accept': '*/*',
+            'Host': 'img.leebay.cyou',
+            'Connection': 'keep-alive'
+        }
+
+        logger.info("Sending request to upload server...")
+        async with httpx.AsyncClient() as client:
             try:
-                headers = {
-                    'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-                    'Accept': '*/*',
-                    'Host': 'img.leebay.cyou',
-                    'Connection': 'keep-alive'
-                }
-                
-                logger.info("Sending request to upload server...")
-                async with session.post(upload_url, data=form, headers=headers, timeout=60) as response:
-                    # 检查状态码
-                    if response.status != 200:
-                        error_text = await response.text()
-                        logger.error(f"HTTP error: {response.status} - {error_text}")
-                        return None
-                    
-                    # 解析响应
-                    try:
-                        result = await response.json()
-                        logger.info(f"Response: {result}")
-                        
-                        if isinstance(result, list) and result:
-                            src = result[0].get('src')
-                            if src:
-                                return src
-                        elif isinstance(result, dict):
-                            return result.get('src') or result.get('url')
-                            
-                        logger.error(f"Unexpected response format: {result}")
-                        return None
-                    except Exception as e:
-                        logger.error(f"Error parsing response: {str(e)}")
-                        response_text = await response.text()
-                        logger.error(f"Raw response: {response_text}")
-                        return None
-            except Exception as e:
+                response = await client.post(
+                    upload_url,
+                    files=files,
+                    headers=headers,
+                    timeout=30.0
+                )
+
+                # 记录响应信息
+                logger.info(f"Response status code: {response.status_code}")
+                logger.info(f"Response headers: {response.headers}")
+                logger.info(f"Response content: {response.text}")
+
+                response.raise_for_status()
+                result = response.json()
+
+                if isinstance(result, list) and result:
+                    return result[0].get('src')
+                else:
+                    logger.error(f"Unexpected response format: {result}")
+                    return None
+
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error: {e.response.status_code} - {e.response.text}")
+                return None
+            except httpx.RequestError as e:
                 logger.error(f"Request error: {str(e)}")
                 return None
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error: {str(e)}")
+                logger.error(f"Raw response: {response.text}")
+                return None
+
     except Exception as e:
         logger.error(f"Upload error: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         return None
-    
 
 
 @router.post("/transfer-image")
@@ -583,8 +656,8 @@ async def ai_polish(request: AIExpandRequest):
     feature_config = get_feature_by_name("AI润色")
     if request.is_stream:
         messages = [
-            {"role": "system", "content": feature_config["prompt"]},
-            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文润色内容，不要超过1000字"}
+            {"role": "system", "content": "(所生成的文字，应当进行分段，在每个分段处加上两个换行符\n\n,这两个换行符应当是直接以文本形式添加在文章中的)"+feature_config["prompt"]},
+            {"role": "user", "content": "上下文："+context+"\n\n 内容："+content+"请根据上下文润色内容，不要超过1000字(每处分段处加上两个换行符)"}
         ]
         return StreamingResponse(generate_response(messages, feature_config["model"]), media_type="text/event-stream",headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})
     else:
