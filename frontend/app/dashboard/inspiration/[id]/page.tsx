@@ -651,7 +651,7 @@ export default function SpirateDetail() {
     // 直接设置所有内容
     if (contentData.content) {
       // 处理内容，确保选择标记正确
-      const contentLines = contentData.content.split('\n\n').map(line => {
+      const contentLines = contentData.content.split('\n\n').map((line:any) => {
         // 将旧的选择标记转换为新的标记格式
         if (line.includes('您已选择了：')) {
           return `_CHOICE_ ${line}`;
@@ -679,7 +679,7 @@ export default function SpirateDetail() {
     if (contentData.content) {
       setHasStartedTyping(true);
       // 处理内容，确保选择标记正确
-      const contentLines = contentData.content.split('\n\n').map(line => {
+      const contentLines = contentData.content.split('\n\n').map((line:any) => {
         // 将旧的选择标记转换为新的标记格式
         if (line.includes('您已选择了：') && !line.startsWith('_CHOICE_')) {
           return `_CHOICE_ ${line}`;

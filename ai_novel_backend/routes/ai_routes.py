@@ -448,7 +448,7 @@ logger = logging.getLogger(__name__)
 async def upload_image(file_path: str) -> Optional[str]:
     """上传图片到服务器"""
     try:
-        upload_url = "https://img.leebay.cyou/upload?authCode=root"
+        upload_url = "https://img.leebay.cyou/upload?authCode=root&uploadChannel=cfr2"
 
         # 检查文件是否存在
         if not os.path.exists(file_path):

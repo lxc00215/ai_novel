@@ -30,6 +30,7 @@ frontend/.next
 
 
 *.zip
+backend/.env
 
 <<<<<<< HEAD
 .gitignore

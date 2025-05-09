@@ -161,7 +161,6 @@ async def update_spirate(request: InspirationUpdate, db: AsyncSession = Depends(
         raise HTTPException(status_code=404, detail="spirate not found")
 
 
-
 @router.get("/getOne/{id}")
 async def get_spirate(id: int, db: AsyncSession = Depends(get_db)):
     spirate = await db.execute(select(InspirationResult).where(InspirationResult.id == id))
