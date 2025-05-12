@@ -168,7 +168,7 @@ export default function SpirateDetailClient({
     
     if (inspiration.content) {
 
-      const contentLines = inspiration.content.split().map(line => {
+      const contentLines = inspiration.content.split('\n\n').map(line => {
         // 转换选择标记格式
         if (line.includes('您已选择了：') && !line.startsWith('_CHOICE_')) {
           console.log(line);
