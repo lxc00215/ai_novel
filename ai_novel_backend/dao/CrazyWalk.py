@@ -54,7 +54,6 @@ class CrazyWalkService:
             novel_template = NOVEL_TEMPLATES.get(task_data['type'], {}).get(task_data['category'], "")
             if not novel_template:
                 novel_template = "这是一本精彩的小说，情节跌宕起伏，人物刻画深刻。"
-                
             outline_prompt = f"""
             你是一位专业的小说策划，需要规划一部完整的{task_data['type']}向{task_data['category']}小说。
             
@@ -114,7 +113,6 @@ class CrazyWalkService:
                 # 创建一本小说
                 res_id = 0
                 async with async_session() as db:
-
                     result = CrazyWalkResult(
                         title=novel_title,
                         novel_type=task_data['type'],
@@ -209,10 +207,9 @@ class CrazyWalkService:
                     # 暂停一下，避免API限流
                     await asyncio.sleep(1)
                 print("res_id",res_id)
-                # 更新任务
-                async with async_session() as db:
-                    await db.execute(update(Task).where(Task.id == task_id).values(result_id=res_id))
-                    await db.commit()
+
+                return res_id
+                
 
             except Exception as e:
                 print(f"Error generating novel: {str(e)}")

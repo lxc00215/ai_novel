@@ -52,6 +52,7 @@ async def process_task(task_id: int, task_data: dict,background_tasks:Background
         elif task_data['task_type'] == "CRAZY_WALK":
             result_id = await process_task_crazy_walk(task_id,task_data)
         # API调用完成后，更新完成状态和结果
+        print("任务处理完成",result_id)
         async with async_session() as db:
             await db.execute(
                 update(Task)
@@ -206,8 +207,9 @@ async def process_task_crazy_walk(task_id: int,task_data: dict)->int:
 
     service = CrazyWalkService()
     try:
-        result = await service.generate_novel_in_background(task_id,task_data,update_progress)
-        return result
+        result_id = await service.generate_novel_in_background(task_id,task_data,update_progress)
+
+        return result_id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

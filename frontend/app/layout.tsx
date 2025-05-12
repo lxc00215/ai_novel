@@ -39,9 +39,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground`}>
           <Providers
           >
-            <SpeedInsights />
             {children}
             <Toaster />
+            <SpeedInsights />
           </Providers>
       </body>
     </html>

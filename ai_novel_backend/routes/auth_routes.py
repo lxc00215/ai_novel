@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from database import get_db, User
 from schemas import UserCreate, UserLogin, Token, UserResponse
-from auth import get_current_user, verify_password, create_access_token
+from auth import  verify_password, create_access_token
 from datetime import timedelta
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -95,7 +95,7 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         )
     
     # 创建新用户
-    hashed_password = bcrypt.hashpw(user.password.encode(), bcrypt.gensalt())
+    hashed_password = bcrypt.hash(user.password.encode(), bcrypt.gensalt())
     new_user = User(
         account=user.account,
         email=user.email,
