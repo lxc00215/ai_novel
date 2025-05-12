@@ -69,12 +69,46 @@ const handleApiError = (error: any) => {
   throw error;
 };
 
-// 封装请求函数
+// 添加重试函数
+const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, delay = 1000) => {
+  let lastError;
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      // 添加超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+      
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error:any) {
+      lastError = error;
+      console.warn(`请求失败(${i + 1}/${retries}):`, url, error);
+      
+      // 检查是否是ECONNRESET错误
+      const isConnReset = error.code === 'ECONNRESET' || 
+                         (error.cause && error.cause.code === 'ECONNRESET');
+      
+      // 如果是连接重置错误且不是最后一次重试，则等待后重试
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // 指数退避
+        continue;
+      }
+    }
+  }
+  
+  throw lastError;
+};
+
+// 修改request函数以使用重试机制
 export const request = async (url: string, is_auth: boolean, options: RequestInit = {}) => {
   try {
     // 获取认证令牌并添加到请求头
-
-    // 是否需要添加token
     const token = await getToken();
 
     // 创建一个新的options对象，合并现有headers
@@ -82,7 +116,6 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
       ...options,
       headers: {
         ...options.headers,
-        // 如果有token，添加Authorization header
       }
     };
 
@@ -93,14 +126,18 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
         'Authorization': 'Bearer ' + token
       };
     }
-    const response = await fetch(`${BASE_URL}${url}`, newOptions);
+    
+    // 使用带重试的fetch
+    const response = await fetchWithRetry(`${BASE_URL}${url}`, newOptions);
+    
     // 检查响应状态
-    console.log(JSON.stringify(response))
     if (!response.ok) {
       // 处理401错误(token无效或过期)
       if (response.status === 401) {
         // 清除token并重定向到登录页
-        window.location.href = '/auth';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth';
+        }
       }
       const errorData: ErrorResponse = await response.json();
       throw {
@@ -110,9 +147,7 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
         }
       };
     }
-    else if (response.status === 400) {
-      console.log("400错误")
-    }
+    
     // 检查是否是 SSE 请求
     const headers = newOptions.headers as Record<string, string>;
     if (headers && headers['Accept'] === 'text/event-stream') {
@@ -120,9 +155,58 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
     }
 
     return await response.json();
-  } catch (error) {
-    console.log("自动保存error" + error)
+  } catch (error:any) {
+    console.log("请求错误:", error);
+    
+    // 检查是否是网络错误，给出更具体的错误信息
+    if (error.message === 'Failed to fetch' || 
+        (error.cause && error.cause.code === 'ECONNRESET')) {
+      console.error('网络连接问题，请检查服务器是否在线或网络连接是否稳定');
+      
+      // 为服务器组件和客户端组件定制不同的错误响应
+      if (typeof window === 'undefined') {
+        // 服务器端
+        throw new Error('服务器连接失败，请稍后重试');
+      } else {
+        // 客户端可以显示更友好的提示
+        if (error.cause && error.cause.code === 'ECONNRESET') {
+          throw new Error('连接被重置，服务器可能暂时不可用，请稍后重试');
+        } else {
+          throw new Error('网络请求失败，请检查您的网络连接');
+        }
+      }
+    }
+    
     return handleApiError(error);
+  }
+};
+
+// 服务器端安全获取数据的特定函数
+export const serverSideRequest = async (url: string, token?: string) => {
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await fetchWithRetry(`${BASE_URL}${url}`, {
+      headers,
+      // 关闭连接保持，减少服务器端ECONNRESET问题
+      keepalive: false,
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`服务器响应错误: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('服务器端请求失败:', error);
+    throw error;
   }
 };
 
@@ -281,15 +365,20 @@ const apiService = {
       });
     },
     get: async (id: string) => {
-      console.log('Calling API with ID:', id); // 添加日志
+      console.log('Calling API with ID:', id);
       try {
-        const response = await request(`/spirate/getOne/${id}`, true, {
-
-        });
-        return response;
+        // 判断是服务器端还是客户端环境
+        if (typeof window === 'undefined') {
+          // 服务器端环境
+          return await serverSideRequest(`/spirate/getOne/${id}`);
+        } else {
+          // 客户端环境
+          const response = await request(`/spirate/getOne/${id}`, true, {});
+          return response;
+        }
       } catch (error) {
         console.error('API error:', error);
-        return { success: false, data: null };
+        throw error; // 向上抛出错误，让页面组件处理
       }
     },
     getStories: async (page: number, pageSize: number) => {
