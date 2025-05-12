@@ -16,6 +16,9 @@ import {
   CreateInspirationRequest,
   User
 } from './types';
+import http from 'http';
+import https from 'https';
+import { URL } from 'url';
 
 
 // API 基础URL
@@ -181,7 +184,72 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
   }
 };
 
-// 服务器端安全获取数据的特定函数
+// 使用Node.js原生HTTP模块进行请求
+export const nodeHttpRequest = async (fullUrl: string, options: any = {}) => {
+  return new Promise((resolve, reject) => {
+    const url = new URL(fullUrl);
+    const isHttps = url.protocol === 'https:';
+    
+    const requestOptions = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: `${url.pathname}${url.search}`,
+      method: options.method || 'GET',
+      headers: options.headers || {},
+    };
+    
+    // 选择http或https模块
+    const requestModule = isHttps ? https : http;
+    
+    const req = requestModule.request(requestOptions, (res) => {
+      let data = '';
+      
+      // 接收数据块
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      // 接收完成
+      res.on('end', () => {
+        // 检查状态码
+        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            // 尝试解析JSON
+            const parsedData = JSON.parse(data);
+            resolve(parsedData);
+          } catch (e) {
+            // 不是JSON则返回原始数据
+            resolve(data);
+          }
+        } else {
+          reject(new Error(`HTTP请求失败: ${res.statusCode}`));
+        }
+      });
+    });
+    
+    // 设置超时
+    req.setTimeout(30000, () => {
+      req.destroy();
+      reject(new Error('请求超时'));
+    });
+    
+    // 处理错误
+    req.on('error', (error) => {
+      console.error(`HTTP请求错误: ${error.message}`);
+      reject(error);
+    });
+    
+    // 如果有请求体，写入数据
+    if (options.body) {
+      req.write(options.body);
+    }
+    
+    // 结束请求
+    req.end();
+  });
+};
+
+// 修改serverSideRequest函数，使用nodeHttpRequest
 export const serverSideRequest = async (url: string, token?: string) => {
   try {
     const headers: Record<string, string> = {
@@ -192,18 +260,11 @@ export const serverSideRequest = async (url: string, token?: string) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetchWithRetry(`${BASE_URL}${url}`, {
-      headers,
-      // 关闭连接保持，减少服务器端ECONNRESET问题
-      keepalive: false,
-      cache: 'no-store'
-    });
+    // 使用Node.js原生HTTP请求
+    const fullUrl = `${BASE_URL}${url}`;
+    console.log('服务器端请求:', fullUrl);
     
-    if (!response.ok) {
-      throw new Error(`服务器响应错误: ${response.status}`);
-    }
-    
-    return await response.json();
+    return await nodeHttpRequest(fullUrl, { headers });
   } catch (error) {
     console.error('服务器端请求失败:', error);
     throw error;
@@ -369,16 +430,30 @@ const apiService = {
       try {
         // 判断是服务器端还是客户端环境
         if (typeof window === 'undefined') {
-          // 服务器端环境
-          return await serverSideRequest(`/spirate/getOne/${id}`);
+          // 服务器端环境 - 使用Node.js原生HTTP请求
+          console.log('使用nodeHttpRequest在服务器端获取数据');
+          const token = await getToken();
+          return await nodeHttpRequest(`${BASE_URL}/spirate/getOne/${id}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+          });
         } else {
-          // 客户端环境
+          // 客户端环境 - 使用常规fetch请求
+          console.log('使用fetch在客户端获取数据');
           const response = await request(`/spirate/getOne/${id}`, true, {});
           return response;
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error('API error:', error);
-        throw error; // 向上抛出错误，让页面组件处理
+        
+        // 提供更具体的错误信息
+        if (typeof window === 'undefined' && error.code === 'ECONNRESET') {
+          throw new Error('后端服务器连接重置，请检查服务器状态或网络连接');
+        }
+        
+        throw error;
       }
     },
     getStories: async (page: number, pageSize: number) => {
