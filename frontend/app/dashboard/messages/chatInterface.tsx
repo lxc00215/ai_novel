@@ -282,6 +282,10 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  const myLoader = ({ src }: { src: string }) => {
+    return src;
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -290,7 +294,6 @@ const ChatInterface = () => {
   // 渲染用户头像
   const renderAvatar = (name: string, avatar?: string) => {
     const imageId = `${name}-${avatar}`;
-
     return (
       <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
         {avatar ? (
@@ -307,6 +310,7 @@ const ChatInterface = () => {
               height={40}
               className={`${styles.avatarImage} ${loadedImages[imageId] ? styles.loaded : ''}`}
               onLoad={() => handleImageLoaded(imageId)}
+              loader={myLoader}
               loading="lazy"
             />
           </div>
@@ -318,20 +322,6 @@ const ChatInterface = () => {
       </Avatar>
     );
   };
-
-
-
-  // Format message content to handle action text (italics)
-  //   const formatMessageContent = (message: Message) => {
-  //     if (!message.action) return <p className="text-base">{message.content}</p>;
-
-  //     return (
-  //       <div>
-  //         {message.action && <p className="text-gray-400 italic mb-1 text-sm">*{message.action}*</p>}
-  //         <p className="text-base">{message.content}</p>
-  //       </div>
-  //     );
-  //   };
 
   const handleSendMessage = async () => {
     if (message.trim() && CurrentSessionID && !isNaN(Number(CurrentSessionID))) {
@@ -416,11 +406,8 @@ const ChatInterface = () => {
             ))}
           </div>
         </ScrollArea>
-
         {/* History */}
-
       </div>
-
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">
         {/* Chat Header */}
@@ -433,7 +420,6 @@ const ChatInterface = () => {
             </div>
           </div>
           <div className="relative">
-
             <Button
               variant="ghost"
               size="icon"
@@ -514,7 +500,6 @@ const ChatInterface = () => {
                   {msg.sender_type == 'user' && renderAvatar("Lxc", "")}
                 </div>
               ))}
-
               {/* Streaming Message */}
               {isLoading && streamingMessage.length > 0 ? (
                 <div className={`flex items-start gap-3`}>

@@ -600,7 +600,6 @@ async def transfer_image(image_url: str, prompt: Optional[str] = None):
             except Exception as e:
                 logger.error(f"Error updating character: {str(e)}")
                 # 不阻止返回URL
-        
         return {"success": True, "image_url": full_url}
     
     except Exception as e:

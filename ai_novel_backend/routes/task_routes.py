@@ -242,6 +242,7 @@ async def generate_image_async(prompt: str, size: str, user_id: int, inspiration
             )
         )
         # 更新数据库
+        print("执行了")
         await update_inspiration_with_image(inspiration_id, image_url)
     except Exception as e:
         print(f"Background image generation failed: {e}")
@@ -258,13 +259,10 @@ async def process_task_inspiration(task_data: dict, background_tasks: Background
         else:
             result = await service.generate_complete_story(task_data['prompt'])
 
-        print("直行道")
-        print(result)
         # 保存到灵感表
         character_ids = []
         # 创建Character 对象
         for character in result['characters']:
-            print(f"character: {character}")
             character_result = Character(
                 book_id=None,
                 name=character['姓名'],

@@ -1,4 +1,3 @@
-'use client'
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {  Shuffle, History } from 'lucide-react';
@@ -53,10 +52,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
    
   //  // 获取历史记录数据
   const getStories = async (page: number, pageSize: number) => {
-    try {
-      const user = localStorage.getItem('user')
-      const userId = JSON.parse(user || '{}').id;
-      
+    try { 
       // 调用 API 获取故事列表，传入分页参数
       const response = await apiService.spirate.getStories(page, pageSize);
       return response;
@@ -220,7 +216,6 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
                 ref={inputRef}
                 className="text-gray-300 flex-1 text-sm bg-transparent w-full resize-none outline-none"
                 value={inputStory}
-
                 onChange={(e) => setInputStory(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder= {storyPrompts[currentPromptIndex]}

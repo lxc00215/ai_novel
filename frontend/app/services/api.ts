@@ -1,5 +1,4 @@
-"use client";
-
+import { cookies } from 'next/dist/server/request/cookies';
 import {
   LoginRequest,
   RegisterRequest,
@@ -17,7 +16,6 @@ import {
   CreateInspirationRequest,
   User
 } from './types';
-import { toast } from "sonner";  // 使用 sonner 来显示错误提示
 
 
 // API 基础URL
@@ -32,26 +30,26 @@ interface ErrorResponse {
 const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT || 'http://localhost:8000'; // 确保这里配置正确
 
 // JWT工具函数 - 从token中解析用户ID
-export const getUserIdFromToken = (): string | null => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-
-    // JWT token由三部分组成，用点分隔：header.payload.signature
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-
-    // 解码payload部分（第二部分）
-    const payload = JSON.parse(atob(parts[1]));
-
-    // 从payload中提取用户ID (sub字段)
-    return payload.sub || null;
-  } catch (error) {
-    console.error('解析token失败:', error);
-    return null;
+const getToken =async () => {
+  // 根据执行环境选择不同方式获取token
+  if (typeof window !== 'undefined') {
+    // 客户端环境
+    return document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+  } else {
+    // 服务器环境
+    try {
+      const cookieStore = await cookies();
+      return cookieStore.get('token')?.value;
+    } catch (error) {
+      // 在某些服务器上下文可能无法访问cookie
+      console.error('无法在服务器环境获取cookie:', error);
+      return null;
+    }
   }
 };
-
 // 封装错误处理函数
 const handleApiError = (error: any) => {
   // 获取错误信息
@@ -67,31 +65,37 @@ const handleApiError = (error: any) => {
     }
   }
 
-  // 显示错误提示
-  toast.error(errorMessage, {
-    position: 'top-center',
-    duration: 3000,
-  });
 
   // 抛出错误，让调用方可以继续处理
   throw error;
 };
 
 // 封装请求函数
-export const request = async (url: string, options: RequestInit = {}) => {
+export const request = async (url: string,is_auth:boolean, options: RequestInit = {}) => {
   try {
     // 获取认证令牌并添加到请求头
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+    // 是否需要添加token
+    const token = await getToken();
+    
     // 创建一个新的options对象，合并现有headers
-    const newOptions = {
-      ...options,
-      headers: {
-        ...options.headers,
-        // 如果有token，添加Authorization header
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+     const newOptions = {
+        ...options,
+        headers: {
+          ...options.headers,
+          // 如果有token，添加Authorization header
+        }
+      };
+
+      if (is_auth) {
+        // 如果需要认证，添加token
+        newOptions.headers = {
+          ...newOptions.headers,
+          'Authorization': 'Bearer ' + token
+        };
       }
-    };
+    
+   
     const response = await fetch(`${BASE_URL}${url}`, newOptions);
     // 检查响应状态
     if (!response.ok) {
@@ -131,11 +135,10 @@ const apiService = {
 
   alipay: {
     creat: async (amount: string) => {
-      const response = await request('/alipay/create', {
+      const response = await request('/alipay/create',true, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token'),
         },
         body: JSON.stringify({
           amount: amount,
@@ -145,11 +148,10 @@ const apiService = {
       return response;
     },
     checkOrder: async (orderInfo: string) => {
-      const response = await request('/alipay/check', {
+      const response = await request('/alipay/check',true, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify({
           order_info: orderInfo
@@ -163,7 +165,7 @@ const apiService = {
   auth: {
     // 检查用户名是否可用 
     checkUsernameAvailability: async (username: string): Promise<{ success: boolean }> => {
-      const response = await request(`/auth/check_username_available/${username}`, {
+      const response = await request(`/auth/check_username_available/${username}`,false, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -174,7 +176,7 @@ const apiService = {
 
     // 检查邮箱是否可用
     checkEmailAvailability: async (email: string): Promise<{ success: boolean }> => {
-      const response = await request(`/auth/check_email_available/${email}`, {
+      const response = await request(`/auth/check_email_available/${email}`, false, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -187,7 +189,7 @@ const apiService = {
 
     // 登录
     login: async (data: LoginRequest): Promise<AuthResponse> => {
-      const response = await request('/auth/login', {
+      const response = await request('/auth/login',false, {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
@@ -203,7 +205,7 @@ const apiService = {
 
     // 注册
     register: async (data: RegisterRequest): Promise<AuthResponse> => {
-      const response = await request('/auth/register', {
+      const response = await request('/auth/register',false, {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
@@ -224,30 +226,17 @@ const apiService = {
     // 退出登录
     logout: async (): Promise<any> => {
       // 调用后端登出接口（如果需要）
-      const response = await request('/auth/logout', {
+      const response = await request('/auth/logout',true, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
       });
+      // 清除cookie
 
-      // 无论成功与否，清除本地存储
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
 
       return response;
     },
-
-    // 获取当前用户ID
-    getCurrentUserId: (): string | null => {
-      return getUserIdFromToken();
-    },
-
-    // 获取当前用户信息
-    // getCurrentUser: async (): Promise<ApiResponse<User>> => {
-    //   return fetchApi<User>('/auth/me');
-    // }
   },
 
   utils: {
@@ -258,11 +247,10 @@ const apiService = {
      * @returns 上传成功后返回的图片URL
      */
     downloadImageAndUpload: async (image_url: string): Promise<string> => {
-      const response = await request(`/utils/download_image_and_upload?image_url=${image_url}`, {
+      const response = await request(`/utils/download_image_and_upload?image_url=${image_url}`,true, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Content-Type': 'application/json'
         }
       });
 
@@ -277,7 +265,7 @@ const apiService = {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await request(`/utils/upload-image`, {
+      const response = await request(`/utils/upload-image`,true, {
         method: 'POST',
         body: formData,
         // 不要手动设置Content-Type，让浏览器自动设置，包含boundary信息
@@ -293,22 +281,20 @@ const apiService = {
 
   spirate: {
     continue: async (inspiration_id: string, choice: string): Promise<ContinueResponse> => {
-      return request(`/spirate/continue/${inspiration_id}`, {
+      return request(`/spirate/continue/${inspiration_id}`,true, {
         method: 'POST',
         body: JSON.stringify({ choice }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       });
     },
-    get: async (id: string) => {
+    get: async (id: string ) => {
       console.log('Calling API with ID:', id); // 添加日志
       try {
-        const response = await request(`/spirate/getOne/${id}`, {
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
-          }
+        const response = await request(`/spirate/getOne/${id}`,true, {
+
         });
         return response;
       } catch (error) {
@@ -318,53 +304,43 @@ const apiService = {
     },
     getStories: async (page: number, pageSize: number) => {
       console.log("getStories1");
-      const response = await request(`/spirate/getMy?page=${page}&pageSize=${pageSize}`, {
+      const response = await request(`/spirate/getMy?page=${page}&pageSize=${pageSize}`, true,{
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       });
       return response;
     },
     update: async (data: Partial<Inspiration>): Promise<Inspiration> => {
-      return request(`/spirate/update`, {
+      return request(`/spirate/update`,true, {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       });
     }
   },
-  // bookGeneration: {
-  //   getAnalysisHistory: async () => {
-  //     return request(`/bookGeneration/get-analysis-history`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer ' + localStorage.getItem('token')
-  //       }
-  //     })
-  //   },
-  // },
+
 
   analysis: {
     // 拆书相关api
 
     // 获取该角色的全部拆书历史
     get_history: async () => {
-      return request(`/analysis/get-analysis-history`, {
+      return request(`/analysis/get-analysis-history`,true, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       })
     },
     get_detail: async (breakdown_id: number) => {
-      return request(`/analysis/` + breakdown_id, {
+      return request(`/analysis/` + breakdown_id,true, {
         method: 'GET'
       })
     },
@@ -373,30 +349,30 @@ const apiService = {
   ai: {
     // 拆解
     analyze: async (file_id: string) => {
-      return request(`/ai/analyze-file`, {
+      return request(`/ai/analyze-file`, true,{
         method: 'POST',
         body: JSON.stringify({ file_id }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       })
     },
 
 
     getAnalysis: async (file_id: string) => {
-      return request(`/ai/get-analysis`, {
+      return request(`/ai/get-analysis`,true, {
         method: 'POST',
         body: JSON.stringify({ file_id }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       })
     },
     // 生成小说内容
     generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<any> => {
-      return request('/ai/generate', {
+      return request('/ai/generate',true, {
         method: 'POST',
         body: JSON.stringify({
           prompt,
@@ -405,7 +381,7 @@ const apiService = {
         }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       });
     },
@@ -413,7 +389,7 @@ const apiService = {
     // 流式AI扩写
     expandContent: async (context: string, content: string) => {
       try {
-        const response = await request('/ai/expand', {
+        const response = await request('/ai/expand',true,{
           method: 'POST',
           body: JSON.stringify({ context, content, is_stream: true }),
           headers: {
@@ -461,7 +437,7 @@ const apiService = {
       }
     },
     polish: async (context: string, content: string) => {
-      const response = await request('/ai/polish', {
+      const response = await request('/ai/polish', true,{
         method: 'POST',
         body: JSON.stringify({ context, content, is_stream: true }),
         headers: {
@@ -499,7 +475,7 @@ const apiService = {
     },
 
     rewrite: async (context: string, content: string) => {
-      const response = await request('/ai/rewrite', {
+      const response = await request('/ai/rewrite',true, {
         method: 'POST',
         body: JSON.stringify({ context, content, is_stream: true }),
         headers: {
@@ -535,7 +511,7 @@ const apiService = {
       }
     },
     generateImageFromSpirate: async (prompt: string, name: string, book_id: string, user_id: string): Promise<ImageObject> => {
-      return request('/ai/generate_image_from_spirate', {
+      return request('/ai/generate_image_from_spirate',true, {
         method: 'POST',
         body: JSON.stringify({ prompt, name, book_id, user_id }),
         headers: {
@@ -550,12 +526,12 @@ const apiService = {
       const user = localStorage.getItem('user')
       const userId = JSON.parse(user || '{}').id;
 
-      const response = await request('/ai/generate_images', {
+      const response = await request('/ai/generate_images',true, {
         method: 'POST',
         body: JSON.stringify({ prompt, user_id: userId, size: "1280x960" }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       });
 
@@ -563,7 +539,7 @@ const apiService = {
     },
     // 获取写作建议
     getSuggestions: async (content: string): Promise<string[]> => {
-      return request('/ai/suggestions', {
+      return request('/ai/suggestions',true, {
         method: 'POST',
         body: JSON.stringify({ content }),
       });
@@ -573,24 +549,24 @@ const apiService = {
   chat: {
     // 获取用户最近的会话列表
     getRecentSessions: async () => {
-      return await request(`/chat/sessions`, {
+      return await request(`/chat/sessions`, true,{
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          
         }
       });
     },
     // 获取特定角色的聊天历史
     getChatHistory: async (sessionId: number) => {
-      return await request(`/chat/history/${sessionId}`, {
+      return await request(`/chat/history/${sessionId}`,true, {
         method: 'GET'
       });
     },
 
     // 清空特定角色的对话记录
     clearSession: async (sessionId: number) => {
-      return await request(`/chat/session/${sessionId}/clear`, {
+      return await request(`/chat/session/${sessionId}/clear`,true, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -611,7 +587,7 @@ const apiService = {
 
     getOrCreateSession: async (userId: number, characterId: number) => {
       try {
-        return await request('/chat/session', {
+        return await request('/chat/session',true, {
           method: 'POST',
           body: JSON.stringify({ user_id: userId, character_id: characterId }),
           headers: {
@@ -627,7 +603,7 @@ const apiService = {
     // 发送消息
     sendMessage: async (sessionId: number, message: string) => {
       try {
-        const response = await request(`/chat/session/${sessionId}/message`, {
+        const response = await request(`/chat/session/${sessionId}/message`,false, {
           method: 'POST',
           body: JSON.stringify({ content: message }),
           headers: {
@@ -675,7 +651,7 @@ const apiService = {
 
   crazy: {
     get: async (task_id: string) => {
-      const response = await request(`/crazy/${task_id}`, {
+      const response = await request(`/crazy/${task_id}`,false, {
         method: 'GET'
       })
       return response;
@@ -703,7 +679,7 @@ const apiService = {
         'user_id': userIdStr // 使用字符串类型
       });
 
-      return request(`/novels/create`, {
+      return request(`/novels/create`,false, {
         method: 'POST',
         body: JSON.stringify(
           {
@@ -721,7 +697,7 @@ const apiService = {
 
 
     delete: async (id: string) => {
-      return request(`/novels/${id}/delete`, {
+      return request(`/novels/${id}/delete`,false, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -729,7 +705,7 @@ const apiService = {
       })
     },
     updateNovel: async (id: string, data: Partial<Novel>): Promise<Novel> => {
-      return request(`/novels/${id}/updateNovel`, {
+      return request(`/novels/${id}/updateNovel`,false, {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
@@ -739,7 +715,7 @@ const apiService = {
     },
 
     createChapter: async (id: string, data: Partial<Chapter>): Promise<Chapter> => {
-      return request(`/novels/${id}/chapters`, {
+      return request(`/novels/${id}/chapters`,false, {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
@@ -750,7 +726,7 @@ const apiService = {
 
     updateChapter: async (id: string, order: number, data: Partial<Chapter>): Promise<Chapter> => {
       console.log("updateChapter", JSON.stringify(data));
-      return request(`/novels/${id}/chapters/${order}`, {
+      return request(`/novels/${id}/chapters/${order}`,false, {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
@@ -759,7 +735,7 @@ const apiService = {
       })
     },
     getChapters: async (id: string): Promise<Chapter[]> => {
-      return request(`/novels/${id}/chapters`, {
+      return request(`/novels/${id}/chapters`, false,{
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -767,7 +743,7 @@ const apiService = {
       })
     },
     getNovel: async (): Promise<Novel[]> => {
-      return request(`/novels/getMy`, {
+      return request(`/novels/getMy`,false, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -780,7 +756,7 @@ const apiService = {
   character: {
     update: async (id: string, data: Partial<Character>): Promise<Character> => {
       console.log("update", JSON.stringify(data));
-      return request(`/character/${id}`, {
+      return request(`/character/${id}`,false, {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
@@ -789,7 +765,7 @@ const apiService = {
       })
     },
     getCharacters: async (): Promise<Character[]> => {
-      return request(`/character/getMy`, {
+      return request(`/character/getMy`,false, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -804,7 +780,7 @@ const apiService = {
     create: async (data: CreateCrazyRequest | CreateInspirationRequest): Promise<SimpleTask> => {
 
       try {
-        const response = await request('/task/new', {
+        const response = await request('/task/new',false, {
           method: 'POST',
           body: JSON.stringify(data),
           headers: {
@@ -819,7 +795,7 @@ const apiService = {
     },
     status: async (taskId: string): Promise<TaskResponse> => {
       try {
-        const response = await request(`/task/status/${taskId}`);
+        const response = await request(`/task/status/${taskId}`,false);
         return response;
       } catch (error) {
         // 这里可以添加特定于状态查询的错误处理
@@ -828,7 +804,7 @@ const apiService = {
     },
     getByType: async (taskType: string, userId: number) => {
       try {
-        const response = await request(`/task/get-by-type?task_type=${taskType}&user_id=${userId}`, {
+        const response = await request(`/task/get-by-type?task_type=${taskType}&user_id=${userId}`,false, {
           method: 'GET'
         });
 
@@ -840,35 +816,11 @@ const apiService = {
     }
   },
 
-  // 设置认证相关函数
-  setupAuth: () => {
-    // 检查token是否存在
-    const checkAuthToken = (): boolean => {
-      const token = localStorage.getItem('token');
-      return !!token;
-    };
-
-    // 检查token是否有效
-    const isAuthenticated = (): boolean => {
-      return checkAuthToken();
-    };
-
-    // 获取当前用户ID
-    const getCurrentUserId = (): string | null => {
-      return getUserIdFromToken();
-    };
-
-    return {
-      checkAuthToken,
-      isAuthenticated,
-      getCurrentUserId
-    };
-  },
-
+  
   // 用户相关API
   user: {
     updateVip: async (subscriptionType: string, durationMonths: number) => {
-      const response = await request('/users/update_vip', {
+      const response = await request('/users/update_vip',false, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -881,7 +833,7 @@ const apiService = {
       return response;
     },
     updateUser: async (profile: Partial<User>) => {
-      return request('/users/profile', {
+      return request('/users/profile',false, {
         method: 'POST',
         body: JSON.stringify(profile),
         headers: {

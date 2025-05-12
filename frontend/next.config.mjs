@@ -13,6 +13,7 @@ const nextConfig = {
   },
   
   images: {
+    domains: ['localhost', 'img.leebay.cyou', 'sc-maas.oss-cn-shanghai.aliyuncs.com'],
     remotePatterns: [
       {
         protocol: 'http',

@@ -44,26 +44,26 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="AI Novel Management System", lifespan=lifespan)
 
 # CORS配置
-# origins = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-#     "http://localhost",
-#     "http://localhost:5173",  # Vite开发服务器默认端口
-#     "http://192.168.0.1:3000",  # 局域网IP，根据实际调整
-#     # 添加其他前端域名，如需要
-# ]
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://localhost:5173",  # Vite开发服务器默认端口
+    "http://192.168.0.1:3000",  # 局域网IP，根据实际调整
+    # 添加其他前端域名，如需要
+]
 
 # # 优先应用CORS中间件
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_origin_regex=r"https?://.*\.yourdomain\.com",  # 如果有自定义域名，可以使用正则匹配
-#     allow_credentials=True,
-#     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-#     allow_headers=["*"],
-#     expose_headers=["*"],
-#     max_age=600,  # 预检请求的缓存时间（秒）
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r"https?://.*\.leebay\.cyou",  # 如果有自定义域名，可以使用正则匹配
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # 预检请求的缓存时间（秒）
+)
 
 @app.on_event("startup")
 async def startup_event():
