@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import apiService from '@/app/services/api';
 import ErrorFallback from './ErrorFallback';
 import dynamic from 'next/dynamic';
+import ClientOnlyDetail from './clientFallback';
 
 // 服务器端数据获取
 export default async function SpirateDetailPage({ params, searchParams }: {
@@ -21,48 +22,22 @@ export default async function SpirateDetailPage({ params, searchParams }: {
   try {
     // 在服务器端获取初始数据
 
-
-
     const resolvedParams = await params;
     const inspirationId = resolvedParams.id;
-
-
-
 
 
     if (!inspirationId) return notFound();
 
     const resolvedSearchParams = await searchParams;
-    const isNew = resolvedSearchParams?.isNew === 'true';
+  
 
 
-    // 从服务器获取初始数据
-     let inspirationData;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒超时
-      
-      // 从服务器获取初始数据
-      inspirationData = await apiService.spirate.get(inspirationId);
-      
-      clearTimeout(timeoutId);
-    } catch (fetchError:any) {
-      console.error("获取数据超时或连接问题:", fetchError);
-      return (<ErrorFallback error={fetchError.message || '连接超时'} />)
-    }
-
-    if (!inspirationData) {
-      return notFound();
-    }
 
     // 将数据传递给客户端组件
     return (
       <Suspense fallback={<LoadingUI />}>
-        <SpirateDetailClient
-          initialData={inspirationData}
-          inspirationId={inspirationId}
-          isNew={isNew}
-        />
+        <ClientOnlyDetail
+        inspirationId={inspirationId} />
       </Suspense>
     );
   } catch (error: any) {

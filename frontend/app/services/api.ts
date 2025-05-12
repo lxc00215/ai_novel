@@ -72,28 +72,28 @@ const handleApiError = (error: any) => {
 // 添加重试函数
 const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, delay = 1000) => {
   let lastError;
-  
+
   for (let i = 0; i < retries; i++) {
     try {
       // 添加超时
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-      
+
       const response = await fetch(url, {
         ...options,
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
       return response;
-    } catch (error:any) {
+    } catch (error: any) {
       lastError = error;
       console.warn(`请求失败(${i + 1}/${retries}):`, url, error);
-      
+
       // 检查是否是ECONNRESET错误
-      const isConnReset = error.code === 'ECONNRESET' || 
-                         (error.cause && error.cause.code === 'ECONNRESET');
-      
+      const isConnReset = error.code === 'ECONNRESET' ||
+        (error.cause && error.cause.code === 'ECONNRESET');
+
       // 如果是连接重置错误且不是最后一次重试，则等待后重试
       if (i < retries - 1) {
         await new Promise(resolve => setTimeout(resolve, delay * (i + 1))); // 指数退避
@@ -101,7 +101,7 @@ const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, de
       }
     }
   }
-  
+
   throw lastError;
 };
 
@@ -126,10 +126,10 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
         'Authorization': 'Bearer ' + token
       };
     }
-    
+
     // 使用带重试的fetch
     const response = await fetchWithRetry(`${BASE_URL}${url}`, newOptions);
-    
+
     // 检查响应状态
     if (!response.ok) {
       // 处理401错误(token无效或过期)
@@ -147,7 +147,7 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
         }
       };
     }
-    
+
     // 检查是否是 SSE 请求
     const headers = newOptions.headers as Record<string, string>;
     if (headers && headers['Accept'] === 'text/event-stream') {
@@ -155,14 +155,14 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
     }
 
     return await response.json();
-  } catch (error:any) {
+  } catch (error: any) {
     console.log("请求错误:", error);
-    
+
     // 检查是否是网络错误，给出更具体的错误信息
-    if (error.message === 'Failed to fetch' || 
-        (error.cause && error.cause.code === 'ECONNRESET')) {
+    if (error.message === 'Failed to fetch' ||
+      (error.cause && error.cause.code === 'ECONNRESET')) {
       console.error('网络连接问题，请检查服务器是否在线或网络连接是否稳定');
-      
+
       // 为服务器组件和客户端组件定制不同的错误响应
       if (typeof window === 'undefined') {
         // 服务器端
@@ -176,7 +176,7 @@ export const request = async (url: string, is_auth: boolean, options: RequestIni
         }
       }
     }
-    
+
     return handleApiError(error);
   }
 };
@@ -187,22 +187,22 @@ export const serverSideRequest = async (url: string, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     const response = await fetchWithRetry(`${BASE_URL}${url}`, {
       headers,
       // 关闭连接保持，减少服务器端ECONNRESET问题
       keepalive: false,
       cache: 'no-store'
     });
-    
+
     if (!response.ok) {
       throw new Error(`服务器响应错误: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('服务器端请求失败:', error);
@@ -367,21 +367,18 @@ const apiService = {
     get: async (id: string) => {
       console.log('Calling API with ID:', id);
       try {
-        // 直接使用普通的fetch请求，避免nodeHttpRequest
-        return await request(`/spirate/getOne/${id}`, true, {
+        return request(`/spirate/getOne/${id}`, true, {
           headers: {
             'Content-Type': 'application/json',
           },
-          // 增加请求超时时间
         });
-      } catch (error:any) {
+      } catch (error: any) {
         console.error('API error:', error);
-        
         // 提供更具体的错误信息
         if (error.code === 'ECONNRESET' || (error.cause && error.cause.code === 'ECONNRESET')) {
           throw new Error('后端服务器连接重置，请稍后重试');
         }
-        
+
         throw error;
       }
     },
