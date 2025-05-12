@@ -1,12 +1,7 @@
 // app/dashboard/inspiration/[id]/page.tsx (服务器组件)
 import { Suspense } from 'react';
-import SpirateDetailClient from './SpirateDetailClient';
 import LoadingUI from '@/components/ui/loading';
-// import { getInspiration } from '@/app/services/server-api';
 import { notFound } from 'next/navigation';
-import apiService from '@/app/services/api';
-import ErrorFallback from './ErrorFallback';
-import dynamic from 'next/dynamic';
 import ClientOnlyDetail from './clientFallback';
 
 // 服务器端数据获取
@@ -16,27 +11,31 @@ export default async function SpirateDetailPage({ params, searchParams }: {
 }) {
 
 
-
-  
-
   try {
     // 在服务器端获取初始数据
 
     const resolvedParams = await params;
     const inspirationId = resolvedParams.id;
 
+    const resolvedSearchParams = await searchParams;
+    console.log(resolvedSearchParams);
+
+    let isNew = resolvedSearchParams?.is_new === 'true';
+
+
+
+
+    
+
 
     if (!inspirationId) return notFound();
-
-    const resolvedSearchParams = await searchParams;
-  
-
 
 
     // 将数据传递给客户端组件
     return (
       <Suspense fallback={<LoadingUI />}>
         <ClientOnlyDetail
+        isNew={isNew}
         inspirationId={inspirationId} />
       </Suspense>
     );

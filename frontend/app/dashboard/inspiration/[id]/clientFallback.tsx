@@ -7,14 +7,12 @@ import SpirateDetailClient from './SpirateDetailClient';
 import LoadingUI from '@/components/ui/loading';
 import apiService from '@/app/services/api';
 
-export default function ClientOnlyDetail({ inspirationId }: { inspirationId: string }) {
+export default function ClientOnlyDetail({ inspirationId,isNew }: { inspirationId: string,isNew:boolean }) {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const searchParams = useSearchParams();
-  const isNew = searchParams?.get('isNew') === 'true';
-  
+ 
   useEffect(() => {
     const fetchData = async () => {
       try {

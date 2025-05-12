@@ -70,12 +70,14 @@ export default function SpirateDetailClient({
   useEffect(() => {
     if (displayedLines.length > 0) {
       // 使用setTimeout确保DOM已更新
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 60);
     }
   }, [displayedLines]);
 
   // 初始化界面
   useEffect(() => {
+    console.log("执行了",isNew);
+
     if (typewriterMode) {
       // 新内容使用打字机效果
       handleInitialContentWithTypewriter();
@@ -165,10 +167,12 @@ export default function SpirateDetailClient({
     setShowChat(true);
     
     if (inspiration.content) {
-      const contentLines = inspiration.content.split('\n\n').map(line => {
+
+      const contentLines = inspiration.content.split().map(line => {
         // 转换选择标记格式
         if (line.includes('您已选择了：') && !line.startsWith('_CHOICE_')) {
-          return `_CHOICE_ ${line}`;
+          console.log(line);
+          return `_CHOICE_${line}\n`;
         }
         return line;
       });
@@ -191,8 +195,10 @@ export default function SpirateDetailClient({
     setShowStoryContent(true);
     
     if (inspiration.content) {
+
       const contentLines = inspiration.content.split('\n\n').map(line => {
         if (line.includes('您已选择了：') && !line.startsWith('_CHOICE_')) {
+          console.log(line);
           return `_CHOICE_ ${line}`;
         }
         return line;
@@ -210,7 +216,7 @@ export default function SpirateDetailClient({
   const typewriterEffect = async (lines: string[]) => {
     if (!typewriterMode) {
       setDisplayedLines(lines);
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 60);
       return;
     }
     
@@ -235,6 +241,7 @@ export default function SpirateDetailClient({
       } else if (line.includes('【插图】')) {
         // 处理插图标记
         let currentText = '';
+        console.log("执行了");
         for (let j = 0; j < line.length; j++) {
           currentText += line[j];
           setDisplayedLines(prev => {
@@ -258,7 +265,7 @@ export default function SpirateDetailClient({
             newLines[i] = currentText;
             return newLines;
           });
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 60));
         }
       }
       
@@ -268,7 +275,7 @@ export default function SpirateDetailClient({
     }
     
     setIsTyping(false);
-    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 60);
   };
 
   // 生成图片
@@ -310,7 +317,7 @@ export default function SpirateDetailClient({
     
     try {
       // 创建用户选择提示
-      const choiceNotification = `_CHOICE_ 您已选择了：${choice}`;
+      const choiceNotification = `_CHOICE_ 您已选择了：${choice}\n\n`;
       const updatedDisplayedLines = [...displayedLines, choiceNotification];
       setDisplayedLines(updatedDisplayedLines);
       
@@ -417,7 +424,7 @@ export default function SpirateDetailClient({
     }
     
     setIsTyping(false);
-    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 60);
   };
 
   // 如果出错显示错误页面
