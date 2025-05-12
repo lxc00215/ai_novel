@@ -1,7 +1,7 @@
 'use client'
 
 import apiService from "@/app/services/api";
-import WritingInterface from "../components/WritingInterface";
+import WritingInterface from "./WritingInterface";
 import { Novel } from "@/app/services/types";
 import { useEffect, useState, use } from "react";
 

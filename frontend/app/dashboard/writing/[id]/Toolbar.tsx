@@ -261,7 +261,7 @@ export default function Toolbar({
         <div
           ref={buttonRef}
           key={button.tooltip}
-          className="relative text-foreground hover:cursor-pointer"
+          className="relative  text-foreground hover:cursor-pointer"
           onMouseEnter={() => setHoveredButton(button.tooltip)}
           onMouseLeave={() => setHoveredButton(null)}
         >

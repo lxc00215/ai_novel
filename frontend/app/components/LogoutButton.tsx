@@ -33,7 +33,7 @@ const LogoutButton = () => {
     return (
         <Button
                   onClick={handleLogout}
-                  className="flex w-full hover:cursor-pointer items-center justify-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-black hover:bg-gray-200 transition-colors"
+                  className="flex w-full hover:cursor-pointer items-center justify-center gap-2 rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-gray-200 transition-colors"
                 >
                   <IoLogOutOutline className="h-4 w-4" />
                   <span >退出登录</span>

@@ -27,10 +27,10 @@ export default function SpirateHeader({
   return (
     <div className="w-full text-left mb-6 animate-fadeIn">
       {editingTitle ? (
-        <div className="relative inline-block">
+        <div className="relative  inline-block">
           <input
             type="text"
-            className="text-xl font-bold mb-2 bg-black border border-gray-700 rounded-md px-2 py-1 text-left outline-none focus:border-blue-500"
+            className="text-xl font-bold mb-2 bg-background  border border-gray-700 rounded-md px-2 py-1 text-left outline-none focus:border-blue-500"
             value={inspiration?.title}
             onChange={(e) => setInspiration({ ...inspiration, title: e.target.value })}
             autoFocus
@@ -54,13 +54,12 @@ export default function SpirateHeader({
         </div>
       ) : (
         <h2
-          className="text-xl font-bold mb-2 cursor-pointer hover:bg-gray-900 p-1 rounded inline-block"
+          className="text-xl font-bold mb-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900 p-1 rounded inline-block"
           onClick={() => setEditingTitle(true)}
         >
           {inspiration?.title}
         </h2>
       )}
-
       <div className="flex flex-col text-sm text-gray-400">
         <p>作者: {inspiration?.user?.account}</p>
         <p>最后更新: {parseTime(inspiration?.updated_at)}</p>
@@ -75,17 +74,17 @@ export default function SpirateHeader({
             <Button
               size="sm"
               variant="outline"
-              className="ml-2 h-6 text-xs border-gray-700 text-white"
+              className="ml-2 h-6 text-xs  border-gray-700 text-black"
               onClick={() => setEditingPrompt(true)}
             >
-              <Wand2 size={14} className="mr-1" />
+              <Wand2 size={14} className="mr-1 " />
               重新开始
             </Button>
           </div>
         ) : (
           <div className="relative">
             <textarea
-              className="bg-black text-gray-300 w-full resize-none outline-none min-h-[15px] mb-8"
+              className="bg-background text-black w-full resize-none outline-none min-h-[15px] mb-8"
               value={inspiration?.prompt}
               onChange={(e) => setInspiration({ ...inspiration, prompt: e.target.value })}
               style={{ height: 'auto', overflow: 'hidden' }}
@@ -98,7 +97,7 @@ export default function SpirateHeader({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs border-gray-700 text-white"
+                className="h-7 text-xs border-gray-700 text-black hover:cursor-pointer"
                 onClick={() => {
                   setEditingPrompt(false);
                   router.push(`/dashboard/inspiration?prompt=${inspiration?.prompt}`);
@@ -109,7 +108,7 @@ export default function SpirateHeader({
               </Button>
               <Button
                 size="sm"
-                className="h-7 text-xs bg-white text-black hover:bg-gray-200"
+                className="h-7 text-xs bg-forground text-forground hover:bg-gray-200"
                 onClick={() => setEditingPrompt(false)}
               >
                 取消

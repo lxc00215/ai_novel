@@ -186,8 +186,8 @@ export default function WorksContainer() {
   return (
     <div className="container mx-auto py-8 px-4">
       <Tabs defaultValue="works" onValueChange={handleTabChange} className="w-full">
-        <div className="bg-black rounded-lg shadow-sm mb-8">
-          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-black rounded-lg">
+        <div className="bg-background rounded-lg  mb-8">
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto p-1 bg-background rounded-lg">
             <TabsTrigger
               value="works"
               className={`hover:cursor-pointer text-base py-3 rounded-md transition-all ${activeTab === "works"

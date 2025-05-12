@@ -9,13 +9,13 @@ import Image from "next/image";
 import { Inspiration } from "@/app/services/types";
 import { useRouter } from "next/navigation";
 import apiService from "@/app/services/api";
-import {QRCodeSVG } from 'qrcode.react';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ const getStories = async (page: number, pageSize: number) => {
     // const { getCurrentUserId } = await import('@/app/utils/jwt')
     // const userId = getCurrentUserId();
     // 调用 API 获取故事列表，传入分页参数
-    const response = await apiService.spirate.getStories( page, pageSize);
+    const response = await apiService.spirate.getStories(page, pageSize);
     console.log("response", response);
     return response;
   } catch (err) {
@@ -84,7 +84,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
 
   const handleShare = (storyId: string) => (e: React.MouseEvent) => {
     e.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击事件
-    
+
     // 创建分享URL (根据您的实际URL结构调整)
     const shareableUrl = `${window.location.origin}/dashboard/inspiration/${storyId}`;
     setShareUrl(shareableUrl);
@@ -109,7 +109,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
       card.classList.add('bg-[#191919]'); // 添加hover时的背景色
       // 添加可点击的视觉提示
       card.classList.add('cursor-pointer');
-  
+
     }
   }
 
@@ -133,30 +133,30 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
     );
   }
 
-  const handleClick = (id: string): void =>{
-      router.push(`/dashboard/inspiration/${id}`);
+  const handleClick = (id: string): void => {
+    router.push(`/dashboard/inspiration/${id}`);
   }
 
   return (
     <div className="relative">
-      <div className="min-h-screen overflow-y-auto p-6 flex-1 bg-black text-white pr-20 pl-30 pt-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+      <div className="min-h-screen overflow-y-auto p-6 flex-1 bg-background text-foreground pr-20 pl-30 pt-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
 
         {/* My Stories Section */}
         <div className="mb-6">
           <h2 className="text-lg font-medium mb-4">
             我的故事 ({stories.length})
           </h2>
-          
+
           {/* Stories Grid */}
           <div className="grid grid-cols-1 grid-cols-2 gap-4">
             {stories.map((story) => (
-              <Card 
-                id={`card-${story.id}`} 
-                key={story.id} 
-                className="bg-[#0c0a09] rounded-none border-none overflow-hidden pt-0 h-40 pb-0 mr-10 border-zinc-800 hover:bg-[#1a1a1a] transition-all duration-200 ease-in-out cursor-pointer" 
-                onClick={()=>handleClick(story.id)} 
-                onMouseEnter={()=>handleMouseEnter(story.id)} 
-                onMouseLeave={()=>handleMouseLeave(story.id)}>
+              <Card
+                id={`card-${story.id}`}
+                key={story.id}
+                className="bg-background rounded-none border-none overflow-hidden pt-0 h-40 pb-0 mr-10 border-zinc-800 hover:bg-[#1a1a1a] transition-all duration-200 ease-in-out cursor-pointer"
+                onClick={() => handleClick(story.id)}
+                onMouseEnter={() => handleMouseEnter(story.id)}
+                onMouseLeave={() => handleMouseLeave(story.id)}>
                 <div className="flex flex-row h-full">
                   {/* 左侧图片区域 - 在小屏幕时缩小宽度 */}
                   <div className="relative w-1/3 sm:w-1/4 md:w-1/5 h-full">
@@ -166,7 +166,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-background/70 to-transparent" />
                   </div>
                   {/* 右侧内容区域 - 自适应剩余空间 */}
                   <CardContent className="px-2 sm:px-3 md:px-5 py-2 w-2/3 sm:w-3/4 md:w-4/5 flex flex-col justify-between">
@@ -180,10 +180,10 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                         <span className="font-medium">设定:</span> {story.prompt}
                       </div>
                     </div>
-                    
+
                     {/* 底部按钮区域 - 响应式按钮大小和间距 */}
                     <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
-                      <Button 
+                      <Button
                         onClick={() => handleClick(story.id)}
                         className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
                       >
@@ -194,7 +194,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                         <DrawerTrigger asChild>
                           <Button
                             onClick={handleShare(story.id)}
-                             className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
+                            className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9 rounded-md bg-zinc-800 hover:bg-zinc-700 border-zinc-700 transition-colors"
                           >
                             <Share2 className="w-4 h-4 mr-2" />
                             分享
@@ -210,18 +210,18 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                                 </Button>
                               </DrawerClose>
                             </div>
-                            
+
                             {/* QR Code */}
                             <div className="bg-white p-4 rounded-lg mb-6">
                               <QRCodeSVG value={shareUrl} size={200} />
                             </div>
 
-                             {/* 链接区域 */}
-                             <div className="w-full flex items-center gap-2 bg-zinc-800 p-3 rounded-lg mb-6">
-                              <input 
-                                type="text" 
-                                value={shareUrl} 
-                                readOnly 
+                            {/* 链接区域 */}
+                            <div className="w-full flex items-center gap-2 bg-zinc-800 p-3 rounded-lg mb-6">
+                              <input
+                                type="text"
+                                value={shareUrl}
+                                readOnly
                                 className="flex-1 bg-transparent border-none outline-none text-white text-sm"
                               />
                               <Button
@@ -233,7 +233,7 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                                 <Copy className="h-4 w-4" />
                               </Button>
                             </div>
-                            
+
                             <p className="text-sm text-zinc-400 text-center">
                               扫描二维码或复制链接分享给好友
                             </p>
@@ -254,12 +254,12 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
             <PaginationContent>
               {/* 上一页按钮 */}
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
                   className={`
                     transition-all duration-200 ease-in-out
-                    ${currentPage === 1 
-                      ? 'opacity-50 cursor-not-allowed' 
+                    ${currentPage === 1
+                      ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-zinc-800 hover:text-white cursor-pointer'
                     }
                     border border-zinc-700
@@ -282,8 +282,8 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
                       transition-all duration-200 ease-in-out
                       cursor-pointer
                       border border-zinc-700
-                      ${currentPage === page 
-                        ? 'bg-zinc-800 text-white border-zinc-600' 
+                      ${currentPage === page
+                        ? 'bg-zinc-800 text-white border-zinc-600'
                         : 'hover:bg-zinc-800 hover:text-white hover:border-zinc-600'
                       }
                     `}
@@ -296,12 +296,12 @@ export default function End({ onToggleView }: { onToggleView: () => void }) {
 
               {/* 下一页按钮 */}
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
                   className={`
                     transition-all duration-200 ease-in-out
-                    ${currentPage === totalPages 
-                      ? 'opacity-50 cursor-not-allowed' 
+                    ${currentPage === totalPages
+                      ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-zinc-800 hover:text-white cursor-pointer'
                     }
                     border border-zinc-700

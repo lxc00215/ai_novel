@@ -426,7 +426,7 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
   }, [localContent, searchResults]);
 
   return (
-    <div className="p-4 pb-20 flex flex-col h-full bg-black text-white">
+    <div className="p-4 pb-20 flex flex-col h-full bg-background text-foreground">
       {/* 章节标题 */}
       <div className="flex items-center mb-4">
         <input
@@ -434,7 +434,7 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
           value={localTitle}
           onChange={handleTitleChange}
           onBlur={handleTitleBlur}
-          className="text-2xl font-bold w-full border-none p-2 bg-black text-white focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+          className="text-2xl font-bold w-full border-none p-2 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
           placeholder="章节标题"
         />
       </div>
@@ -446,7 +446,7 @@ export default function Editor({ chapter, updateTitle, updateContent }: EditorPr
           value={localContent}
           onChange={handleContentChange}
           placeholder="在这里开始写作..."
-          className="w-full h-full min-h-[300px] resize-none p-4 bg-black text-white border-gray-700 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full h-full min-h-[300px] resize-none p-4 bg-background text-foreground border-gray-700 focus:ring-blue-500 focus:border-blue-500"
           style={{
             height: textareaHeight,
             lineHeight: '1.7',

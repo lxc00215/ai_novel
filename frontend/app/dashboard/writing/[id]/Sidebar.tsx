@@ -37,10 +37,10 @@ export default function Sidebar({
   //章节标题前添加序号
 
   return (
-    <div className="flex flex-col h-full bg-black border-r border-gray-300">
+    <div className="flex flex-col h-full bg-background border-r border-gray-300">
       <div className="flex items-center justify-between p-4 border-b border-gray-600">
-        <h2 className="font-medium text-white">目录</h2>
-        <Button size="sm" variant="outline" className="border-gray-400 text-white hover:bg-gray-800 hover:text-white" onClick={addNewChapter}>
+        <h2 className="font-medium text-foreground">目录</h2>
+        <Button size="sm" variant="outline" className="border-gray-400 text-foreground hover:bg-gray-800 hover:text-white" onClick={addNewChapter}>
           新建章节
         </Button>
       </div>
@@ -51,7 +51,7 @@ export default function Sidebar({
           {sortedChapters.map((chapter) => (
             <li
               key={chapter.id}
-              className={`flex items-center justify-between p-2 rounded hover:cursor-pointer text-white ${currentOrder === chapter.order ? 'bg-blue-900' : 'hover:bg-gray-800'
+              className={`flex items-center justify-between p-2 rounded hover:cursor-pointer text-foreground ${currentOrder === chapter.order ? 'bg-blue-900' : 'hover:bg-gray-800'
                 }`}
               onClick={() => {
                 setCurrentOrder(chapter.order);
@@ -62,7 +62,7 @@ export default function Sidebar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 opacity-70 hover:opacity-100 text-white hover:bg-gray-700"
+                  className="h-7 w-7 opacity-70 hover:opacity-100 text-foreground hover:bg-gray-700"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSetSummary(chapter.id);
@@ -75,7 +75,7 @@ export default function Sidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 opacity-70 hover:opacity-100 text-white hover:bg-gray-700"
+                    className="h-7 w-7 opacity-70 hover:opacity-100 text-foreground hover:bg-gray-700"
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteChapter(chapter.order);

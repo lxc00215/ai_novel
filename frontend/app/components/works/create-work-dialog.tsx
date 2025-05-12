@@ -73,7 +73,7 @@ export default function CreateWorkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-black border-gray-800 text-white">
+      <DialogContent className="sm:max-w-md bg-background border-gray-800 text-white">
         <DialogHeader className="flex justify-between items-center">
           <DialogTitle className="text-lg text-white">{dialogTitle}</DialogTitle>
           <DialogClose className="h-6 w-6 hover:cursor-pointer text-gray-300 hover:text-white" />

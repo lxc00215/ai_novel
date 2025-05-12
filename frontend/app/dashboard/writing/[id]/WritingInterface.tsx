@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Sidebar from '@/app/dashboard/writing/components/Sidebar';
-import Editor from '@/app/dashboard/writing/components/Editor';
-import AIPanel from '@/app/dashboard/writing/components/AIPanel';
-import Toolbar from '@/app/dashboard/writing/components/Toolbar';
+import Sidebar from '@/app/dashboard/writing/[id]/Sidebar';
+import Editor from '@/app/dashboard/writing/[id]/Editor';
+import AIPanel from '@/app/dashboard/writing/[id]/AIPanel';
+import Toolbar from '@/app/dashboard/writing/[id]/Toolbar';
 import { cn } from '@/lib/utils';
 import { Chapter, Novel } from '@/app/services/types';
 import apiService from '@/app/services/api';
@@ -21,7 +21,6 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  //   const [bookId, setBookId] = useState(novel[0].book_id);
   const [searchText, setSearchText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [searchResults, setSearchResults] = useState({
@@ -39,7 +38,6 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
     e.preventDefault();
     setIsDragging(true);
   };
-
 
   const handleNextSearchMatch = () => {
     if (searchResults.currentIndex < searchResults.matches.length - 1) {
@@ -369,7 +367,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
     };
   }, []);
   return (
-    <div className={`flex h-screen bg-black text-white overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
+    <div className={`flex h-screen bg-background text-foreground overflow-x-hidden ${isFullscreen ? 'fullscreen' : ''}`}>
       {/* Left Sidebar - novel */}
       <div className={`border-r border-gray-600 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden'}`}>
         <Sidebar
@@ -382,7 +380,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden bg-black">
+      <div className="flex flex-col flex-1 overflow-hidden bg-background">
         {/* Toolbar */}
         <Toolbar
           book_title={novel.title}
@@ -402,7 +400,7 @@ export default function WritingInterface({ novel, setNovel }: WritingInterfacePr
         {/* Right AI Panel */}
         <div className="flex flex-1 overflow-hidden">
           {/* Editor */}
-          <div ref={editorRef} className="flex-1 overflow-auto bg-black text-white">
+          <div ref={editorRef} className="flex-1 overflow-auto bg-background text-foreground">
             <Editor
               chapter={getCurrentChapter()}
               updateTitle={(newTitle: string) => {

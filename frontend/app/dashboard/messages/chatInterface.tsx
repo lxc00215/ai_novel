@@ -119,10 +119,8 @@ const ChatInterface = () => {
             const character = characters.find(
               char => char.id == lastSession.character_id
             );
-            console.log("character", character);
             if (character) {
               setCurrentCharacter(character);
-              //   const historyResponse = await apiService.chat.getChatHistory(lastSession.id);
               let newMessages: Message[] = [];
               sessionsResponse[0].messages.map((msg: Message) => {
                 newMessages.push(msg as Message)
@@ -140,10 +138,7 @@ const ChatInterface = () => {
     initializeChat();
   }, [characterIdFromUrl]); // 依赖项添加 characterIdFromUrl
 
-
-
   const switchCharacter = async (character: Character, characterID: string) => {
-    console.log("switchCharacter", JSON.stringify(sessionsResponse));
     setCurrentCharacter(character);
     
     // 查找是否已有与该角色的会话
@@ -172,7 +167,6 @@ const ChatInterface = () => {
   };
 
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -190,7 +184,7 @@ const ChatInterface = () => {
   const renderAvatar = (name: string, avatar?: string, description?: string) => {
     const imageId = `${name}-${avatar}`;
     return (
-      <Avatar className="h-10 w-10 border z-1 border-gray-300 shadow-md transition-all duration-300 hover:scale-105">
+      <Avatar className="h-10 w-10 border z-1 border-background shadow-md transition-all duration-300 hover:scale-105">
         {avatar ? (
           <div className={styles.avatarContainer}>
             {!loadedImages[imageId] && (
@@ -210,7 +204,7 @@ const ChatInterface = () => {
             />
           </div>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 text-gray-100 font-medium rounded-full">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-background to-background text-foreground font-medium rounded-full">
             {name?.charAt(0) || 'U'}
           </div>
         )}
@@ -264,38 +258,29 @@ const ChatInterface = () => {
       alert("请先选择一个角色开始聊天");
     }
   };
-  //   const handleQuickResponse = (text: string) => {
-  //     setMessage(text);
-  //     // Optional: automatically send the message after selecting a quick response
-  //     setTimeout(() => handleSendMessage(), 100);
-  //   };
 
-  //   const switchCharacter = (character: Character) => {
-  //     setCurrentCharacter(character);
-  //     // In a real app, you would fetch the conversation history with this character
-  //   };
   // 即使没有会话也显示界面，不再依赖sessionsResponse.length
   return sessionsResponse.length > 0 ? (
-    <div className="flex h-screen bg-black">
+    <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
-      <div className="w-[350px] border-r border-gray-800 flex flex-col bg-black overflow-hidden">
-        <div className="p-4 border-b border-gray-800">
-          <h1 className="text-xl font-bold">聊天</h1>
+      <div className="w-[350px] border-r border-border pb-15 flex flex-col bg-background overflow-hidden">
+        <div className="p-4 border-b border-border">
+          <h1 className="text-xl text-foreground font-bold">聊天</h1>
         </div>
-        <ScrollArea className="flex-1 p-4 border-b border-gray-800 h-full">
-          <h2 className="text-lg font-semibold mb-4">历史</h2>
+        <ScrollArea className="flex-1 p-4 border-b border-border h-full">
+          <h2 className="text-lg font-semibold text-foreground mb-4">历史</h2>
           <div className="space-y-4">
             {characters.map((character,index) => (
               <div
                 key={`character-${character.id}-${index}`}
-                className={`flex items-center space-x-3 cursor-pointer hover:bg-gray-800 p-2 rounded-lg transition-all duration-200 ${currentCharacter?.id === character.id ? 'bg-gray-800' : ''}`}
+                className={`flex items-center space-x-3 cursor-pointer hover:bg-background p-2 rounded-lg transition-all duration-200 ${currentCharacter?.id === character.id ? 'bg-zinc-300' : ''}`}
                 onClick={() => switchCharacter(character, character.id)}
               >
                 {renderAvatar(character.name, character.image_url, character.description)}
                 <div>
                   <p className="font-medium">{character.name}</p>
                   {/* 仅显示一行，多余的用省略号代替 */}
-                  <p className="text-gray-400   text-sm truncate">{sessionsResponse.find((session: any) => session.character_id == character.id)?.last_message ?? ""}</p>
+                  <p className="text-foreground/80   text-sm truncate">{sessionsResponse.find((session: any) => session.character_id == character.id)?.last_message ?? ""}</p>
                 </div>
               </div>
             ))}
@@ -304,21 +289,14 @@ const ChatInterface = () => {
         {/* History */}
       </div>
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">
+      <div className="flex-1 flex flex-col h-screen bg-background">
         {/* Chat Header */}
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-black bg-opacity-60 backdrop-blur-sm">
-          <div className="flex items-center space-x-3">
-            {currentCharacter && renderAvatar(currentCharacter.name, currentCharacter.image_url)}
-            <div>
-              <span className="font-medium text-lg">{currentCharacter?.name || 'Lily Moore'}</span>
-              <div className="text-gray-400 text-sm">Mar 3</div>
-            </div>
-          </div>
+        <div className="p-3 border-b border-border flex items-center justify-end bg-background bg-opacity-60 backdrop-blur-sm">
           <div className="relative">
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-gray-800"
+              className="rounded-full hover:bg-background"
               onClick={() => handleRefresh()}
             >
               <RefreshCcw className="h-5 w-5" />
@@ -327,7 +305,7 @@ const ChatInterface = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-gray-800"
+              className="rounded-full hover:bg-background"
               onMouseEnter={() => document.getElementById('character-info-card')?.classList.remove('hidden')}
               onMouseLeave={() => setTimeout(() => {
                 if (!document.getElementById('character-info-card')?.matches(':hover')) {
@@ -359,7 +337,7 @@ const ChatInterface = () => {
                       }}
                     ></div>
                   ) : (
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-gray-700 to-gray-900 flex items-center justify-center">
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-background to-background flex items-center justify-center">
                       <span className="text-6xl font-bold">{currentCharacter.name.charAt(0)}</span>
                     </div>
                   )}
@@ -387,8 +365,8 @@ const ChatInterface = () => {
                 <div key={msg.id} className={`flex ${msg.sender_type == 'user' ? 'justify-end' : 'items-start'} gap-3`}>
                   {msg.sender_type !== 'user' && renderAvatar(msg.sender, currentCharacter?.image_url)}
                   <div className={`max-w-[70%] rounded-2xl p-4 shadow-md ${msg.sender_type === 'user'
-                    ? 'bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700'
-                    : 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800'
+                    ? 'bg-gradient-to-r from-background to-background border border-border'
+                    : 'bg-gradient-to-r from-background to-background border border-border'
                     }`}>
                     {msg.content}
                   </div>
@@ -399,7 +377,7 @@ const ChatInterface = () => {
               {isLoading && streamingMessage.length > 0 ? (
                 <div className={`flex items-start gap-3`}>
                   {renderAvatar("Character", currentCharacter?.image_url)}
-                  <div className="max-w-[70%] rounded-2xl p-4 shadow-md bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-800">
+                  <div className="max-w-[70%] rounded-2xl p-4 shadow-md bg-gradient-to-r from-background to-background border border-border">
                     {streamingMessage}
                   </div>
                 </div>
@@ -418,11 +396,11 @@ const ChatInterface = () => {
         </div>
 
         {/* Message Input */}
-        <div className="p-6 border-t border-gray-800 bg-black">
+        <div className="p-6 border-t border-border bg-background">
           <div className="relative max-w-4xl mx-auto">
-            <div className="flex items-center border border-gray-700 rounded-2xl overflow-hidden bg-gray-900 focus-within:ring-2 focus-within:ring-gray-600 hover:border-gray-600 transition-all duration-300 shadow-lg">
+            <div className="flex items-center border border-border rounded-2xl overflow-hidden bg-background focus-within:ring-2 focus-within:ring-border hover:border-border transition-all duration-300 shadow-lg">
               <Button
-                className="ml-2 bg-transparent hover:bg-transparent text-gray-400 hover:text-gray-300"
+                className="ml-2 bg-background  text-foreground/80 hover:text-foreground/60"
                 variant="ghost"
                 size="icon"
               >

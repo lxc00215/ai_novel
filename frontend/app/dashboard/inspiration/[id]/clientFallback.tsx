@@ -2,7 +2,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import SpirateDetailClient from './SpirateDetailClient';
 import LoadingUI from '@/components/ui/loading';
 import apiService from '@/app/services/api';

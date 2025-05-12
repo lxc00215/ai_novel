@@ -21,16 +21,7 @@ export default async function SpirateDetailPage({ params, searchParams }: {
     console.log(resolvedSearchParams);
 
     let isNew = resolvedSearchParams?.is_new === 'true';
-
-
-
-
-    
-
-
     if (!inspirationId) return notFound();
-
-
     // 将数据传递给客户端组件
     return (
       <Suspense fallback={<LoadingUI />}>
@@ -42,7 +33,7 @@ export default async function SpirateDetailPage({ params, searchParams }: {
   } catch (error: any) {
     console.error("加载灵感详情失败:", error);
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-white flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl mb-4">加载失败</h2>
           <p className="text-gray-400">{error.message}</p>

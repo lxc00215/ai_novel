@@ -227,13 +227,14 @@ export default function CrazyStartPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* 页面顶部添加历史记录按钮 */}
-      <div className="container hover:cursor-pointer mx-auto p-4 flex justify-end"
-        onClick={()=>navigateToHistory()}
+      <div className="container  mx-auto  p-4 flex justify-end"
+       
       >
         <Button 
           variant="outline" 
           size="sm" 
-          className="flex items-center gap-2"
+          onClick={()=>navigateToHistory()}
+          className="flex items-center hover:cursor-pointer gap-2"
         >
           <History size={16} />
           历史记录
@@ -243,7 +244,7 @@ export default function CrazyStartPage() {
       <main className="flex-1 container mx-auto p-4">
         {/* Gender Selection */}
         <section className="py-6">
-          <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-[#e7000b] to-[#155dfc] text-transparent bg-clip-text">选择创作类型</h2>
+          <h2 className="text-xl  mb-6 bg-background text-foreground">选择创作类型</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div 
@@ -254,13 +255,13 @@ export default function CrazyStartPage() {
                   : "hover:scale-[1.01] hover:shadow-[0_0_8px_rgba(21,93,252,0.4)]"
                 }
                 border-2 rounded-lg overflow-hidden relative
-                ${selectedGender === "male" ? "border-[#155dfc]" : "border-gray-700"}
+                ${selectedGender === "male" ? "border-foreground" : "border-gray-700"}
               `}
             >
-              <div className="bg-[#111]/80 p-6 h-full">
+              <div className="bg-background p-6 h-full">
                 <div className="flex items-center gap-3 mb-3">
                   <BookOpen className="text-[#155dfc]" size={24} />
-                  <h3 className="text-xl font-semibold text-[#155dfc]">男频小说</h3>
+                  <h3 className="text-xl font-semibold text-foreground">男频小说</h3>
                 </div>
                 <p className="text-gray-300 mb-2">热血、奇幻、战斗、修真、冒险</p>
                 <p className="text-xs text-gray-400">适合男性读者的小说类型，情节紧凑，世界观宏大</p>
@@ -274,13 +275,13 @@ export default function CrazyStartPage() {
                   : "hover:scale-[1.01] hover:shadow-[0_0_8px_rgba(231,0,11,0.4)]"
                 }
                 border-2 rounded-lg overflow-hidden relative
-                ${selectedGender === "female" ? "border-[#e7000b]" : "border-gray-700"}
+                ${selectedGender === "female" ? "border-foreground" : "border-gray-700"}
               `}
             >
-              <div className="bg-[#111]/80 p-6 h-full">
+              <div className="bg-background p-6 h-full">
                 <div className="flex items-center gap-3 mb-3">
                   <Heart className="text-[#e7000b]" size={24} />
-                  <h3 className="text-xl font-semibold text-[#e7000b]">女频小说</h3>
+                  <h3 className="text-xl font-semibold text-foreground">女频小说</h3>
                 </div>
                 <p className="text-gray-300 mb-2">言情、宫斗、悬疑、青春、浪漫</p>
                 <p className="text-xs text-gray-400">适合女性读者的小说类型，感情描写细腻，人物情感丰富</p>
@@ -292,7 +293,7 @@ export default function CrazyStartPage() {
         {/* Category Selection */}
         {selectedGender && (
           <div className="mb-8 animate-fadeIn">
-            <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-[#e7000b] to-[#155dfc] bg-clip-text text-transparent">
+            <h2 className="text-xl  mb-4 bg-background text-foreground">
               选择分类
             </h2>
             
@@ -303,12 +304,12 @@ export default function CrazyStartPage() {
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "outline"}
-                    className={`flex gap-2 min-w-max ${
+                    className={`flex gap-2 min-w-max hover:cursor-pointer ${
                       selectedCategory === category.id 
                         ? selectedGender === 'male' 
-                          ? 'bg-[#155dfc] hover:bg-[#155dfc]/80' 
-                          : 'bg-[#e7000b] hover:bg-[#e7000b]/80'
-                        : 'bg-black border-gray-700 hover:border-gray-500'
+                          ? 'bg-[#155dfc] hover:bg-[#155dfc]/20' 
+                          : 'bg-[#e7000b] hover:bg-[#e7000b]/20'
+                        : 'bg-background border-gray-700 hover:border-gray-500'
                     }`}
                     onClick={() => setSelectedCategory(category.id)}
                   >
@@ -326,12 +327,12 @@ export default function CrazyStartPage() {
                       <Button
                         key={subcat.id}
                         variant={selectedSubcategories.includes(subcat.id) ? "default" : "outline"}
-                        className={`justify-start ${
+                        className={`justify-start hover:cursor-pointer ${
                           selectedSubcategories.includes(subcat.id)
                             ? selectedGender === 'male'
                               ? 'bg-[#155dfc]/20 text-[#155dfc] border-[#155dfc] hover:bg-[#155dfc]/30'
                               : 'bg-[#e7000b]/20 text-[#e7000b] border-[#e7000b] hover:bg-[#e7000b]/30'
-                            : 'bg-black border-gray-700'
+                            : 'bg-background border-gray-700 hover:border-gray-500'
                         }`}
                         onClick={() => toggleSubcategory(subcat.id)}
                       >
@@ -348,7 +349,7 @@ export default function CrazyStartPage() {
         {selectedCategory && (
           <div className="mb-8 animate-fadeIn border-t border-gray-800 pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-[#e7000b] to-[#155dfc] bg-clip-text text-transparent">
+              <h2 className="text-xl  bg-background text-foreground">
                 故事种子
               </h2>
               <div className="flex items-center gap-2">
@@ -371,18 +372,18 @@ export default function CrazyStartPage() {
               <div className="space-y-6 animate-fadeIn">
                 {seedCategories.map((category) => (
                   <div key={category.id} className="space-y-2">
-                    <h3 className="text-md font-semibold text-gray-300">{category.name}</h3>
+                    <h3 className="text-md font-semibold text-foreground">{category.name}</h3>
                     <div className="flex flex-wrap gap-2">
                       {category.seeds.map((seed) => (
                         <Badge
                           key={seed}
                           variant={selectedSeeds.includes(seed) ? "default" : "outline"}
-                          className={`cursor-pointer transition-all ${
+                          className={`cursor-pointer transition-all hover:cursor-pointer ${
                             selectedSeeds.includes(seed)
                               ? selectedGender === 'male'
                                 ? 'bg-[#155dfc]/20 text-[#155dfc] border-[#155dfc] hover:bg-[#155dfc]/30'
                                 : 'bg-[#e7000b]/20 text-[#e7000b] border-[#e7000b] hover:bg-[#e7000b]/30'
-                              : 'bg-black border-gray-700 hover:bg-black hover:border-gray-500'
+                              : 'bg-background border-gray-700 hover:border-gray-500'
                           }`}
                           onClick={() => toggleSeed(seed)}
                         >
@@ -400,7 +401,7 @@ export default function CrazyStartPage() {
         {/* Selected Options Summary */}
         {selectedGender && (
           <div className="mb-8">
-            <h3 className="text-md font-semibold text-gray-300 mb-2">已选选项</h3>
+            <h3 className="text-md  text-foreground mb-2">已选选项</h3>
             <div className="flex flex-wrap gap-2">
               {getSelectedOptions().map((option, index) => (
                 <Badge
@@ -433,19 +434,19 @@ export default function CrazyStartPage() {
       </main>
 
       {/* Parameters Section */}
-      <div className="bg-black/80 backdrop-blur-sm border-t border-gray-800 p-4 sticky bottom-0 animate-fadeIn">
+      <div className="bg-background backdrop-blur-sm border-t border-gray-800 p-4 sticky bottom-0 animate-fadeIn">
         <div className="container mx-auto">
-          <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-[#e7000b] to-[#155dfc] bg-clip-text text-transparent">
+          <h2 className="text-xl  mb-4 bg-background text-foreground">
             创作参数
           </h2>
           
-          <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-800 mb-8">
+          <div className="bg-background rounded-lg p-6 border border-gray-800 mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-md font-medium text-white flex items-center">
+              <h3 className="text-md font-medium text-foreground flex items-center">
                 <Heart className="h-4 w-4 mr-2 opacity-70" />
                 章节数量
               </h3>
-              <span className="text-sm font-bold px-3 py-1 rounded-full bg-gray-800">
+              <span className="text-sm  px-3 py-1 rounded-full bg-background">
                 {chapterCount}章
               </span>
             </div>
@@ -480,7 +481,7 @@ export default function CrazyStartPage() {
               onClick={handleStart}
               disabled={!selectedGender || !selectedCategory || selectedSubcategories.length === 0 || isLoading}
               className={`
-                w-full max-w-md py-8 font-bold text-xl tracking-wide transition-all duration-300 
+                w-full max-w-md py-8  text-xl tracking-wide transition-all duration-300 
                 bg-gradient-to-r from-[#e7000b] to-[#155dfc] border-none
                 hover:shadow-[0_0_30px_rgba(21,93,252,0.5)]
                 disabled:opacity-50 disabled:cursor-not-allowed

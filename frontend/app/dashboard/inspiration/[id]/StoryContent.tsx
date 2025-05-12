@@ -49,7 +49,7 @@ export default function StoryContent({
           {editingLineIndex === index ? (
             <div className="relative border border-gray-700 rounded-lg p-3">
               <textarea
-                className="bg-black text-gray-300 w-full pr-10 resize-none outline-none"
+                className="bg-background text-black w-full pr-10 resize-none outline-none"
                 value={line}
                 onChange={(e) => {
                   const newLines = [...displayedLines];
@@ -85,7 +85,7 @@ export default function StoryContent({
             <img src={line} alt="Story illustration" className="w-full h-64 object-cover rounded-lg" />
           ) : (
             <p
-              className={`cursor-pointer hover:bg-gray-900 p-2 rounded transition-opacity duration-300 ${
+              className={`cursor-pointer text-black hover:bg-gray-400 p-2 rounded transition-opacity duration-300 ${
                 index === displayedLines.length - 1 && isTyping ? 'border-l-2 border-blue-500 pl-4' : ''
               }`}
               onClick={() => editLine(index)}

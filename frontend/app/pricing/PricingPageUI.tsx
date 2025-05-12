@@ -571,8 +571,8 @@ export default function PricingPageUI() {
                   </div>
                 )}
                 <CardContent className="p-0">
-                  <div className={`${plan.headerColor} p-6 text-center text-white`}>
-                    <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+                  <div className={`${plan.headerColor} p-6 text-center text-muted-foreground`}>
+                    <h3 className="text-xl text-foreground font-semibold mb-2">{plan.name}</h3>
                     <div className="flex items-center justify-center">
                       <span className="text-3xl font-bold">
                         ¥{plan.name === "免费试用" 
@@ -581,7 +581,7 @@ export default function PricingPageUI() {
                             ? plan.yearlyPrice 
                             : plan.monthlyPrice}
                       </span>
-                      <span className="text-sm ml-1">/{plan.period || (annually ? '年' : '月')}</span>
+                      <span className="text-sm text-foreground ml-1">/{plan.period || (annually ? '年' : '月')}</span>
                     </div>
                     {plan.name !== "免费试用" && annually && (
                       <div className="text-xs mt-1 bg-white/20 rounded-full px-2 py-0.5 inline-block">
@@ -715,9 +715,9 @@ export default function PricingPageUI() {
       </div>
 
       {/* CTA部分 */}
-      <div className="mt-24 mb-16 max-w-5xl mx-auto px-4">
-        <div className="bg-gradient-to-r from-primary/80 to-secondary/80 rounded-2xl shadow-xl p-8 sm:p-12 text-center text-white">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">准备好开始您的创作之旅了吗？</h2>
+      <div className="mt-24 mb-16  max-w-5xl mx-auto px-4">
+        <div className=" bg-gradient-to-r from-primary/80 to-secondary/80 rounded-2xl shadow-xl p-8 sm:p-12 text-center">
+          <h2 className="text-2xl sm:text-3xl text-muted-foreground font-bold mb-4">准备好开始您的创作之旅了吗？</h2>
           <p className="text-lg mb-6 opacity-90">注册即可获得7天免费试用，感受AI辅助创作的魅力</p>
           <Button size="lg" className="bg-white text-sec hover:bg-white/90 shadow-lg">
             立即开始免费试用

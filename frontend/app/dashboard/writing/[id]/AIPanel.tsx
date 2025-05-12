@@ -255,10 +255,10 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         <div className="space-y-2">
           <Label htmlFor="ai-model">AI模型</Label>
           <Select defaultValue={aiModel} onValueChange={setAiModel}>
-            <SelectTrigger id="ai-model" className="w-full bg-black">
+            <SelectTrigger id="ai-model" className="w-full bg-background">
               <SelectValue placeholder="选择AI模型" />
             </SelectTrigger>
-            <SelectContent className="bg-black text-white border-gray-700">
+            <SelectContent className="bg-background text-foreground border-border">
               <SelectItem value="平衡版" className="hover:bg-gray-800">平衡版</SelectItem>
               <SelectItem value="文章版" className="hover:bg-gray-800">文章版</SelectItem>
               <SelectItem value="专业版" className="hover:bg-gray-800">专业版</SelectItem>
@@ -362,19 +362,19 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             <>
               <div className="relative">
                 <div
-                  className="border rounded-md p-3 bg-black text-white flex items-center justify-between cursor-pointer"
+                  className="border rounded-md p-3 bg-background text-foreground flex items-center justify-between cursor-pointer"
                   onClick={() => setShowStyleDropdown(!showStyleDropdown)}
                 >
                   <span>{selectedStylePreset}</span>
-                  <ChevronDown className="h-4 w-4 text-white" />
+                  <ChevronDown className="h-4 w-4 text-foreground" />
                 </div>
 
                 {showStyleDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 border border-gray-700 rounded-md shadow-lg bg-black text-white z-10">
+                  <div className="absolute left-0 right-0 mt-1 border border-border rounded-md shadow-lg bg-background text-foreground z-10">
                     {stylePresets.map(style => (
                       <div
                         key={style.id}
-                        className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-700 last:border-b-0"
+                        className="p-3 hover:bg-muted/80 cursor-pointer border-b border-border last:border-b-0"
                         onClick={() => {
                           setSelectedStylePreset(style.name);
                           setShowStyleDropdown(false);
@@ -389,7 +389,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                           )}
                         </div>
                         {selectedStylePreset === style.name && (
-                          <div className="text-sm text-gray-300 mt-1">
+                          <div className="text-sm text-muted-foreground mt-1">
                             {style.detail}
                           </div>
                         )}
@@ -399,12 +399,12 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                 )}
               </div>
 
-              <div className="bg-black text-white p-3 rounded-md border border-gray-700">
+              <div className="bg-background text-foreground p-3 rounded-md border border-border">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{selectedStylePreset}</span>
-                  <ChevronDown className="h-4 w-4 text-white" />
+                  <ChevronDown className="h-4 w-4 text-foreground" />
                 </div>
-                <div className="text-sm text-gray-300 mt-2">
+                <div className="text-sm text-muted-foreground mt-2">
                   {stylePresets.find(style => style.name === selectedStylePreset)?.prompt}
                 </div>
               </div>
@@ -451,10 +451,10 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
 
           {requirementsMode === "preset" ? (
             <Select onValueChange={setSelectedRequirementsPreset}>
-              <SelectTrigger className="bg-black">
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="请选择写作要求" />
               </SelectTrigger>
-              <SelectContent className="bg-black text-white border-gray-700">
+              <SelectContent className="bg-background text-foreground border-border">
                 {requirementsPresets.map(req => (
                   <SelectItem key={req.id} value={req.name} className="hover:bg-gray-800">{req.name}</SelectItem>
                 ))}
@@ -519,7 +519,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
               </div>
               <div className="bg-gray-50 rounded-md p-4 flex flex-col items-center justify-center">
                 <div className="text-gray-400 flex items-center justify-center mb-2">
-                  <X className="h-4 w-4 text-gray-300 mr-1" />
+                  <X className="h-4 w-4 text-muted-foreground mr-1" />
                   <span className="text-sm">未选择任何章节</span>
                 </div>
                 <Button variant="outline" size="sm" className="rounded-full bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
@@ -535,16 +535,16 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
               <div className="text-sm text-gray-500">
                 可以选择关联备忘录的内容以提供上下文参考，不选择也可以直接生成内容。
               </div>
-              <div className="bg-gray-50 rounded-md p-4 flex flex-col items-center justify-center">
+              <div className="bg-background rounded-md p-4 flex flex-col items-center justify-center">
                 <div className="text-gray-400 flex items-center justify-center mb-2">
-                  <X className="h-4 w-4 text-gray-300 mr-1" />
+                  <X className="h-4 w-4 text-muted-foreground mr-1" />
                   <span className="text-sm">未选择任何备忘录</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100">
+                  <Button variant="outline" size="sm" className="rounded-full bg-background text-blue-600 border-blue-200 hover:bg-blue-100">
                     本书备忘录
                   </Button>
-                  <Button variant="outline" size="sm" className="rounded-full bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
+                  <Button variant="outline" size="sm" className="rounded-full bg-background text-green-600 border-green-200 hover:bg-green-100">
                     选择备忘录
                   </Button>
                 </div>
@@ -578,7 +578,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             </div>
           </Label>
           <div className="flex items-center">
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div 
                 className="bg-green-500 h-2 rounded-full" 
                 style={{ width: `${(textLength / 3000) * 100}%` }}
@@ -632,7 +632,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
 
       <div className="p-4 border-t">
         <Button
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          className="w-full bg-primary hover:bg-blue-700 text-primary-foreground rounded-lg"
           onClick={handleGenerate}
           disabled={isLoading}
         >

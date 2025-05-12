@@ -113,7 +113,7 @@ export function EnhancedSidebar() {
   return (
     <>
       <motion.div 
-        className="flex h-full flex-col bg-black text-white border-r border-zinc-800"
+        className="flex h-full flex-col bg-background text-foreground border-r border-zinc-800"
         initial={isCollapsed ? "collapsed" : "expanded"}
         animate={isCollapsed ? "collapsed" : "expanded"}
         variants={sidebarVariants}
@@ -124,8 +124,8 @@ export function EnhancedSidebar() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 rounded-full hover:bg-zinc-800 hover:cursor-pointer"
-            
+            className="h-8 w-8 rounded-full hover:bg-zinc-500 hover:cursor-pointer"
+    
             onClick={toggleCollapse}
           >
             {isCollapsed ? 
@@ -228,7 +228,7 @@ export function EnhancedSidebar() {
                 {/* 设置按钮 */}
                 <Button
                   onClick={handleSettingsClick}
-                  className="flex w-full hover:cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition-colors"
+                  className="flex w-full hover:cursor-pointer bg-zinc-800 dark:bg-zinc-800 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition-colors"
                 >
                   <IoSettingsOutline className="h-4 w-4" />
                   <span>设置</span>

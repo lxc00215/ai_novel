@@ -71,7 +71,6 @@ export default function BookDetailPage() {
         setLoading(false)
       }
     }
-    
     fetchBookData()
   }, [bookId])
   
@@ -82,7 +81,7 @@ export default function BookDetailPage() {
     try {
       setSavingChanges(true)
       
-      // 替换为你的API端点
+      // TODO: 替换为你的API端点,后端估计也没写
       const response = await fetch(`/api/books/${bookId}`, {
         method: 'PUT',
         headers: {

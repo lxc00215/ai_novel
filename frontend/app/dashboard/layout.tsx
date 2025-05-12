@@ -42,7 +42,7 @@ export default function DashboardLayout({
           <motion.main 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full min-h-screen bg-black"
+            className="w-full min-h-screen bg-background"
           >
             {children}
           </motion.main>

@@ -25,7 +25,6 @@ export default function SpirateDetailClient({
 }: SpirateDetailClientProps) {
   // 基本状态
   const [inspiration, setInspiration] = useState<InspirationDetail>(initialData);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [characters, setCharacters] = useState<Character[]>(initialData.characters || []);
   
@@ -430,7 +429,7 @@ export default function SpirateDetailClient({
   // 如果出错显示错误页面
   if (error) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-foreground flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl mb-4">出错了</h2>
           <p className="text-gray-400">{error}</p>

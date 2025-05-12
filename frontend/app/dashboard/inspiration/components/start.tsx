@@ -33,6 +33,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
   // State for mouse position inside card
   const cardRef = useRef(null);
   const inputRef = useRef(null);
+  const [darkMode,setDarkMode] = useState(false) 
 
   const { checkText, isReady } = useSensitiveFilter({
     showToast: true
@@ -188,15 +189,15 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
             ref={cardRef}
           >
             {/* Gradient border */}
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-red-500 to-blue-500 opacity-70"></div>
+            <div className="absolute inset-0 rounded-lg border-[1px]   border-gradient-to-r from-red-500 to-blue-500 opacity-70"></div>
             {/* Card content */}
-            <div className="relative bg-black rounded-lg p-6 h-full flex flex-col overflow-hidden">
+            <div className="relative bg-background dark:bg-black rounded-lg p-6 h-full flex flex-col overflow-hidden">
               {/* Shuffle button */}
               <div className="flex justify-between mb-4">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="text-white"
+                  className="text-foreground"
                   onClick={getRandomPrompt}
                 >
                   <Shuffle size={20} />
@@ -205,7 +206,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="text-xs px-2 py-1 h-7 rounded-md bg-black text-white border-gray-700"
+                    className="text-xs px-2 py-1 h-7 rounded-md bg-background text-foreground border-gray-700"
                     onClick={startGeneration} >
                     开始
                   </Button>
@@ -214,7 +215,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
               {/* Story prompt text - editable textarea */}
               <textarea
                 ref={inputRef}
-                className="text-gray-300 flex-1 text-sm bg-transparent w-full resize-none outline-none"
+                className="text-foreground flex-1 text-sm bg-background w-full resize-none outline-none"
                 value={inputStory}
                 onChange={(e) => setInputStory(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -225,7 +226,7 @@ const AIStoryApplication = ({ onToggleView }: StartProps) => {
         </div>
       )}
       {page === 'loading' && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center bg-background justify-center">
           <div className="w-1/2 bg-gray-800 rounded-full h-2.5">
             <div 
               className="bg-gradient-to-r from-red-500 to-blue-500 h-2.5 rounded-full transition-all duration-300" 

@@ -25,7 +25,7 @@ export default function ChoicesSection({
         {displayedChoices.map((choice, idx) => (
           <div
             key={idx}
-            className="border border-yellow-600 rounded-lg p-3 cursor-pointer hover:bg-gray-900 transition-colors animate-slideIn"
+            className="border border-yellow-600 rounded-lg p-3 cursor-pointer hover:bg-gray-300 transition-colors animate-slideIn"
             onClick={() => handleChoiceSelect(choice)}
           >
             <span className="text-yellow-500 mr-2">★</span>
