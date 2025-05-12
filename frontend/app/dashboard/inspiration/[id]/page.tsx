@@ -8,17 +8,23 @@ import apiService from '@/app/services/api';
 
 // 服务器端数据获取
 export default async function SpirateDetailPage({ params, searchParams }:{ 
-  params: { id: string }, 
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ id: string }>, 
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   try {
     // 在服务器端获取初始数据
     
 
-    const inspirationId = await params?.id;
+    let inspirationId = ""
+    params.then((params) => {
+      inspirationId = params?.id as string;
+    })
+
     if (!inspirationId) return notFound();
-    
-    const isNew = await searchParams?.is_new === 'true';
+    let isNew = true;
+     searchParams.then((params) => {
+      isNew = params?.isNew === 'true';
+    })
     
     // 从服务器获取初始数据
     const inspirationData = await apiService.spirate.get(inspirationId);
