@@ -377,7 +377,6 @@ class GenerateImageRequest(BaseResultSchema):
     num_inference_steps: Optional[int] = 20
     size: Optional[str] = '1024x1024'
     negative_prompt: Optional[str] = None
-    user_id: int
 
 # @classmethod
 # async def from_orm_with_result(cls, task: "Task", session: AsyncSession) -> "TaskSchema":

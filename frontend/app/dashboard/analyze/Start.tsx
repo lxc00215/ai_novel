@@ -4,6 +4,7 @@ import HistoryList from "@/app/dashboard/analyze/HistoryList";
 import { BookOpen,  } from "lucide-react";
 import { useEffect, useState } from "react";
 import apiService from "@/app/services/api";
+import { toast } from "sonner";
 
 export default function Home() {
   // 模拟检查是否有历史记录 - 实际应用中应从API获取
@@ -11,6 +12,8 @@ export default function Home() {
 
 
   const [historyItems,setHistoryItems] = useState<any[]>([])
+
+  const [updateFlag,setUpdateFlag] = useState(false)
   
   // 用于处理上传结果
   const [uploadResult, setUploadResult] = useState<any>(null);
@@ -22,8 +25,6 @@ export default function Home() {
     if(result.file_id){
       setFileId(result.file_id)
     }
-    console.log(file_id+"aaa")
-    console.log("Upload complete:", result);
   };
 
 
@@ -35,15 +36,19 @@ export default function Home() {
       setHistoryItems(response)
     }
     getHistory()
-  },[file_id])
+  },[updateFlag])
 
 
   const handleAnalyze = async () => {
+    toast.success('开始分析')
     if(file_id){
      const response = await apiService.ai.analyze(file_id)
-     const analysis = response.analysis
+     if(response){
+      toast.success('分析成功') 
+      setUpdateFlag(!updateFlag)
+     }
 
-     console.log(analysis+"分析结果")
+     
 
     }
   }

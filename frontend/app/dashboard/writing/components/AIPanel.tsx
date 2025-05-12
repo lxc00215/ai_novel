@@ -46,22 +46,87 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
   const [selectedRequirementsPreset, setSelectedRequirementsPreset] = useState("");
 
   const stylePresets = [
-    { id: 1, name: "【优化文笔2.0】剧情以对话推动，强冲突（推荐灵光版）", detail: "详情文字..." },
-    { id: 2, name: "【金灵巧】知乎体", detail: "详情文字..." },
-    { id: 3, name: "【乐子文风】模各适合对话推剧情（十三月）", detail: "详情文字..." },
-    { id: 4, name: "【西瓜出品】黄金文风1.3，开启新人入神时代！香茄起点爆款!", detail: "搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。" },
-    { id: 5, name: "【L】【爽文的写作风格减少AI味】2", detail: "详情文字..." },
-    { id: 6, name: "（小熊出品）美乐子文 写作风格 推荐搭配同名使用", detail: "详情文字..." },
-    { id: 7, name: "完全参考之前的章节内容的风格", detail: "详情文字..." },
-    { id: 8, name: "故事多层次递进，突出人物特性", detail: "详情文字..." },
+    { 
+      id: 1, 
+      name: "【优化文笔2.0】剧情以对话推动，强冲突（推荐灵光版）", 
+      detail: "详情文字...",
+      prompt: "使用对话推动剧情发展，塑造强烈的冲突，保持角色间的张力，文笔流畅简练，段落层次分明。"
+    },
+    { 
+      id: 2, 
+      name: "【金灵巧】知乎体", 
+      detail: "详情文字...",
+      prompt: "模仿知乎高质量回答的写作风格，逻辑清晰，论证有力，适当使用专业术语，偶尔插入反问句增加互动感。"
+    },
+    { 
+      id: 3, 
+      name: "【乐子文风】模各适合对话推剧情（十三月）", 
+      detail: "详情文字...",
+      prompt: "轻松幽默的文风，角色对话生动有趣，善用反转和梗，语言接地气但不低俗，节奏明快。"
+    },
+    { 
+      id: 4, 
+      name: "【西瓜出品】黄金文风1.3，开启新人入神时代！香茄起点爆款!", 
+      detail: "搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。",
+      prompt: "网文黄金文风，句式多变，描写细腻，人物个性鲜明，场景代入感强，情节波澜起伏，符合网络小说读者口味，节奏张弛有度。"
+    },
+    { 
+      id: 5, 
+      name: "【L】【爽文的写作风格减少AI味】2", 
+      detail: "详情文字...",
+      prompt: "爽文风格但减少AI痕迹，避免过度堆砌词藻，保持人物动机自然合理，情节爽快但不生硬，保持连贯性和流畅度。"
+    },
+    { 
+      id: 6, 
+      name: "（小熊出品）美乐子文 写作风格 推荐搭配同名使用", 
+      detail: "详情文字...",
+      prompt: "轻松幽默的美式风格，充满生活气息，对话诙谐自然，善用环境渲染情绪，角色个性化表达明显。"
+    },
+    { 
+      id: 7, 
+      name: "完全参考之前的章节内容的风格", 
+      detail: "详情文字...",
+      prompt: "严格遵循之前章节的写作风格、语言习惯和叙事方式，保持人物语气一致性，情节自然衔接，不引入新的写作元素。"
+    },
+    { 
+      id: 8, 
+      name: "故事多层次递进，突出人物特性", 
+      detail: "详情文字...",
+      prompt: "采用多层次递进的叙事结构，情节由浅入深，角色特性鲜明突出，内心活动与外在行为相互印证，铺垫与爆发结合。"
+    },
   ];
 
   const requirementsPresets = [
-    { id: 1, name: "详细描写", detail: "注重场景和人物细节描写" },
-    { id: 2, name: "紧凑情节", detail: "剧情紧凑，节奏明快" },
-    { id: 3, name: "增加对话", detail: "更多角色对话，推动情节发展" },
-    { id: 4, name: "增加悬疑", detail: "添加悬疑元素，引发读者好奇" },
-    { id: 5, name: "续写文章", detail: "保持原文风格继续续写" },
+    { 
+      id: 1, 
+      name: "详细描写", 
+      detail: "注重场景和人物细节描写",
+      prompt: "详细描写场景和人物，使用丰富的感官细节，通过环境烘托氛围，角色外貌与内心刻画要立体。"
+    },
+    { 
+      id: 2, 
+      name: "紧凑情节", 
+      detail: "剧情紧凑，节奏明快",
+      prompt: "情节紧凑，节奏明快，减少不必要的描写，关注核心事件推进，保持读者紧张感。"
+    },
+    { 
+      id: 3, 
+      name: "增加对话", 
+      detail: "更多角色对话，推动情节发展",
+      prompt: "增加角色间的对话比例，通过对话展现性格和关系，推动情节发展，减少叙述性段落。"
+    },
+    { 
+      id: 4, 
+      name: "增加悬疑", 
+      detail: "添加悬疑元素，引发读者好奇",
+      prompt: "增加悬疑元素，设置伏笔，不要完全揭示真相，保持读者好奇心，适当使用暗示和误导。"
+    },
+    { 
+      id: 5, 
+      name: "续写文章", 
+      detail: "保持原文风格继续续写",
+      prompt: "严格遵循原文风格和语言习惯续写，保持人物和情节的一致性，自然过渡到新内容。"
+    },
   ];
 
   useEffect(() => {
@@ -83,27 +148,63 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       setIsLoading(true);
       console.log("生成内容");
 
+      // 获取选中的提示词而非名称
+      const selectedStylePresetObj = stylePresets.find(style => style.name === selectedStylePreset);
+      const selectedRequirementsPresetObj = requirementsPresets.find(req => req.name === selectedRequirementsPreset);
+      const characterRelationshipEl = document.getElementById('character-relationship');
+      const chapterCharactersEl = document.getElementById('chapter-characters');
+      const chapterTermsEl = document.getElementById('chapter-terms');
+
+      // 使用提示词(prompt)而不是名称(name)
       const writingStyle = writingStyleMode === 'preset'
-        ? selectedStylePreset
+        ? (selectedStylePresetObj?.prompt || selectedStylePreset)
         : customWritingStyle;
 
       const requirements = requirementsMode === 'preset'
-        ? selectedRequirementsPreset
+        ? (selectedRequirementsPresetObj?.prompt || selectedRequirementsPreset)
         : customRequirements;
       
-      // 添加新的参数
-      const params = {
-        textLength,
-        extractKeywords,
-        generateChapter
+      // 收集所有表单数据
+      const formData = {
+        aiModel,                  // AI模型选择
+        storyBackground,          // 故事背景/本章剧情
+        writingStyle,             // 写作风格
+        requirements,             // 写作要求
+        textLength,               // 文本长度
+        extractKeywords,          // 是否提取关键词
+        generateChapter,          // 是否生成完整章节
+        autoLinkRecent,           // 是否自动关联最近章节
+        recentChaptersCount,      // 关联的最近章节字数
+        
+        // 高级功能字段 (如果用户启用了高级功能)
+        ...(showAdvanced ? {
+          characterRelationship: (characterRelationshipEl as HTMLTextAreaElement)?.value || '',
+          chapterCharacters: (chapterCharactersEl as HTMLTextAreaElement)?.value || '',
+          chapterTerms: (chapterTermsEl as HTMLTextAreaElement)?.value || '',
+        } : {})
       };
       
-      console.log("标记1")
+      console.log("提交的完整表单数据:", formData);
+      
+      // 调用API时传递所有必要参数
       const response = await apiService.ai.generateContent(
         storyBackground, 
         writingStyle, 
-        requirements
+        requirements,
+        {
+          textLength,
+          extractKeywords,
+          generateChapter,
+          aiModel,
+          // 其他可能需要的参数
+          ...(showAdvanced ? {
+            characterRelationship: formData.characterRelationship,
+            chapterCharacters: formData.chapterCharacters,
+            chapterTerms: formData.chapterTerms,
+          } : {})
+        }
       );
+      
       console.log("AI生成内容:", response);
       if (response) {
         toast.success('内容生成成功');
@@ -116,8 +217,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       }
     } catch (error: any) {
       console.error('AI生成错误:', error);
-      // 错误消息会在api服务中被处理和显示，这里不需要重复显示
-      // 如果需要特殊处理，可以在这里添加
+      toast.error(error.message || '生成失败，请稍后重试');
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +259,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
               <SelectValue placeholder="选择AI模型" />
             </SelectTrigger>
             <SelectContent className="bg-black text-white border-gray-700">
-              <SelectItem value="察图版" className="hover:bg-gray-800">察图版</SelectItem>
+              <SelectItem value="平衡版" className="hover:bg-gray-800">平衡版</SelectItem>
               <SelectItem value="文章版" className="hover:bg-gray-800">文章版</SelectItem>
               <SelectItem value="专业版" className="hover:bg-gray-800">专业版</SelectItem>
             </SelectContent>
@@ -290,7 +390,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                         </div>
                         {selectedStylePreset === style.name && (
                           <div className="text-sm text-gray-300 mt-1">
-                            使用方法：搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。
+                            {style.detail}
                           </div>
                         )}
                       </div>
@@ -305,7 +405,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                   <ChevronDown className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-sm text-gray-300 mt-2">
-                  使用方法：搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。
+                  {stylePresets.find(style => style.name === selectedStylePreset)?.prompt}
                 </div>
               </div>
             </>

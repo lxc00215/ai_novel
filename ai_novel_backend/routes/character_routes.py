@@ -16,7 +16,7 @@ async def get_characters(
     db: AsyncSession = Depends(get_db)
 ):
     # 查询该用户创建的所有角色 is_used=True
-    query = select(Character).where(Character.user_id == current_user.id, Character.is_used == False)
+    query = select(Character).where(Character.user_id == current_user.id, Character.is_used == True)
     result = await db.execute(query)
     characters = result.scalars().all()
     # 将User_id 与 character_id 对应的 session_id 插入到 characters 中

@@ -93,17 +93,14 @@ export const request = async (url: string,is_auth:boolean, options: RequestInit 
           ...newOptions.headers,
           'Authorization': 'Bearer ' + token
         };
-      }
-    
-   
+      }   
     const response = await fetch(`${BASE_URL}${url}`, newOptions);
     // 检查响应状态
+    console.log(JSON.stringify(response))
     if (!response.ok) {
       // 处理401错误(token无效或过期)
       if (response.status === 401) {
         // 清除token并重定向到登录页
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
         window.location.href = '/auth';
       }
       const errorData: ErrorResponse = await response.json();
@@ -213,12 +210,6 @@ const apiService = {
         }
       });
 
-      // 如果注册成功，保存令牌和用户信息
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-        if (token) localStorage.setItem('token', token);
-        if (user) localStorage.setItem('user', JSON.stringify(user));
-      }
 
       return response;
     },
@@ -358,8 +349,6 @@ const apiService = {
         }
       })
     },
-
-
     getAnalysis: async (file_id: string) => {
       return request(`/ai/get-analysis`,true, {
         method: 'POST',
@@ -371,19 +360,27 @@ const apiService = {
       })
     },
     // 生成小说内容
-    generateContent: async (prompt: string, writingStyle: string = "", requirements: string = ""): Promise<any> => {
-      return request('/ai/generate',true, {
+    generateContent: async (
+      storyBackground:string, 
+      writingStyle:string, 
+      requirements:string,
+      options = {}
+    ) => {
+      const response = await request(`/ai/generate_content`,true, {
         method: 'POST',
-        body: JSON.stringify({
-          prompt,
-          writing_style: writingStyle,
-          requirements
-        }),
         headers: {
           'Content-Type': 'application/json',
-          
-        }
+        },
+        body: JSON.stringify({
+          storyBackground,
+          writingStyle,
+          requirements,
+          ...options // 包含所有额外选项
+        })
       });
+      
+      
+      return response
     },
 
     // 流式AI扩写
@@ -523,12 +520,10 @@ const apiService = {
     generateImage: async (prompt: string): Promise<ImageObject> => {
       // 导入工具函数获取用户 ID
 
-      const user = localStorage.getItem('user')
-      const userId = JSON.parse(user || '{}').id;
 
       const response = await request('/ai/generate_images',true, {
         method: 'POST',
-        body: JSON.stringify({ prompt, user_id: userId, size: "1280x960" }),
+        body: JSON.stringify({ prompt, size: "1280x960" }),
         headers: {
           'Content-Type': 'application/json',
           
@@ -660,24 +655,7 @@ const apiService = {
 
   novels: {
     create: async (title: string, description: string): Promise<Novel> => {
-      // 从localStorage获取用户信息
-      const user = localStorage.getItem('user')
-      const userId = JSON.parse(user || '{}').id;
-
-      // 确保userId是字符串类型
-      const userIdStr = userId ? userId.toString() : "";
-
-      // 如果没有找到用户ID，抛出错误
-      if (!userId) {
-        throw new Error('创建小说User not authenticated');
-      }
-
-      // 打印确认发送的数据
-      console.log("创建小说 - 发送数据:", {
-        'title': title,
-        'description': description,
-        'user_id': userIdStr // 使用字符串类型
-      });
+    
 
       return request(`/novels/create`,false, {
         method: 'POST',
@@ -685,7 +663,6 @@ const apiService = {
           {
             'title': title,
             'description': description,
-            'user_id': userIdStr // 使用字符串类型
           }
         ),
         headers: {
@@ -693,9 +670,6 @@ const apiService = {
         }
       })
     },
-
-
-
     delete: async (id: string) => {
       return request(`/novels/${id}/delete`,false, {
         method: 'POST',
@@ -743,11 +717,10 @@ const apiService = {
       })
     },
     getNovel: async (): Promise<Novel[]> => {
-      return request(`/novels/getMy`,false, {
+      return request(`/novels/getMy`,true, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token') || ''
         }
       })
     }
@@ -765,11 +738,10 @@ const apiService = {
       })
     },
     getCharacters: async (): Promise<Character[]> => {
-      return request(`/character/getMy`,false, {
+      return request(`/character/getMy`,true, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token') || ''
         }
       })
     }
@@ -833,12 +805,11 @@ const apiService = {
       return response;
     },
     updateUser: async (profile: Partial<User>) => {
-      return request('/users/profile',false, {
+      return request('/users/profile',true, {
         method: 'POST',
         body: JSON.stringify(profile),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
     }

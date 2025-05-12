@@ -57,23 +57,21 @@ const ChatInterface = () => {
       try {
         console.log("初始化聊天界面，URL参数：", characterIdFromUrl);
 
-        // 1. 获取所有角色列表
-        const charactersResponse = await apiService.character.getCharacters();
-        setCharacters(charactersResponse);
-        console.log("获取到角色列表：", charactersResponse.length);
-
         // 2. 获取最近的会话列表
         const sessionsResponse = await apiService.chat.getRecentSessions();
         setSessionsResponse(sessionsResponse);
         console.log("获取到会话列表：", JSON.stringify(sessionsResponse));
 
+        // 将session中的Character填充到Characters
+        characters.push(...sessionsResponse.map((session: any) => session.character));
+
+
         // 3. 如果 URL 中有指定角色 ID
         if (characterIdFromUrl) {
           // 在角色列表中找到对应角色
-          const targetCharacter = charactersResponse.find(
+          const targetCharacter = characters.find(
             char => char.id == characterIdFromUrl
           );
-          console.log("找到目标角色:", targetCharacter?.name);
 
           if (targetCharacter) {
             // 检查是否已有与该角色的会话
@@ -115,7 +113,7 @@ const ChatInterface = () => {
           if (sessionsResponse.length > 0) {
             const lastSession = sessionsResponse[0];
             setCurrentSessionID(Number(lastSession.id));
-            const character = charactersResponse.find(
+            const character = characters.find(
               char => char.id == lastSession.character_id
             );
             console.log("character", character);
@@ -247,33 +245,7 @@ const ChatInterface = () => {
           created_at: new Date().toISOString()
         }]);
       }
-    } else {
-      // 如果不存在会话，创建新会话
-      const auser = JSON.parse(localStorage.getItem('user') || '{}');
-      try {
-        const newSession = await apiService.chat.getOrCreateSession(Number(auser!.id), Number(characterID));
-        console.log("characterID:"+characterID);
-        setCurrentSessionID(Number(newSession.id));
-        
-        // 检查返回的会话是否包含历史消息
-        if (newSession.messages && newSession.messages.length > 0) {
-          setMessages(newSession.messages);
-        } else {
-          // 如果没有历史消息，则设置初始消息
-          setMessages([{
-            session_id: Number(newSession.id),
-            id: '1',
-            sender: character.name,
-            sender_type: 'character',
-            content: `你好，我是 ${character.name}。`,
-            created_at: new Date().toISOString()
-          }]);
-        }
-      } catch (error) {
-        console.error("创建会话失败:", error);
-        alert("创建会话失败，请重试");
-      }
-    }
+    } 
   };
 
 
@@ -380,14 +352,13 @@ const ChatInterface = () => {
   //     // In a real app, you would fetch the conversation history with this character
   //   };
   // 即使没有会话也显示界面，不再依赖sessionsResponse.length
-  return (
+  return sessionsResponse.length > 0 ? (
     <div className="flex h-screen bg-black">
       {/* Left Sidebar */}
       <div className="w-[350px] border-r border-gray-800 flex flex-col bg-black overflow-hidden">
         <div className="p-4 border-b border-gray-800">
           <h1 className="text-xl font-bold">聊天</h1>
         </div>
-        {/* Recommended Characters */}
         <ScrollArea className="flex-1 p-4 border-b border-gray-800 h-full">
           <h2 className="text-lg font-semibold mb-4">历史</h2>
           <div className="space-y-4">
@@ -400,7 +371,8 @@ const ChatInterface = () => {
                 {renderAvatar(character.name, character.image_url)}
                 <div>
                   <p className="font-medium">{character.name}</p>
-                  <p className="text-gray-400 text-sm truncate">{sessionsResponse.find((session: any) => session.character_id == character.id)?.last_message ?? ""}</p>
+                  {/* 仅显示一行，多余的用省略号代替 */}
+                  <p className="text-gray-400   text-sm truncate">{sessionsResponse.find((session: any) => session.character_id == character.id)?.last_message ?? ""}</p>
                 </div>
               </div>
             ))}
@@ -555,7 +527,7 @@ const ChatInterface = () => {
         </div>
       </div>
     </div>
-  ); (
+  ): (
     // 中间加一个按钮，点击按钮跳转到灵感页面
     <div className="flex h-screen bg-black">
       <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">

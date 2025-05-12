@@ -11,6 +11,7 @@ from routes.feature_routes import get_feature_by_name
 from schemas import ChatMessageRequest, ChatSessionRequest
 from openai import AsyncOpenAI  # 确保导入异步客户端
 from sqlalchemy.orm import joinedload,selectinload
+
 router = APIRouter(prefix="/chat")
     
 from sqlalchemy import select
@@ -44,7 +45,7 @@ async def get_chat_sessions(db: AsyncSession, sessions: list):
     
     return sessions_with_messages
 
-@router.get("/sessions/recent")
+@router.get("/sessions")
 async def get_user_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -52,21 +53,21 @@ async def get_user_sessions(
     # 首先获取会话列表
     sessions_query = select(ChatSession).options(
         selectinload(ChatSession.messages),
-        joinedload(ChatSession.character),
-        joinedload(ChatSession.user)
-    ).where(ChatSession.user_id == current_user.id).order_by(ChatSession.updated_at.desc()).limit(1)
+        joinedload(ChatSession.character)
+    ).where(ChatSession.user_id == current_user.id).order_by(ChatSession.updated_at.desc()).limit(10)
     result = await db.execute(sessions_query)
+
+
     sessions = result.scalars().all()
     
     return sessions
 
 # 在路由处理函数中使用
-@router.get("/sessions")
+@router.get("/sessions/recent")
 async def get_user_sessions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # 只查最近7天的会话
     # 首先获取会话列表
     sessions_query = select(ChatSession).where(ChatSession.user_id == current_user.id).where(ChatSession.updated_at >= datetime.now() - timedelta(days=1))
     result = await db.execute(sessions_query)

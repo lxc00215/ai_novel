@@ -35,6 +35,7 @@ export default function WorkCard({ work, handleArchive, onDelete, onUpdate }: Wo
   // 阻止按钮点击事件冒泡到卡片
   const handleButtonClick = (e: React.MouseEvent, action: string) => {
     e.stopPropagation();
+    handleCardClick();
     console.log(`执行${action}操作`);
   };
 

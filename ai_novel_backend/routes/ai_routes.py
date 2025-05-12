@@ -121,7 +121,85 @@ async def analyze_file(
         feature_config = get_feature_by_name("AI分析")
         
         # 准备文件信息
-        user_message = ""
+        user_message = '''
+# AI图书深度解构提示词
+
+## 任务说明
+你是一位专业的文学解构和分析专家。请对我提供的书籍进行全面而深入的解构分析，提取以下关键元素并进行详细说明。
+
+## 基本信息提取
+1. 书名与作者信息
+2. 出版背景与时代背景
+3. 文学类型与流派
+4. 写作风格特点概述
+
+## 核心解构要素
+
+### 1. 爆点识别与分析
+- 识别书中最令人震撼、引发强烈情感反应的关键场景
+- 分析每个爆点的叙事构建方式
+- 说明爆点在整体叙事中的功能和意义
+- 提取爆点的实现技巧与方法
+
+### 2. 爽点解析
+- 提取最满足读者期待的场景或情节
+- 分析爽点的情感调动机制
+- 归纳爽点的类型模式(如正义伸张、能力觉醒、情感宣泄等)
+- 剖析爽点与读者心理需求的匹配方式
+
+### 3. 叙事结构分析
+- 绘制完整的叙事弧线与转折点
+- 识别叙事中的铺垫与回应技巧
+- 分析情节节奏控制方法
+- 提取作者处理悬念和冲突的特殊手法
+
+### 4. 人物构建解析
+- 主要角色的人物弧与成长路径
+- 人物塑造的独特技巧
+- 分析角色魅力点与共鸣机制
+- 人物关系网络及其动态发展
+
+### 5. 主题与思想提取
+- 核心主题与副主题识别
+- 主题展现的手法与层次
+- 隐含的价值观与世界观
+- 主题与当代社会的关联与意义
+
+### 6. 语言与修辞亮点
+- 提取代表性的语言风格特征
+- 分析特殊的修辞手法与效果
+- 识别语言节奏与情绪调动的关系
+- 提取值得学习的表达技巧
+
+### 7. 读者情感调动机制
+- 分析作品如何引导读者情绪
+- 读者代入感营造的技巧
+- 情感波动设计与高潮构建
+- 解析阅读体验的设计路径
+
+## 可学习与借鉴的创作技巧
+1. 总结该书值得借鉴的写作技巧(至少5项)
+2. 提取可复制的创作模式与方法
+3. 分析技巧背后的创作原理
+4. 针对不同类型创作者的借鉴建议
+
+## 输出格式要求
+- 提供一份摘要，概括核心发现
+- 主体分析部分按上述要素分节展开
+- 每个要素提供具体的文本实例和分析
+- 结尾部分提供整体创作启示与建议
+
+## 特别说明
+- 如果是特定类型的书籍(如科幻、悬疑、商业等)，请额外关注该类型特有的叙事模式和技巧
+- 分析中请保持客观性，同时指出技巧的优缺点
+- 避免过度解读，确保分析有文本依据
+- 区分作者有意为之的技巧与偶然效果
+
+---
+
+请提供书籍信息，我将为你提供专业、深入且实用的解构分析，帮助你理解作品的精髓和创作技巧。
+
+'''
         
         # 构建用户消息
         if request.additional_instructions:
@@ -238,7 +316,7 @@ async def generate_image_from_spirate(request: GenerateImageRequest):
             return await generate_images(request)
 
 @router.post("/generate_images", response_model=ImageResponse)
-async def generate_images(request: GenerateImageRequest):
+async def generate_images(request: GenerateImageRequest,current_user: User = Depends(get_current_user)):
     
     # 使用数据库会话查询
     async with async_session() as db:
@@ -725,7 +803,7 @@ async def generate_response(
         print(f"Error in generate_response: {str(e)}")
         yield f"data: Error: {str(e)}\n\n"
 
-@router.post("/generate")
+@router.post("/generate_content")
 async def generate_content(request: dict = Body(...)):
     """
     生成小说内容
@@ -734,26 +812,69 @@ async def generate_content(request: dict = Body(...)):
         # 获取AI写作特性配置
         feature_config = get_feature_by_name("AI写作")
         
-        # 获取请求数据
-        prompt = request.get("prompt", "")
-        model = request.get("model", feature_config["model"])
-        
-        # 写作风格和要求
-        writing_style = request.get("writing_style", "")
+        # 获取请求参数
+        story_background = request.get("storyBackground", "")
+        writing_style = request.get("writingStyle", "")
         requirements = request.get("requirements", "")
+
+        model = request.get("model", feature_config["model"])
+
+        if model == "平衡版":
+            model = feature_config["model"]
+        elif model == "文章版":
+            model = feature_config["model"]
+        elif model == "专业版":
+            model = feature_config["model"]
+        else :
+            model = feature_config["model"]
+        # 获取额外选项
+        text_length = request.get("textLength", "")
+        extract_keywords = request.get("extractKeywords", False)
+        generate_chapter = request.get("generateChapter", False)
+        auto_link_recent = request.get("autoLinkRecent", False)
+        recent_chapters_count = request.get("recentChaptersCount", 0)
+        
+        # 高级功能选项
+        character_relationship = request.get("characterRelationship", None)
+        chapter_characters = request.get("chapterCharacters", None)
+        chapter_terms = request.get("chapterTerms", None)
         
         # 构建提示词
         system_prompt = feature_config["prompt"]
         user_message = f"""
         请根据以下信息创作小说内容:
         
-        剧情/提纲: {prompt}
+        故事背景/本章剧情: {story_background}
         
         写作风格: {writing_style}
         
         写作要求: {requirements}
         """
         
+        # 添加额外的选项信息
+        if text_length:
+            user_message += f"\n\n文本长度: {text_length}"
+            
+        if extract_keywords:
+            user_message += "\n\n请提取关键词"
+            
+        if generate_chapter:
+            user_message += "\n\n请生成完整章节"
+            
+        if auto_link_recent and recent_chapters_count > 0:
+            user_message += f"\n\n请关联最近的 {recent_chapters_count} 章节内容以保持一致性"
+        
+        # 添加高级功能信息
+        if character_relationship:
+            user_message += f"\n\n角色关系: {character_relationship}"
+            
+        if chapter_characters:
+            user_message += f"\n\n本章角色: {chapter_characters}"
+            
+        if chapter_terms:
+            user_message += f"\n\n关键术语: {chapter_terms}"
+        
+        user_message += "\n\n请根据以上信息创作小说内容,不要生成除了文章内容外的任何信息，不要对我回复，你只是一个无情的文章撰写家"
         # 调用AI生成内容
         bridge = OpenAIBridge()
         bridge.init({
@@ -770,8 +891,8 @@ async def generate_content(request: dict = Body(...)):
             messages=messages,
             options={
                 "model": model,
-                "temperature": feature_config.get("temperature", 0.7),
-                "max_tokens": feature_config.get("max_tokens", 2000)
+                "temperature": request.get("temperature", feature_config.get("temperature", 0.7)),
+                "max_tokens": request.get("max_tokens", feature_config.get("max_tokens", 2000))
             }
         )
         
