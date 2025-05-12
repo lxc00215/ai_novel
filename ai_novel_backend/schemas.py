@@ -460,7 +460,6 @@ class ChatMessageRequest(BaseModel):
     content: str
 
 class ChatSessionRequest(BaseModel):
-    user_id: int
     character_id: int
 
 # schemas.py additions:

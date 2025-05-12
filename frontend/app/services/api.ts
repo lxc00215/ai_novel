@@ -669,11 +669,11 @@ const apiService = {
     //   });
     // },
 
-    getOrCreateSession: async (userId: number, characterId: number) => {
+    getOrCreateSession: async (characterId: number) => {
       try {
         return await request('/chat/session', true, {
           method: 'POST',
-          body: JSON.stringify({ user_id: userId, character_id: characterId }),
+          body: JSON.stringify({  character_id: characterId }),
           headers: {
             'Content-Type': 'application/json'
           }

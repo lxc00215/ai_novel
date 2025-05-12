@@ -20,6 +20,7 @@ export default function CharacterChat({
   const handleChatClick = async (char: Character) => {
     try {
       // 标记角色为已使用
+      console.log(inspiration?.user?.id+"ccc");
       const updatedData: Character = {
         ...char,
         is_used: true,
