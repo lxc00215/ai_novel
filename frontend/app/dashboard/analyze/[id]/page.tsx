@@ -110,18 +110,18 @@ export default function MarkdownDisplay() {
   }
   
   // 错误状态渲染
-  if (error) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-destructive">加载失败</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>{error}</p>
-        </CardContent>
-      </Card>
-    )
-  }
+  // if (error) {
+  //   return (
+  //     <Card className="w-full">
+  //       <CardHeader>
+  //         <CardTitle className="text-destructive">加载失败</CardTitle>
+  //       </CardHeader>
+  //       <CardContent>
+  //         <p>{error}</p>
+  //       </CardContent>
+  //     </Card>
+  //   )
+  // }
   
   return (
     <Card className="w-full  flex flex-col">
