@@ -91,21 +91,21 @@ const ChatInterface = () => {
             );
             console.log("是否存在会话:", existingSession ? "是" : "否");
 
-              setCurrentSessionID(Number(existingSession?.id));
-              setMessages(existingSession.messages);
-            } else {
-              console.log("没有现有会话，创建新会话");
-              const newSession = await apiService.chat.getOrCreateSession(Number(characterIdFromUrl));
-              setCurrentSessionID(newSession['id']);
-              // 设置初始消息
-              setMessages([{
-                session_id: newSession['id'],
-                id: '1',
-                sender: newSession['character']['name'],
-                sender_type: 'character',
-                content: `你好，我是 ${newSession['character']['name']}。`,
-                created_at: new Date().toISOString()
-              }]);
+            setCurrentSessionID(Number(existingSession?.id));
+            setMessages(existingSession.messages);
+          } else {
+            console.log("没有现有会话，创建新会话");
+            const newSession = await apiService.chat.getOrCreateSession(Number(characterIdFromUrl));
+            setCurrentSessionID(newSession['id']);
+            // 设置初始消息
+            setMessages([{
+              session_id: newSession['id'],
+              id: '1',
+              sender: newSession['character']['name'],
+              sender_type: 'character',
+              content: `你好，我是 ${newSession['character']['name']}。`,
+              created_at: new Date().toISOString()
+            }]);
             // 设置当前角色
             setCurrentCharacter(newSession['character']);
             setCurrentSessionID(newSession['id']);
@@ -140,16 +140,16 @@ const ChatInterface = () => {
 
   const switchCharacter = async (character: Character, characterID: string) => {
     setCurrentCharacter(character);
-    
+
     // 查找是否已有与该角色的会话
     const existingSession = sessionsResponse.find(
       (session: any) => session.character_id == characterID
     );
-    
+
     if (existingSession) {
       // 如果存在会话，设置会话ID和消息
       setCurrentSessionID(Number(existingSession.id));
-      
+
       if (existingSession.messages && existingSession.messages.length > 0) {
         setMessages(existingSession.messages);
       } else {
@@ -163,7 +163,7 @@ const ChatInterface = () => {
           created_at: new Date().toISOString()
         }]);
       }
-    } 
+    }
   };
 
 
@@ -222,21 +222,21 @@ const ChatInterface = () => {
         created_at: new Date().toISOString(),
         session_id: CurrentSessionID
       };
-  
+
       setMessages(prevMessages => [...prevMessages, newMessage]);
       setMessage('');
       setIsLoading(true);
       setStreamingMessage('');
-  
+
       try {
         const stream = await apiService.chat.sendMessage(CurrentSessionID, message);
-  
+
         let content = "";
         for await (const chunk of stream.getMessages()) {
           setStreamingMessage(prev => prev + chunk);
           content += chunk;
         }
-  
+
         const aiMessage: Message = {
           id: `msg-${Date.now()}`,
           content: content,
@@ -245,7 +245,7 @@ const ChatInterface = () => {
           created_at: new Date().toISOString(),
           session_id: CurrentSessionID
         };
-        
+
         setMessages(prev => [...prev, aiMessage]);
       } catch (error) {
         console.error("发送消息失败:", error);
@@ -270,7 +270,7 @@ const ChatInterface = () => {
         <ScrollArea className="flex-1 p-4 border-b border-border h-full">
           <h2 className="text-lg font-semibold text-foreground mb-4">历史</h2>
           <div className="space-y-4">
-            {characters.map((character,index) => (
+            {characters.map((character, index) => (
               <div
                 key={`character-${character.id}-${index}`}
                 className={`flex items-center space-x-3 cursor-pointer hover:bg-background p-2 rounded-lg transition-all duration-200 ${currentCharacter?.id === character.id ? 'bg-zinc-300' : ''}`}
@@ -409,7 +409,7 @@ const ChatInterface = () => {
 
               <input
                 type="text"
-                className="w-full bg-transparent py-4 px-4 focus:outline-none text-gray-100 placeholder-gray-500"
+                className="w-full bg-transparent py-4 px-4 focus:outline-none placeholder-gray-500 text-foreground"
                 placeholder="Type your message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -428,7 +428,7 @@ const ChatInterface = () => {
         </div>
       </div>
     </div>
-  ): (
+  ) : (
     // 中间加一个按钮，点击按钮跳转到灵感页面
     <div className="flex h-screen bg-black">
       <div className="flex-1 flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black">
