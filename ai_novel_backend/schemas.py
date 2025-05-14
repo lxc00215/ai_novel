@@ -222,7 +222,6 @@ class BookAnalysisResponse(BookAnalysisBase):
 #     error_message: Optional[str] = None
 
 class BookGenerationCreate(BaseResultSchema):
-    user_id: Optional[int]
     description: Optional[str]
     title: str
 

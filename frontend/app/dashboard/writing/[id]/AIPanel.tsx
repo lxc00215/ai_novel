@@ -258,7 +258,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
             <SelectTrigger id="ai-model" className="w-full bg-background">
               <SelectValue placeholder="选择AI模型" />
             </SelectTrigger>
-            <SelectContent className="bg-background text-foreground border-border">
+            <SelectContent className="bg-[#faf7f5] text-foreground border-border">
               <SelectItem value="平衡版" className="hover:bg-gray-800">平衡版</SelectItem>
               <SelectItem value="文章版" className="hover:bg-gray-800">文章版</SelectItem>
               <SelectItem value="专业版" className="hover:bg-gray-800">专业版</SelectItem>
@@ -370,7 +370,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                 </div>
 
                 {showStyleDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 border border-border rounded-md shadow-lg bg-background text-foreground z-10">
+                  <div className="absolute left-0 right-0 mt-1 border border-border rounded-md shadow-lg bg-[#faf7f5] text-foreground z-10">
                     {stylePresets.map(style => (
                       <div
                         key={style.id}
@@ -454,9 +454,9 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
               <SelectTrigger className="bg-background">
                 <SelectValue placeholder="请选择写作要求" />
               </SelectTrigger>
-              <SelectContent className="bg-background text-foreground border-border">
+              <SelectContent className="bg-[#faf7f5] text-foreground border-border">
                 {requirementsPresets.map(req => (
-                  <SelectItem key={req.id} value={req.name} className="hover:bg-gray-800">{req.name}</SelectItem>
+                  <SelectItem key={req.id} value={req.name} className="hover:bg-gray-800 ">{req.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

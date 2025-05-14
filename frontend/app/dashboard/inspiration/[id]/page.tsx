@@ -13,10 +13,8 @@ export default async function SpirateDetailPage({ params, searchParams }: {
 
   try {
     // 在服务器端获取初始数据
-
     const resolvedParams = await params;
     const inspirationId = resolvedParams.id;
-
     const resolvedSearchParams = await searchParams;
     console.log(resolvedSearchParams);
 

@@ -49,6 +49,7 @@ export default function SpirateDetailClient({
   // 图片相关状态
   const [imageStates, setImageStates] = useState<Record<number, { loading: boolean; url?: string }>>({});
   const [imageGenerationInProgress, setImageGenerationInProgress] = useState<Record<string, boolean>>({});
+  const [storyImageGenerationInProgress, setStoryImageGenerationInProgress] = useState<Record<string, boolean>>({})
   
   // 添加滚动参考点
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -280,6 +281,11 @@ export default function SpirateDetailClient({
   // 生成图片
   const generateImage = async (prompt: string, lineIndex: number) => {
     try {
+      setImageGenerationInProgress(prev => ({...prev, [lineIndex]: true}));
+      if(imageGenerationInProgress[lineIndex]){
+        console.log("图片生成中");
+        return;
+      }
       const data = await apiService.ai.generateImage(prompt.replace('【插图】', ''));
       
       if (data?.image) {
@@ -303,7 +309,6 @@ export default function SpirateDetailClient({
       console.error('生成图片失败:', error);
       setImageStates(prev => ({...prev, [lineIndex]: { loading: false }}));
     }
-    
     return '';
   };
 

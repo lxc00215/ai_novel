@@ -746,7 +746,7 @@ const apiService = {
     create: async (title: string, description: string): Promise<Novel> => {
 
 
-      return request(`/novels/create`, false, {
+      return request(`/novels/create`, true, {
         method: 'POST',
         body: JSON.stringify(
           {
@@ -761,7 +761,7 @@ const apiService = {
     },
     delete: async (id: string) => {
       return request(`/novels/${id}/delete`, false, {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
         }

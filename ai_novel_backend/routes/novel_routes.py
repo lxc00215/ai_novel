@@ -26,7 +26,7 @@ async def create_novel(
 
     # 创建一本什么都没的空小说
         novel = Novels(
-            user_id=request.user_id,  # 使用当前登录用户的ID
+            user_id=current_user.id,  # 使用当前登录用户的ID
             title=request.title,
             description=request.description,
             created_at=datetime.now(),
