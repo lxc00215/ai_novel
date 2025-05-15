@@ -152,9 +152,9 @@ export default function Toolbar({
   };
 
   const firstRowButtons = [
-    { icon: <Menu className="h-4 w-4 text-white" />, position: MenuTooltipPosition, ref: MenuButtonRef, tooltip: "菜单", onClick: toggleSidebar, },
-    { icon: <Maximize2 className="h-4 w-4 text-white" />, position: MaximizeTooltipPosition, ref: MaximizeButtonRef, tooltip: "沉浸模式", onClick: toggleFullscreen },
-    { icon: <BookOpen className="h-4 w-4 text-white" />, position: BookOpenTooltipPosition, ref: BookOpenButtonRef, tooltip: "备忘录", onClick: openNotes },
+    { icon: <Menu className="h-4 w-4 text-foreground" />, position: MenuTooltipPosition, ref: MenuButtonRef, tooltip: "菜单", onClick: toggleSidebar, },
+    { icon: <Maximize2 className="h-4 w-4 text-foreground" />, position: MaximizeTooltipPosition, ref: MaximizeButtonRef, tooltip: "沉浸模式", onClick: toggleFullscreen },
+    { icon: <BookOpen className="h-4 w-4 text-foreground" />, position: BookOpenTooltipPosition, ref: BookOpenButtonRef, tooltip: "备忘录", onClick: openNotes },
   ]
 
   const firstRow = () => {
@@ -193,7 +193,7 @@ export default function Toolbar({
           <Button
             variant="ghost"
             size="icon"
-            className={`h-8 w-8 transition-colors text-white ${hoveredButton === button.tooltip ? 'border-blue-500 text-blue-400' : ''
+            className={`h-8 w-8 transition-colors  ${hoveredButton === button.tooltip ? 'border-blue-500 text-blue-400' : ''
               }`}
             onClick={button.onClick}>
             {button.icon}
@@ -222,15 +222,15 @@ export default function Toolbar({
 
   const buttons = [
     //撤回 撤销撤回 复制 替换 排版 角色库 词条库 沉浸模式 备忘录 保存 历史记录 设置 返回上一页 使用AI生成内容 AI扩写润色 AI续写 AI拆书 AI起名
-    { icon: <Undo className="h-4 w-4 text-white" />, tooltip: "撤回", onClick: onUndo, },
-    { icon: <Redo className="h-4 w-4 text-white" />, tooltip: "撤销撤回", onClick: onRedo },
-    { icon: <Copy className="h-4 w-4 text-white" />, tooltip: "复制", onClick: onCopy },
-    { icon: <Replace className="h-4 w-4 text-white" />, tooltip: "替换", onClick: taggleReplace },
-    { icon: <Search className="h-4 w-4 text-white" />, tooltip: "搜索", actions: [{ label: "本章搜索", onClick: taggleSearch }, { label: "全书搜索", onClick: handleSearch }] },
+    { icon: <Undo className="h-4 w-4 text-foreground " />, tooltip: "撤回", onClick: onUndo, },
+    { icon: <Redo className="h-4 w-4 text-foreground" />, tooltip: "撤销撤回", onClick: onRedo },
+    { icon: <Copy className="h-4 w-4 text-foreground" />, tooltip: "复制", onClick: onCopy },
+    { icon: <Replace className="h-4 w-4 text-foreground" />, tooltip: "替换", onClick: taggleReplace },
+    { icon: <Search className="h-4 w-4 text-foreground" />, tooltip: "搜索", actions: [{ label: "本章搜索", onClick: taggleSearch }, { label: "全书搜索", onClick: handleSearch }] },
 
-    { icon: <AlignLeft className="h-4 w-4 text-white" />, tooltip: "排版", onClick: handleFormat },
-    { icon: <Users className="h-4 w-4 text-white" />, tooltip: "角色库", onClick: openCharacterLibrary },
-    { icon: <Tag className="h-4 w-4 text-white" />, tooltip: "词条库", onClick: openTermLibrary },
+    { icon: <AlignLeft className="h-4 w-4 text-foreground" />, tooltip: "排版", onClick: handleFormat },
+    { icon: <Users className="h-4 w-4 text-foreground" />, tooltip: "角色库", onClick: openCharacterLibrary },
+    { icon: <Tag className="h-4 w-4 text-foreground" />, tooltip: "词条库", onClick: openTermLibrary },
   ]
 
   const aiButtons = [
@@ -327,7 +327,7 @@ export default function Toolbar({
           <Button
             variant="ghost"
             size="icon"
-            className={`h-8 w-8 transition-colors text-white ${isHovered ? 'border-blue-500 text-blue-400' : ''
+            className={`h-8 w-8 transition-colors ${isHovered ? 'border-blue-500 text-blue-400' : ''
               }`}
             onClick={button.onClick}
           >

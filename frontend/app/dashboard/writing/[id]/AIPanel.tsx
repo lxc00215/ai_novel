@@ -46,84 +46,84 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
   const [selectedRequirementsPreset, setSelectedRequirementsPreset] = useState("");
 
   const stylePresets = [
-    { 
-      id: 1, 
-      name: "【优化文笔2.0】剧情以对话推动，强冲突（推荐灵光版）", 
+    {
+      id: 1,
+      name: "【优化文笔2.0】剧情以对话推动，强冲突（推荐灵光版）",
       detail: "详情文字...",
       prompt: "使用对话推动剧情发展，塑造强烈的冲突，保持角色间的张力，文笔流畅简练，段落层次分明。"
     },
-    { 
-      id: 2, 
-      name: "【金灵巧】知乎体", 
+    {
+      id: 2,
+      name: "【金灵巧】知乎体",
       detail: "详情文字...",
       prompt: "模仿知乎高质量回答的写作风格，逻辑清晰，论证有力，适当使用专业术语，偶尔插入反问句增加互动感。"
     },
-    { 
-      id: 3, 
-      name: "【乐子文风】模各适合对话推剧情（十三月）", 
+    {
+      id: 3,
+      name: "【乐子文风】模各适合对话推剧情（十三月）",
       detail: "详情文字...",
       prompt: "轻松幽默的文风，角色对话生动有趣，善用反转和梗，语言接地气但不低俗，节奏明快。"
     },
-    { 
-      id: 4, 
-      name: "【西瓜出品】黄金文风1.3，开启新人入神时代！香茄起点爆款!", 
+    {
+      id: 4,
+      name: "【西瓜出品】黄金文风1.3，开启新人入神时代！香茄起点爆款!",
       detail: "搭配【西瓜出品】黄金写作，给一句话简单描述故事；细纲生成正文；润色、扩写、缩写；写清楚需求即可。",
       prompt: "网文黄金文风，句式多变，描写细腻，人物个性鲜明，场景代入感强，情节波澜起伏，符合网络小说读者口味，节奏张弛有度。"
     },
-    { 
-      id: 5, 
-      name: "【L】【爽文的写作风格减少AI味】2", 
+    {
+      id: 5,
+      name: "【L】【爽文的写作风格减少AI味】2",
       detail: "详情文字...",
       prompt: "爽文风格但减少AI痕迹，避免过度堆砌词藻，保持人物动机自然合理，情节爽快但不生硬，保持连贯性和流畅度。"
     },
-    { 
-      id: 6, 
-      name: "（小熊出品）美乐子文 写作风格 推荐搭配同名使用", 
+    {
+      id: 6,
+      name: "（小熊出品）美乐子文 写作风格 推荐搭配同名使用",
       detail: "详情文字...",
       prompt: "轻松幽默的美式风格，充满生活气息，对话诙谐自然，善用环境渲染情绪，角色个性化表达明显。"
     },
-    { 
-      id: 7, 
-      name: "完全参考之前的章节内容的风格", 
+    {
+      id: 7,
+      name: "完全参考之前的章节内容的风格",
       detail: "详情文字...",
       prompt: "严格遵循之前章节的写作风格、语言习惯和叙事方式，保持人物语气一致性，情节自然衔接，不引入新的写作元素。"
     },
-    { 
-      id: 8, 
-      name: "故事多层次递进，突出人物特性", 
+    {
+      id: 8,
+      name: "故事多层次递进，突出人物特性",
       detail: "详情文字...",
       prompt: "采用多层次递进的叙事结构，情节由浅入深，角色特性鲜明突出，内心活动与外在行为相互印证，铺垫与爆发结合。"
     },
   ];
 
   const requirementsPresets = [
-    { 
-      id: 1, 
-      name: "详细描写", 
+    {
+      id: 1,
+      name: "详细描写",
       detail: "注重场景和人物细节描写",
       prompt: "详细描写场景和人物，使用丰富的感官细节，通过环境烘托氛围，角色外貌与内心刻画要立体。"
     },
-    { 
-      id: 2, 
-      name: "紧凑情节", 
+    {
+      id: 2,
+      name: "紧凑情节",
       detail: "剧情紧凑，节奏明快",
       prompt: "情节紧凑，节奏明快，减少不必要的描写，关注核心事件推进，保持读者紧张感。"
     },
-    { 
-      id: 3, 
-      name: "增加对话", 
+    {
+      id: 3,
+      name: "增加对话",
       detail: "更多角色对话，推动情节发展",
       prompt: "增加角色间的对话比例，通过对话展现性格和关系，推动情节发展，减少叙述性段落。"
     },
-    { 
-      id: 4, 
-      name: "增加悬疑", 
+    {
+      id: 4,
+      name: "增加悬疑",
       detail: "添加悬疑元素，引发读者好奇",
       prompt: "增加悬疑元素，设置伏笔，不要完全揭示真相，保持读者好奇心，适当使用暗示和误导。"
     },
-    { 
-      id: 5, 
-      name: "续写文章", 
+    {
+      id: 5,
+      name: "续写文章",
       detail: "保持原文风格继续续写",
       prompt: "严格遵循原文风格和语言习惯续写，保持人物和情节的一致性，自然过渡到新内容。"
     },
@@ -163,7 +163,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
       const requirements = requirementsMode === 'preset'
         ? (selectedRequirementsPresetObj?.prompt || selectedRequirementsPreset)
         : customRequirements;
-      
+
       // 收集所有表单数据
       const formData = {
         aiModel,                  // AI模型选择
@@ -175,7 +175,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
         generateChapter,          // 是否生成完整章节
         autoLinkRecent,           // 是否自动关联最近章节
         recentChaptersCount,      // 关联的最近章节字数
-        
+
         // 高级功能字段 (如果用户启用了高级功能)
         ...(showAdvanced ? {
           characterRelationship: (characterRelationshipEl as HTMLTextAreaElement)?.value || '',
@@ -183,13 +183,13 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
           chapterTerms: (chapterTermsEl as HTMLTextAreaElement)?.value || '',
         } : {})
       };
-      
+
       console.log("提交的完整表单数据:", formData);
-      
+
       // 调用API时传递所有必要参数
       const response = await apiService.ai.generateContent(
-        storyBackground, 
-        writingStyle, 
+        storyBackground,
+        writingStyle,
         requirements,
         {
           textLength,
@@ -204,7 +204,7 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
           } : {})
         }
       );
-      
+
       console.log("AI生成内容:", response);
       if (response) {
         toast.success('内容生成成功');
@@ -370,11 +370,11 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
                 </div>
 
                 {showStyleDropdown && (
-                  <div className="absolute left-0 right-0 mt-1 border border-border rounded-md shadow-lg bg-[#faf7f5] text-foreground z-10">
+                  <div className="absolute left-0 right-0 mt-1 border border-border rounded-md shadow-lg bg-white text-foreground z-10">
                     {stylePresets.map(style => (
                       <div
                         key={style.id}
-                        className="p-3 hover:bg-muted/80 cursor-pointer border-b border-border last:border-b-0"
+                        className="p-3 hover:bg-blue/80 cursor-pointer border-b border-border last:border-b-0"
                         onClick={() => {
                           setSelectedStylePreset(style.name);
                           setShowStyleDropdown(false);
@@ -454,9 +454,9 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
               <SelectTrigger className="bg-background">
                 <SelectValue placeholder="请选择写作要求" />
               </SelectTrigger>
-              <SelectContent className="bg-[#faf7f5] text-foreground border-border">
+              <SelectContent className="bg-white text-foreground border-border">
                 {requirementsPresets.map(req => (
-                  <SelectItem key={req.id} value={req.name} className="hover:bg-gray-800 ">{req.name}</SelectItem>
+                  <SelectItem key={req.id} value={req.name} className="hover:bg-blue-800">{req.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -558,18 +558,18 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
           <Label htmlFor="text-length" className="flex items-center justify-between">
             <span>文本长度控制</span>
             <div className="flex items-center">
-              <Button 
-                variant="outline" 
-                size="icon" 
+              <Button
+                variant="outline"
+                size="icon"
                 className="h-6 w-6 rounded-full"
                 onClick={() => setTextLength(Math.max(100, textLength - 100))}
               >
                 <Minus className="h-3 w-3" />
               </Button>
               <span className="mx-2 text-sm">{textLength}</span>
-              <Button 
-                variant="outline" 
-                size="icon" 
+              <Button
+                variant="outline"
+                size="icon"
                 className="h-6 w-6 rounded-full"
                 onClick={() => setTextLength(Math.min(3000, textLength + 100))}
               >
@@ -579,8 +579,8 @@ export default function AIPanel({ closeAIPanel, onContentGenerated, expansionMod
           </Label>
           <div className="flex items-center">
             <div className="w-full bg-muted rounded-full h-2">
-              <div 
-                className="bg-green-500 h-2 rounded-full" 
+              <div
+                className="bg-green-500 h-2 rounded-full"
                 style={{ width: `${(textLength / 3000) * 100}%` }}
               ></div>
             </div>
