@@ -101,7 +101,7 @@ class ChapterUtils:
             }
         }
 
-    def generate_chapter_outline(book_prompt: str, chapter_number: int, previous_chapters_summary: Optional[str] = None) -> str:
+    def generate_chapter_outline(book_prompt: str, chapter_number: int) -> str:
         """
         生成章节的大纲，基于书籍整体设定和之前的章节
         
@@ -188,5 +188,5 @@ class ChapterUtils:
             # 确保最后一个角色被添加
             if current_character:
                 result['characters'].append(current_character)
-            
+            print("niubi",result)
             return result

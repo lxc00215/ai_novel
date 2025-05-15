@@ -37,7 +37,7 @@ class MCPClient:
         )
         self.aviliable_tools = [] 
         # 默认模型
-        self.model = model or "gemini-2.0-pro-exp-02-05"
+        self.model = model or "gemini-1.5-flash"
         
     async def load_servers_from_config(self, config_path: str):
         """从配置文件加载多个MCP服务器"""
@@ -63,33 +63,23 @@ class MCPClient:
     async def connect_to_server(self, server_name: str, server_config: Dict):
         """连接到单个MCP服务器"""
         if server_config.get("transportType") != "stdio":
-            logger.warning(f"暂不支持非stdio类型的服务器: {server_name}")
             return
         
         import shutil
         cmd_path = shutil.which(server_config["command"])
-        logger.info(f"命令路径: {cmd_path}")
         
         if not cmd_path:
-            logger.error(f"命令 '{server_config['command']}' 不存在或不在PATH中")
             return
         server_params = StdioServerParameters(
             command=server_config["command"],
             args=server_config["args"],
             env=server_config.get("env", {})
         )
-
-        print(server_params)
         stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
-        logger.info(f"服务器 {server_name} 连接成功，获取stdio_transport")
         stdio, write = stdio_transport
-        logger.info(f"成功解析stdio_transport")
             
         self.session = await self.exit_stack.enter_async_context(ClientSession(stdio, write))
-        logger.info(f"成功创建ClientSession")
         await self.session.initialize()
-        logger.info(f"成功初始化ClientSession")
-        
         # 获取可用工具列表
         response = await self.session.list_tools()
 
@@ -102,19 +92,9 @@ class MCPClient:
             }
         } for tool in response.tools]
         processed_tools = prepare_tools_for_model(available_tools, self.model)
-        print(processed_tools,"abc")
         self.aviliable_tools = processed_tools
-        # logger.info(f"服务器 {server_name} 可用工具: {[tool['name'] for tool in self.aviliable_tools]}")
 
     async def call_tool(self,prompt:str,is_raw_args:bool=False):
-        
-        print(self.clients)
-        print(self.aviliable_tools)
-        print("到这里了")
-        print(self.model)
-        print(prompt)
-
-
         try:
             response = self.clients.chat.completions.create(
             model=self.model,
@@ -123,25 +103,15 @@ class MCPClient:
             tools=self.aviliable_tools,
             tool_choice="auto"
 
-         )   
-            print(response)
-            
+         )      
         except Exception as e:
-            print(f"调用工具失败: {e}")
             return None
-       
-       
         final_text = []
-        print(self.aviliable_tools)
-        
-        
-
         for choice in response.choices:
             message = choice.message
             is_function_call = message.tool_calls
             if not is_function_call:
                 final_text.append(message.content)
-                # Add assistant's response to conversation history
                 self.conversation_history.append({
                     "role": "assistant",
                     "content": message.content
@@ -151,23 +121,17 @@ class MCPClient:
                 tool_name = message.tool_calls[0].function.name
                 print(message.tool_calls[0].function.arguments)
                 raw_args = message.tool_calls[0].function.arguments
-                print(f"原始参数: {raw_args}")
                 tool_args = {}
-        # 如果参数已经是字典类型，直接使用
                 if isinstance(raw_args, dict):
                     tool_args = raw_args
                 else:
-                    # 尝试使用ast.literal_eval安全解析Python字典
                     import ast
                     try:
                         tool_args = ast.literal_eval(raw_args)
                     except (SyntaxError, ValueError):
-                        # 如果literal_eval失败，尝试JSON解析
                         tool_args = json.loads(raw_args)
 
-                # Execute tool call
                 result = await self.session.call_tool(tool_name, tool_args)
-                print(f"Tool call result: {result.content}\n")
                 final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
 
                 # Add the tool response to conversation history
@@ -188,7 +152,6 @@ class MCPClient:
                     }
                 else:
                     return tool_content
-
     async def generate_link(self,money:int) -> str:
         # 构建提示词
         user_prompt = f"用户想要在web网页充值{money}元,请立刻为其生成支付链接（订单号是结合情境与时间生成，金额在1元-100000元之间，订单标题为“充值”即可），渲染给用户，并引导其完成付款。"

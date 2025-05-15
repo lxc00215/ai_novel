@@ -125,7 +125,6 @@ export function EnhancedSidebar() {
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 rounded-full hover:bg-zinc-500 hover:cursor-pointer"
-    
             onClick={toggleCollapse}
           >
             {isCollapsed ? 

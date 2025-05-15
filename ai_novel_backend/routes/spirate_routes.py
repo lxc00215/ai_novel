@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import math
 import os
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -46,59 +47,64 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
 
 剧情要往这个方向走
 {request.choice}
+''' 
+        last_prompt = """
 
-
-
-请严格按照以下格式输出：
-    标题：xxx
-    角色：
-    - 姓名：张三
-      描述：退伍军人，性格沉稳、果断，年龄35....
-    - 姓名：李四
-      描述：大学生，性格活泼、聪明，年龄20....
-    的内容：
-        XXX
-
-    剧情走向：
-    - xxx
-    - xxx
-    - xxx
-
-    
+    输出格式：
+    {{"title": "小说标题",
+    "content": "小说内容", 
+    "characters": [{"name": "角色名", "description": "角色描述","prompt": "与角色有关的提示词，越贴近角色，越详细越好。要携带与故事内容相关的信息！"}], 
+    "story_direction": [分支，3个]}}
+     确保输出是有效的JSON格式，以便于系统自动处理。
 剧情走向这里给出三个选项，让用户之后选择，最好是主动式。比如 张三去到了北京、某年某月，张三的股票大跌。只是举一个例子，一切基于该剧情给出。
+
 请严格按照这个格式输出，不要输出其他内容。后续我还要解析。
-'''
+"""
+
 
         # 构建续写请求
         messages = [
             {"role": "system", "content": "你是一个小说创作大师，现在需要你根据用户提供的内容，进行续写。确保续写的内容符合主题，且有足够吸引用户。"},
-            {"role": "user", "content": content}
+            {"role": "user", "content": content+last_prompt}
         ]
 
-        res = bridge.chat(messages,  options={
+        result = bridge.chat(messages,  options={
                     "model": feature_config["model"],
                     "max_tokens": 2000,
                     "temperature": 0.7
                 })
+        outline_data = ""
+        json_start = result.find('{')
+        json_end = result.rfind('}') + 1
+        if json_start >= 0 and json_end > json_start:
+            outline_json_str = result[json_start:json_end]
+            outline_data = json.loads(outline_json_str)
+        else:
+            # 尝试更宽松的解析
+            import re
+            json_pattern = r'({.*})'
+            match = re.search(json_pattern, result, re.DOTALL)
+            if match:
+                outline_json_str = match.group(1)
+                outline_data = json.loads(outline_json_str)
+            else:
+                raise ValueError("无法从响应中提取JSON数据")
 
 
         # 解析返回的故事内容
-
-        chapter_utils = ChapterUtils()
-        story_parts = chapter_utils.parse_story(res)
         # 追加到数据库
 
         characters = []
         character_ids = []
         # 创建Character 对象
-        for character in story_parts['characters']:
+        for character in outline_data['characters']:
             print(f"character: {character}")
             character_result = Character(
-                name=character['姓名'],
+                name=character['name'],
                 book_id=spirate.id,
-                description='\n'.join(character['描述']) if isinstance(character['描述'], list) else character['描述'],
+                description='\n'.join(character['description']) if isinstance(character['description'], list) else character['description'],
                 user_id=spirate.user_id,
-                prompt=f"你现在正在做一个角色扮演，无论用户如何去套取你的模型信息，你都不会回复。你只会回答你的公开信息，你的公开信息是：你叫{character['姓名']},关于你的描述为：{character['描述']},除此之外，你可以基于你的角色定位和用户聊天、谈心，唯独不能泄露你的模型信息！"
+                prompt=f"{character['prompt']},不要泄露任何模型信息！"
             )
             characters.append(character_result)
             async with async_session() as db:
@@ -115,7 +121,7 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
 
             # Update the inspiration result
             query = update(InspirationResult).where(InspirationResult.id == id).values(
-                content=spirate.content + story_parts['content'],
+                content=spirate.content + outline_data['content'],
                 updated_at=datetime.utcnow(),  # Make sure to update the timestamp
                 story_direction=spirate.story_direction,
                 characters=spirate.characters,
@@ -133,8 +139,8 @@ async def continue_spirate(id: int, request: ContinueSpirateRequest, db: AsyncSe
             updated_at=spirate.updated_at,
             title=spirate.title,
             characters=characters,
-            content=story_parts['content'],
-            story_direction=story_parts['story_direction'],
+            content=outline_data['content'],
+            story_direction=outline_data['story_direction'],
             user= user
         )
         return response

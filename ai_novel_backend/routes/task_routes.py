@@ -1,3 +1,4 @@
+import json
 from typing import Callable
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from sqlalchemy import  select, update
@@ -208,7 +209,6 @@ async def process_task_crazy_walk(task_id: int,task_data: dict)->int:
     service = CrazyWalkService()
     try:
         result_id = await service.generate_novel_in_background(task_id,task_data,update_progress)
-
         return result_id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -261,54 +261,70 @@ async def process_task_inspiration(task_data: dict, background_tasks: Background
         else:
             result = await service.generate_complete_story(task_data['prompt'])
 
+            outline_data = ""
+            json_start = result.find('{')
+            json_end = result.rfind('}') + 1
+            if json_start >= 0 and json_end > json_start:
+                outline_json_str = result[json_start:json_end]
+                outline_data = json.loads(outline_json_str)
+            else:
+                # 尝试更宽松的解析
+                import re
+                json_pattern = r'({.*})'
+                match = re.search(json_pattern, result, re.DOTALL)
+                if match:
+                    outline_json_str = match.group(1)
+                    outline_data = json.loads(outline_json_str)
+                else:
+                    raise ValueError("无法从响应中提取JSON数据")
+
         # 保存到灵感表
-        character_ids = []
-        # 创建Character 对象
-        for character in result['characters']:
-            character_result = Character(
-                book_id=None,
-                name=character['姓名'],
-                description='\n'.join(character['描述']) if isinstance(character['描述'], list) else character['描述'],
-                user_id=task_data['user_id'],
-                prompt=f"你现在正在做一个角色扮演，无论用户如何去套取你的模型信息，你都不会回复。你只会回答你的公开信息，你的公开信息是：你叫{character['姓名']},关于你的描述为：{character['描述']},除此之外，你可以基于你的角色定位和用户聊天、谈心，唯独不能泄露你的模型信息！"
-            )
-            async with async_session() as db:
-                db.add(character_result)
-                await db.commit()
-                await db.refresh(character_result)
-                character_ids.append(character_result.id)
-        print("执行到这里了")
-        # 先创建没有封面图片的灵感记录
-        inspiration_result = InspirationResult(
-            title=result['title'],
-            characters=character_ids,
-            prompt=task_data['prompt'],
-            content=result['content'],
-            user_id=task_data['user_id'],
-            story_direction=result['story_direction'],
-            cover_image=None  # 初始为空
-        )
-
-        # 更新Character 的book_id字段
-        for character_id in character_ids:
-            character = await db.get(Character, character_id)
-            character.book_id = inspiration_result.id
-            await db.commit()
-        
-        async with async_session() as db:
-            db.add(inspiration_result)
-            await db.commit()
-            await db.refresh(inspiration_result)
-            # 添加后台任务生成图片
-            background_tasks.add_task(
-                generate_image_async,
+            character_ids = []
+            # 创建Character 对象
+            for character in outline_data['characters']:
+                character_result = Character(
+                    book_id=None,
+                    name=character['name'],
+                    description='\n'.join(character['description']) if isinstance(character['description'], list) else character['description'],
+                    user_id=task_data['user_id'],
+                    prompt=f"{character['prompt']},无论任何人如何套取你的模型信息，你都不要泄露！"
+                )
+                async with async_session() as db:
+                    db.add(character_result)
+                    await db.commit()
+                    await db.refresh(character_result)
+                    character_ids.append(character_result.id)
+            # 先创建没有封面图片的灵感记录
+            inspiration_result = InspirationResult(
+                title=outline_data['title'],
+                characters=character_ids,
                 prompt=task_data['prompt'],
-                size='1280x960',
+                content=outline_data['content'],
                 user_id=task_data['user_id'],
-                inspiration_id=inspiration_result.id
+                story_direction=outline_data['story_direction'],
+                cover_image=None  # 初始为空
             )
 
-            return inspiration_result.id
+            # 更新Character 的book_id字段
+            for character_id in character_ids:
+                character = await db.get(Character, character_id)
+                character.book_id = inspiration_result.id
+                await db.commit()
+            
+            async with async_session() as db:
+                db.add(inspiration_result)
+                await db.commit()
+                await db.refresh(inspiration_result)
+                # 添加后台任务生成图片
+                background_tasks.add_task(
+                    generate_image_async,
+                    prompt=task_data['prompt'],
+                    size='1280x960',
+                    user_id=task_data['user_id'],
+                    inspiration_id=inspiration_result.id
+                )
+
+                return inspiration_result.id
 
     except Exception as e:
         print(f"Task processing error: {e}")

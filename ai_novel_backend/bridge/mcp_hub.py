@@ -33,12 +33,6 @@ class MCPClient:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
-    # 如何创建 MCPClient 实例？
-    # 1. 使用单例模式
-
-
-    
     def __init__(self, model: str = None):
         self.exit_stack = AsyncExitStack()
         self.session: Optional[ClientSession] = None
@@ -50,27 +44,18 @@ class MCPClient:
         )
         self.aviliable_tools = [] 
         # 默认模型
-        self.model = model or "gemini-2.0-pro-exp-02-05"
-        
+        self.model = model or "gemini-1.5-flash"
     async def load_servers_from_config(self, config_path: str):
         """从配置文件加载多个MCP服务器"""
-        logger.info(f"正在从配置文件加载MCP服务器: {config_path}")
-        
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
-        
         for server_name, server_config in config.items():
             if server_config.get("disabled", False):
-                logger.info(f"跳过已禁用的服务器: {server_name}")
                 continue  
-            logger.info(f"正在连接到服务器: {server_name}")
             try:
                 await self.connect_to_server(server_name, server_config)
-                logger.info(f"成功连接到服务器: {server_name}")
             except Exception as e:
-                logger.error(f"连接到服务器 {server_name} 失败: {str(e)}")
                 continue
-
     async def connect_to_server(self, server_name: str, server_config: Dict):
         """连接到单个MCP服务器"""
         if server_config.get("transportType") != "stdio":
@@ -92,7 +77,6 @@ class MCPClient:
             
         self.session = await self.exit_stack.enter_async_context(ClientSession(stdio, write))
         await self.session.initialize()
-        logger.info(f"成功初始化ClientSession")
         
         # 获取可用工具列表
         response = await self.session.list_tools()
@@ -108,7 +92,6 @@ class MCPClient:
         processed_tools = prepare_tools_for_model(available_tools, self.model)
 
         self.aviliable_tools = self.aviliable_tools.append(processed_tools)
-        # logger.info(f"服务器 {server_name} 可用工具: {[tool['name'] for tool in self.aviliable_tools]}")
 
     async def call_tool(self,prompt:str,is_raw_args:bool=False):
         response = self.clients.chat.completions.create(
@@ -149,7 +132,6 @@ class MCPClient:
                     except (SyntaxError, ValueError):
                         # 如果literal_eval失败，尝试JSON解析
                         tool_args = json.loads(raw_args)
-
                 # Execute tool call
                 result = await self.session.call_tool(tool_name, tool_args)
                 print(f"Tool call result: {result.content}\n")
@@ -173,7 +155,6 @@ class MCPClient:
                     }
                 else:
                     return tool_content[0].text
-
     async def generate_link(self,money:int) -> str:
         # 构建提示词
         user_prompt = f"用户想要在web网页充值{money}元,请立刻为其生成支付链接（订单号是结合情境与时间生成，金额在1元-100000元之间，订单标题为“充值”即可），渲染给用户，并引导其完成付款。"
@@ -216,7 +197,6 @@ def prepare_tools_for_model(tools, model_name):
        if "gemini" in model_name.lower():
            # Gemini兼容的工具定义
            gemini_tools = []
-           print(tools)
            for tool in tools:
                # 复制工具定义
                gemini_tool = {
@@ -256,8 +236,6 @@ def clean_schema_for_gemini(schema):
         
     return schema
 
-
-    # 根据支付金额生成支付链接 1、5、10元
 
 if __name__ == "__main__":
     import sys

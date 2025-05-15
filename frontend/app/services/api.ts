@@ -881,7 +881,7 @@ const apiService = {
   // 用户相关API
   user: {
     updateVip: async (subscriptionType: string, durationMonths: number) => {
-      const response = await request('/users/update_vip', false, {
+      const response = await request('/users/update_vip', true, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

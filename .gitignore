@@ -17,11 +17,8 @@ logs/
 .DS_Store
 Thumbs.db
 frontend/.env.local
-<<<<<<< HEAD
-=======
 frontend/package-lock.json
 frontend/package.json
->>>>>>> 0c69a5bff214f76c1d431ae07020709311e11f40
 frontend/next.config.js
 frontend/next-env.d.ts
 frontend/.vercel
@@ -32,7 +29,3 @@ frontend/.next
 *.zip
 backend/.env
 
-<<<<<<< HEAD
-.gitignore
-=======
->>>>>>> 0c69a5bff214f76c1d431ae07020709311e11f40

@@ -226,7 +226,6 @@ async def send_message(
         history = await db.execute(history_query)
         history_messages = history.scalars().all()
         
-        print(character.prompt,"character.prompt")
         # 6. 准备消息格式
         messages = [
             {"role": "system", "content": character.prompt}  # 使用角色的 prompt
@@ -275,10 +274,6 @@ async def generate_response(
                 content = chunk.choices[0].delta.content
                 accumulated_message += content
                 
-                # 更新数据库中的消息
-             
-                
-                # 返回流式内容
                 yield f"data: {content}\n\n"
             # 等全部流式内容返回后，更新数据库内容
 
@@ -303,8 +298,6 @@ async def generate_response(
             session.last_message_time = datetime.now()
             await new_db.commit()
 
-            # await new_db.refresh(session)
-            
             yield "data:\n\n"
             
     except Exception as e:

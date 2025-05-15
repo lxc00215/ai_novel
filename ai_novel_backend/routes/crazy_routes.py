@@ -11,7 +11,6 @@ router = APIRouter(prefix="/crazy",tags=["crazy"])
 @router.get("/{bookId}")
 async def get_crazy_walk_by_user(bookId: int):
     # 这里传来的应该为task的id
-    print(bookId,"妙")
     async with async_session() as db:
         query = select(Task).where(Task.id == bookId)
         result = await db.execute(query)

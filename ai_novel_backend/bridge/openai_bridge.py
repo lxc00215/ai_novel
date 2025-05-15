@@ -82,8 +82,7 @@ class OpenAIBridge:
         except Exception as e:
             print('OpenAI chat error:', str(e))
             raise e
-
-        
+     
     async def chat_stream(self, messages: List[Dict], options: Dict = {}):
 
    

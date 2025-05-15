@@ -168,7 +168,7 @@ export default function SpirateDetailClient({
     
     if (inspiration.content) {
 
-      const contentLines = inspiration.content.split('\n\n').map(line => {
+      const contentLines = inspiration.content.split(/\n\n|\n/).map(line => {
         // 转换选择标记格式
         if (line.includes('您已选择了：') && !line.startsWith('_CHOICE_')) {
           console.log(line);
@@ -196,7 +196,7 @@ export default function SpirateDetailClient({
     
     if (inspiration.content) {
 
-      const contentLines = inspiration.content.split('\n\n').map(line => {
+      const contentLines = inspiration.content.split(/\n\n|\n/).map(line => {
         if (line.includes('您已选择了：') && !line.startsWith('_CHOICE_')) {
           console.log(line);
           return `_CHOICE_ ${line}`;
@@ -321,7 +321,7 @@ export default function SpirateDetailClient({
     
     try {
       // 创建用户选择提示
-      const choiceNotification = `_CHOICE_ 您已选择了：${choice}\n\n`;
+      const choiceNotification = `_CHOICE_ 您已选择了：${choice}\n`;
       const updatedDisplayedLines = [...displayedLines, choiceNotification];
       setDisplayedLines(updatedDisplayedLines);
       
@@ -330,7 +330,7 @@ export default function SpirateDetailClient({
         try {
           await apiService.spirate.update({
             id: inspiration.id,
-            content: updatedDisplayedLines.join('\n\n'),
+            content: updatedDisplayedLines.join('\n'),
             story_direction: inspiration.story_direction
           });
         } catch (error) {
@@ -345,7 +345,8 @@ export default function SpirateDetailClient({
       
       // 处理新内容
       if (newContent) {
-        const newContentLines = newContent.split('\n\n');
+        // 先匹配两个换行符，再匹配一个换行符
+        const newContentLines = newContent.split(/\n\n|\n/);
         const startIndex = updatedDisplayedLines.length;
         await typewriterEffectForContinuation(newContentLines, startIndex);
       }
@@ -356,7 +357,7 @@ export default function SpirateDetailClient({
       // 更新灵感对象
       setInspiration(prev => ({
         ...prev,
-        content: displayedLines.join('\n\n'),
+        content: displayedLines.join('\n'),
         story_direction: newChoices
       }));
     } catch (error) {

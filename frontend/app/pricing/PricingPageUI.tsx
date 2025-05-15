@@ -89,7 +89,7 @@ export default function PricingPageUI() {
             try {
               const subscriptionType = selectedPlan?.name === "基础版" ? "basic" : "professional";
               const durationMonths = annually ? 12 : 1;
-              await apiService.user.updateVip(subscriptionType, durationMonths);
+              // await apiService.user.updateVip(subscriptionType, durationMonths);
               
               // 更新本地存储的用户信息
               const userStr = localStorage.getItem('user');
@@ -413,7 +413,7 @@ export default function PricingPageUI() {
       }}>
         {/* 自定义全屏蒙版 */}
         {showPaymentDialog && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" />
+          <div className="fixed inset-0 bg-background/10 backdrop-blur-sm z-40" />
         )}
         <DialogContent className="sm:max-w-md z-50">
           <DialogHeader>
@@ -461,7 +461,7 @@ export default function PricingPageUI() {
             <div className="flex flex-col space-y-3">
               <Button 
                 onClick={handleManualCheck}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2"
+                className="w-full border hover:bg-primary/90 text-white font-medium py-2"
               >
                 我已完成支付
               </Button>
@@ -602,7 +602,7 @@ export default function PricingPageUI() {
                     </ul>
                     
                     <Button 
-                      className={`w-full mt-6 ${plan.buttonColor} border-white border-1 text-white hover:cursor-pointer transition-all duration-300 hover:shadow-lg`} 
+                      className={`w-full mt-6 ${plan.buttonColor} border border-1 text-foreground hover:cursor-pointer transition-all duration-300 hover:shadow-lg`} 
                       onClick={() => {
                         // 将处理逻辑移到新的函数中
                         const amount = annually ? plan.yearlyPrice?.toString() : plan.monthlyPrice?.toString();
